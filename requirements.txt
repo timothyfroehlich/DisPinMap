@@ -1,5 +1,3 @@
-# requirements.txt
-# Add your dependencies here
-# Example:
 discord.py
 requests
+python-dotenv

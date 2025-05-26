@@ -4,7 +4,7 @@
         {
             "label": "Run Discord Pinball Bot",
             "type": "shell",
-            "command": "python bot.py",
+            "command": "source venv/bin/activate && python bot.py",
             "group": "build",
             "problemMatcher": []
         }
