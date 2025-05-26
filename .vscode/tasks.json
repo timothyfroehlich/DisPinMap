@@ -1,0 +1,12 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Discord Pinball Bot",
+            "type": "shell",
+            "command": "python bot.py",
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}
