@@ -232,13 +232,80 @@ async def stop_monitoring(ctx):
         await ctx.send(f"❌ Error stopping monitoring: {str(e)}")
 
 
+@client.command(name='check')
+async def check_now(ctx):
+    """Immediately check for machine changes (bypasses scheduled polling)"""
+    config = db.get_channel_config(ctx.channel.id)
+    
+    if not config:
+        await ctx.send("❌ No configuration found. Use `!location <region_name>` to set up monitoring first.")
+        return
+    
+    # Check if we have either a region or valid coordinates
+    has_region = config.get('region_name') is not None
+    has_coords = (config.get('latitude') is not None and config.get('longitude') is not None)
+    
+    if not has_region and not has_coords:
+        await ctx.send("❌ Location not configured. Use `!location <region_name>` or `!location <lat> <lon>` first.")
+        return
+    
+    try:
+        await ctx.send("🔍 Checking for machine changes...")
+        
+        # Import the functions we need
+        from api import fetch_region_machines, fetch_machines_for_location
+        
+        # Fetch current machines - either by region or lat/lon
+        if config.get('region_name'):
+            machines = await fetch_region_machines(config['region_name'])
+            location_desc = f"region **{config['region_name']}**"
+        else:
+            machines = await fetch_machines_for_location(
+                config['latitude'], 
+                config['longitude'], 
+                config['radius_miles']
+            )
+            location_desc = f"coordinates **{config['latitude']}, {config['longitude']}** ({config['radius_miles']} mile radius)"
+        
+        # Update tracking and detect changes
+        db.update_machine_tracking(ctx.channel.id, machines)
+        
+        # Check for notifications
+        notifications = db.get_pending_notifications(ctx.channel.id)
+        
+        if notifications:
+            # Send the notifications using monitor's logic
+            await monitor._send_notifications(ctx.channel.id, notifications)
+            
+            added_count = len([n for n in notifications if n['change_type'] == 'added'])
+            removed_count = len([n for n in notifications if n['change_type'] == 'removed'])
+            
+            summary = f"✅ Found {len(machines)} machines in {location_desc}. "
+            if added_count or removed_count:
+                changes = []
+                if added_count:
+                    changes.append(f"{added_count} added")
+                if removed_count:
+                    changes.append(f"{removed_count} removed")
+                summary += f"**Changes detected:** {', '.join(changes)}!"
+            else:
+                summary += "No changes since last check."
+            
+            await ctx.send(summary)
+        else:
+            await ctx.send(f"✅ Found {len(machines)} machines in {location_desc}. No changes since last check.")
+        
+    except Exception as e:
+        await ctx.send(f"❌ Error checking for changes: {str(e)}")
+
+
 @client.command(name='test')
 async def test_simulation(ctx):
     """Run a 30-second simulation of machine changes for testing"""
     config = db.get_channel_config(ctx.channel.id)
 
     if not config:
-        await ctx.send("❌ No configuration found. Set up monitoring first with `!configure location <lat> <lon>`.")
+        await ctx.send("❌ No configuration found. Set up monitoring first with `!location <region_name>`.")
         return
 
     try:
