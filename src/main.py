@@ -5,7 +5,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from database import Database
 from monitor import MachineMonitor
-from api import fetch_austin_machines, get_all_regions, find_region_by_name, fetch_region_machines
+from api import fetch_austin_machines, get_all_regions, find_region_by_name, fetch_region_machines, search_location_by_name, fetch_location_machines
 
 # Add test directory to path for test_simulation import
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'test'))
@@ -60,70 +60,156 @@ async def list_regions(ctx):
         await ctx.send(f"❌ Error fetching regions: {str(e)}")
 
 
-@client.command(name='location')
-async def set_location(ctx, *args):
-    """Set monitoring location
-    
-    Examples:
-    !location austin          (region name)
-    !location 30.27 -97.74    (latitude longitude)"""
-    if not args:
-        await ctx.send("❌ Please specify a location. Examples:\n"
-                      "`!location austin` (region name)\n"
-                      "`!location 30.2672 -97.7431` (latitude longitude)")
-        return
-    
-    try:
-        if len(args) == 1:
-            # Region name
-            region_name = args[0]
-            region = await find_region_by_name(region_name)
-            
-            # Clear lat/lon and set region
-            db.update_channel_config(ctx.channel.id, ctx.guild.id, 
-                                   region_name=region['name'], 
-                                   latitude=None, longitude=None)
-            await ctx.send(f"✅ Location set to region: **{region['name']}**")
-            
-        elif len(args) == 2:
-            # Lat/lon coordinates
-            try:
-                latitude = float(args[0])
-                longitude = float(args[1])
-                
-                if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-                    await ctx.send("❌ Invalid coordinates. Latitude must be -90 to 90, longitude -180 to 180")
-                    return
-                
-                # Clear region and set lat/lon
-                db.update_channel_config(ctx.channel.id, ctx.guild.id,
-                                       region_name=None,
-                                       latitude=latitude, longitude=longitude)
-                await ctx.send(f"✅ Location set to coordinates: **{latitude}, {longitude}**")
-                
-            except ValueError:
-                await ctx.send("❌ Invalid coordinates. Please use numbers for latitude and longitude.")
-                return
+@client.group(name='region')
+async def region_group(ctx):
+    """Manage region monitoring"""
+    if ctx.invoked_subcommand is None:
+        targets = db.get_monitoring_targets(ctx.channel.id)
+        region_targets = [t for t in targets if t['target_type'] == 'region']
+        
+        if region_targets:
+            regions = [t['target_name'] for t in region_targets]
+            await ctx.send(f"**Monitored regions:** {', '.join(regions)}\nUse `!region add <name>` or `!region remove <name>`")
         else:
-            await ctx.send("❌ Invalid format. Use either:\n"
-                          "`!location <region_name>` or `!location <latitude> <longitude>`")
+            await ctx.send("No regions being monitored. Use `!region add <name>` to add one.")
+
+
+@region_group.command(name='add')
+async def add_region(ctx, region_name: str):
+    """Add a region to monitor"""
+    try:
+        region = await find_region_by_name(region_name)
+        db.add_monitoring_target(ctx.channel.id, 'region', region['name'])
+        await ctx.send(f"✅ Added region: **{region['name']}**")
+    except Exception as e:
+        await ctx.send(f"❌ Error adding region: {str(e)}")
+
+
+@region_group.command(name='remove')
+async def remove_region(ctx, region_name: str):
+    """Remove a region from monitoring"""
+    try:
+        region = await find_region_by_name(region_name)
+        db.remove_monitoring_target(ctx.channel.id, 'region', region['name'])
+        await ctx.send(f"✅ Removed region: **{region['name']}**")
+    except Exception as e:
+        await ctx.send(f"❌ Error removing region: {str(e)}")
+
+
+@client.group(name='latlong')
+async def latlong_group(ctx):
+    """Manage lat/lon coordinate monitoring"""
+    if ctx.invoked_subcommand is None:
+        targets = db.get_monitoring_targets(ctx.channel.id)
+        latlong_targets = [t for t in targets if t['target_type'] == 'latlong']
+        
+        if latlong_targets:
+            coords = [t['target_name'] for t in latlong_targets]
+            await ctx.send(f"**Monitored coordinates:** {', '.join(coords)}\nUse `!latlong add <lat> <lon> <radius>` or `!latlong remove <lat> <lon>`")
+        else:
+            await ctx.send("No coordinates being monitored. Use `!latlong add <lat> <lon> <radius>` to add some.")
+
+
+@latlong_group.command(name='add')
+async def add_latlong(ctx, latitude: float, longitude: float, radius: int):
+    """Add lat/lon coordinates to monitor"""
+    try:
+        if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+            await ctx.send("❌ Invalid coordinates. Latitude must be -90 to 90, longitude -180 to 180")
+            return
+        
+        if radius < 1 or radius > 100:
+            await ctx.send("❌ Radius must be between 1 and 100 miles")
+            return
+        
+        target_name = f"{latitude},{longitude},{radius}"
+        db.add_monitoring_target(ctx.channel.id, 'latlong', target_name)
+        await ctx.send(f"✅ Added coordinates: **{latitude}, {longitude}** ({radius} mile radius)")
+    except Exception as e:
+        await ctx.send(f"❌ Error adding coordinates: {str(e)}")
+
+
+@latlong_group.command(name='remove')
+async def remove_latlong(ctx, latitude: float, longitude: float):
+    """Remove lat/lon coordinates from monitoring"""
+    try:
+        # Find matching target (any radius)
+        targets = db.get_monitoring_targets(ctx.channel.id)
+        latlong_targets = [t for t in targets if t['target_type'] == 'latlong']
+        
+        matching_target = None
+        for target in latlong_targets:
+            parts = target['target_name'].split(',')
+            if len(parts) >= 2 and float(parts[0]) == latitude and float(parts[1]) == longitude:
+                matching_target = target
+                break
+        
+        if not matching_target:
+            await ctx.send(f"❌ Coordinates {latitude}, {longitude} not found in monitoring list")
+            return
+        
+        db.remove_monitoring_target(ctx.channel.id, 'latlong', matching_target['target_name'])
+        await ctx.send(f"✅ Removed coordinates: **{latitude}, {longitude}**")
+    except Exception as e:
+        await ctx.send(f"❌ Error removing coordinates: {str(e)}")
+
+
+@client.group(name='location')
+async def location_group(ctx):
+    """Manage individual pinball location monitoring"""
+    if ctx.invoked_subcommand is None:
+        targets = db.get_monitoring_targets(ctx.channel.id)
+        location_targets = [t for t in targets if t['target_type'] == 'location']
+        
+        if location_targets:
+            locations = [t['target_name'] for t in location_targets]
+            await ctx.send(f"**Monitored locations:** {', '.join(locations)}\nUse `!location add <name>` or `!location remove <name>`")
+        else:
+            await ctx.send("No individual locations being monitored. Use `!location add <name>` to add one.")
+
+
+@location_group.command(name='add')
+async def add_location(ctx, *, location_name: str):
+    """Add a specific pinball location to monitor"""
+    try:
+        # Search for the location
+        matching_locations = await search_location_by_name(location_name)
+        
+        if not matching_locations:
+            await ctx.send(f"❌ No locations found matching '{location_name}'")
+            return
+        
+        if len(matching_locations) == 1:
+            location = matching_locations[0]
+            target_data = f"{location['id']}:{location['region_name']}"
+            db.add_monitoring_target(ctx.channel.id, 'location', location['name'], target_data)
+            await ctx.send(f"✅ Added location: **{location['name']}** (in {location['region_name']})")
+        else:
+            # Multiple matches - show options
+            message = f"Multiple locations found for '{location_name}':\n"
+            for i, location in enumerate(matching_locations[:10]):
+                message += f"{i+1}. **{location['name']}** (in {location['region_name']})\n"
+            
+            if len(matching_locations) > 10:
+                message += f"... and {len(matching_locations) - 10} more"
+            
+            message += "\nPlease be more specific with the location name."
+            await ctx.send(message)
             
     except Exception as e:
-        await ctx.send(f"❌ Error setting location: {str(e)}")
+        await ctx.send(f"❌ Error adding location: {str(e)}")
 
 
-@client.command(name='radius')
-async def set_radius(ctx, miles: int):
-    """Set search radius in miles (only used with lat/lon coordinates)"""
-    if miles < 1 or miles > 100:
-        await ctx.send("❌ Radius must be between 1 and 100 miles")
-        return
-    
+@location_group.command(name='remove')
+async def remove_location(ctx, *, location_name: str):
+    """Remove a specific pinball location from monitoring"""
     try:
-        db.update_channel_config(ctx.channel.id, ctx.guild.id, radius_miles=miles)
-        await ctx.send(f"✅ Search radius set to {miles} miles")
+        db.remove_monitoring_target(ctx.channel.id, 'location', location_name)
+        await ctx.send(f"✅ Removed location: **{location_name}**")
     except Exception as e:
-        await ctx.send(f"❌ Error setting radius: {str(e)}")
+        await ctx.send(f"❌ Error removing location: {str(e)}")
+
+
 
 
 @client.command(name='interval')
@@ -162,27 +248,49 @@ async def set_notifications(ctx, notification_type: str):
 
 @client.command(name='status')
 async def status(ctx):
-    """Show current channel configuration"""
+    """Show current channel configuration and monitoring targets"""
     config = db.get_channel_config(ctx.channel.id)
+    targets = db.get_monitoring_targets(ctx.channel.id)
 
-    if not config:
-        await ctx.send("❌ No configuration found for this channel. Use `!location` to set up monitoring.")
+    if not config and not targets:
+        await ctx.send("❌ No configuration found for this channel. Use `!region add`, `!latlong add`, or `!location add` to set up monitoring.")
         return
 
     status_msg = "**Channel Configuration:**\n"
     
-    # Show location info
-    if config.get('region_name'):
-        status_msg += f"📍 Region: **{config['region_name']}**\n"
-    elif config.get('latitude') and config.get('longitude'):
-        status_msg += f"📍 Coordinates: **{config['latitude']}, {config['longitude']}**\n"
-        status_msg += f"📏 Radius: {config['radius_miles']} miles\n"
-    else:
-        status_msg += "📍 Location: Not set\n"
+    # Show monitoring targets
+    region_targets = [t for t in targets if t['target_type'] == 'region']
+    latlong_targets = [t for t in targets if t['target_type'] == 'latlong']
+    location_targets = [t for t in targets if t['target_type'] == 'location']
     
-    status_msg += f"⏱️ Poll Interval: {config['poll_rate_minutes']} minutes\n"
-    status_msg += f"🔔 Notifications: {config['notification_types']}\n"
-    status_msg += f"▶️ Status: {'Active' if config['is_active'] else 'Inactive'}\n"
+    if region_targets:
+        regions = [t['target_name'] for t in region_targets]
+        status_msg += f"🌍 **Regions:** {', '.join(regions)}\n"
+    
+    if latlong_targets:
+        coords = []
+        for target in latlong_targets:
+            parts = target['target_name'].split(',')
+            if len(parts) >= 3:
+                coords.append(f"{parts[0]}, {parts[1]} ({parts[2]}mi)")
+        status_msg += f"📍 **Coordinates:** {', '.join(coords)}\n"
+    
+    if location_targets:
+        locations = [t['target_name'] for t in location_targets]
+        status_msg += f"🏢 **Locations:** {', '.join(locations)}\n"
+    
+    if not (region_targets or latlong_targets or location_targets):
+        status_msg += "📍 **Monitoring:** Nothing configured\n"
+    
+    # Show general settings
+    if config:
+        status_msg += f"⏱️ **Poll Interval:** {config['poll_rate_minutes']} minutes\n"
+        status_msg += f"🔔 **Notifications:** {config['notification_types']}\n"
+        status_msg += f"▶️ **Status:** {'Active' if config['is_active'] else 'Inactive'}\n"
+    else:
+        status_msg += f"⏱️ **Poll Interval:** 60 minutes (default)\n"
+        status_msg += f"🔔 **Notifications:** machines (default)\n"
+        status_msg += f"▶️ **Status:** Inactive\n"
 
     await ctx.send(status_msg)
 
@@ -190,28 +298,28 @@ async def status(ctx):
 @client.command(name='start')
 async def start_monitoring(ctx):
     """Start monitoring pinball machines for this channel"""
-    config = db.get_channel_config(ctx.channel.id)
-
-    if not config:
-        await ctx.send("❌ No configuration found. Use `!location <region_name>` to set up monitoring first.")
-        return
-
-    # Check if we have either a region or valid coordinates
-    has_region = config.get('region_name') is not None
-    has_coords = (config.get('latitude') is not None and config.get('longitude') is not None)
+    targets = db.get_monitoring_targets(ctx.channel.id)
     
-    if not has_region and not has_coords:
-        await ctx.send("❌ Location not configured. Use `!location <region_name>` or `!location <lat> <lon>` first.")
+    if not targets:
+        await ctx.send("❌ No monitoring targets configured. Use `!region add`, `!latlong add`, or `!location add` to set up monitoring first.")
         return
 
-    if config['is_active']:
+    config = db.get_channel_config(ctx.channel.id)
+    if config and config['is_active']:
         await ctx.send("✅ Monitoring is already active for this channel.")
         return
 
     try:
-        db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
-        await ctx.send("✅ Started monitoring pinball machines! I'll check for changes every "
-                      f"{config['poll_rate_minutes']} minutes.")
+        # Create config if it doesn't exist
+        if not config:
+            db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
+            poll_rate = 60  # default
+        else:
+            db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
+            poll_rate = config['poll_rate_minutes']
+        
+        target_count = len(targets)
+        await ctx.send(f"✅ Started monitoring {target_count} target(s)! I'll check for changes every {poll_rate} minutes.")
     except Exception as e:
         await ctx.send(f"❌ Error starting monitoring: {str(e)}")
 
@@ -234,44 +342,51 @@ async def stop_monitoring(ctx):
 
 @client.command(name='check')
 async def check_now(ctx):
-    """Immediately check for machine changes (bypasses scheduled polling)"""
-    config = db.get_channel_config(ctx.channel.id)
+    """Immediately check for machine changes across all monitoring targets"""
+    targets = db.get_monitoring_targets(ctx.channel.id)
     
-    if not config:
-        await ctx.send("❌ No configuration found. Use `!location <region_name>` to set up monitoring first.")
-        return
-    
-    # Check if we have either a region or valid coordinates
-    has_region = config.get('region_name') is not None
-    has_coords = (config.get('latitude') is not None and config.get('longitude') is not None)
-    
-    if not has_region and not has_coords:
-        await ctx.send("❌ Location not configured. Use `!location <region_name>` or `!location <lat> <lon>` first.")
+    if not targets:
+        await ctx.send("❌ No monitoring targets configured. Use `!region add`, `!latlong add`, or `!location add` to set up monitoring first.")
         return
     
     try:
-        await ctx.send("🔍 Checking for machine changes...")
+        await ctx.send("🔍 Checking for machine changes across all targets...")
         
         # Import the functions we need
-        from api import fetch_region_machines, fetch_machines_for_location
+        from api import fetch_region_machines, fetch_machines_for_location, fetch_location_machines
         
-        # Fetch current machines - either by region or lat/lon
-        if config.get('region_name'):
-            machines = await fetch_region_machines(config['region_name'])
-            location_desc = f"region **{config['region_name']}**"
-        else:
-            machines = await fetch_machines_for_location(
-                config['latitude'], 
-                config['longitude'], 
-                config['radius_miles']
-            )
-            location_desc = f"coordinates **{config['latitude']}, {config['longitude']}** ({config['radius_miles']} mile radius)"
+        all_machines = []
+        target_descriptions = []
+        
+        # Fetch from all targets
+        for target in targets:
+            if target['target_type'] == 'region':
+                machines = await fetch_region_machines(target['target_name'])
+                target_descriptions.append(f"region **{target['target_name']}**")
+                all_machines.extend(machines)
+                
+            elif target['target_type'] == 'latlong':
+                parts = target['target_name'].split(',')
+                if len(parts) >= 3:
+                    lat, lon, radius = float(parts[0]), float(parts[1]), int(parts[2])
+                    machines = await fetch_machines_for_location(lat, lon, radius)
+                    target_descriptions.append(f"coordinates **{lat}, {lon}** ({radius}mi)")
+                    all_machines.extend(machines)
+                    
+            elif target['target_type'] == 'location':
+                if target['target_data']:
+                    location_id, region_name = target['target_data'].split(':')
+                    machines = await fetch_location_machines(int(location_id), region_name)
+                    target_descriptions.append(f"location **{target['target_name']}**")
+                    all_machines.extend(machines)
         
         # Update tracking and detect changes
-        db.update_machine_tracking(ctx.channel.id, machines)
+        db.update_machine_tracking(ctx.channel.id, all_machines)
         
         # Check for notifications
         notifications = db.get_pending_notifications(ctx.channel.id)
+        
+        target_summary = f"{len(targets)} target(s): {', '.join(target_descriptions)}"
         
         if notifications:
             # Send the notifications using monitor's logic
@@ -280,7 +395,7 @@ async def check_now(ctx):
             added_count = len([n for n in notifications if n['change_type'] == 'added'])
             removed_count = len([n for n in notifications if n['change_type'] == 'removed'])
             
-            summary = f"✅ Found {len(machines)} machines in {location_desc}. "
+            summary = f"✅ Found {len(all_machines)} machines across {target_summary}. "
             if added_count or removed_count:
                 changes = []
                 if added_count:
@@ -293,7 +408,7 @@ async def check_now(ctx):
             
             await ctx.send(summary)
         else:
-            await ctx.send(f"✅ Found {len(machines)} machines in {location_desc}. No changes since last check.")
+            await ctx.send(f"✅ Found {len(all_machines)} machines across {target_summary}. No changes since last check.")
         
     except Exception as e:
         await ctx.send(f"❌ Error checking for changes: {str(e)}")
@@ -305,7 +420,7 @@ async def test_simulation(ctx):
     config = db.get_channel_config(ctx.channel.id)
 
     if not config:
-        await ctx.send("❌ No configuration found. Set up monitoring first with `!location <region_name>`.")
+        await ctx.send("❌ No configuration found. Set up monitoring first with `!region add <name>`.")
         return
 
     try:

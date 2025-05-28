@@ -3,12 +3,13 @@
 A Python Discord bot that continuously monitors the pinballmap.com API for changes in pinball machine locations and automatically posts updates to configured Discord channels.
 
 ## Features
-- **Automated Monitoring**: Background polling of pinballmap.com API at configurable intervals
-- **Multi-Channel Support**: Each Discord channel can monitor different locations independently
-- **Flexible Notifications**: Configure channels to track machine additions/removals, comments, or both
-- **Customizable Search**: Set custom location center point and search radius per channel
-- **Persistent Configuration**: All settings and tracking data survive bot restarts
-- **Real-Time Updates**: Instant Discord notifications when changes are detected
+- **Multiple Target Monitoring**: Monitor regions, coordinates, and individual venues simultaneously
+- **Global Region Support**: Access to 98 pinball regions worldwide with smart search
+- **Individual Venue Tracking**: Monitor specific pinball locations like "Bender Bar" across all regions
+- **Coordinate-Based Areas**: Custom lat/lon monitoring with configurable radius
+- **Multi-Channel Support**: Each Discord channel can monitor different combinations independently
+- **Real-Time Updates**: Instant notifications when machines are added or removed
+- **Flexible Configuration**: Mix and match any combination of monitoring targets
 
 ## Setup
 1. **Prerequisites**: Python 3.8+ installed
@@ -33,19 +34,28 @@ python bot.py
 ```
 
 ### Configuration Commands
-- `!configure location <lat> <lon>` - Set search center point
-- `!configure radius <miles>` - Set search radius (default: 25 miles)
-- `!configure poll_rate <minutes>` - Set polling interval (default: 60 minutes, minimum: 15)
-- `!configure notifications <type>` - Set notification types: `machines`, `comments`, or `all`
-- `!start` - Begin monitoring for this channel
+
+**Multiple Target Monitoring:**
+- `!region add <name>` / `!region remove <name>` - Monitor entire pinball regions
+- `!latlong add <lat> <lon> <radius>` / `!latlong remove <lat> <lon>` - Monitor coordinate areas
+- `!location add <name>` / `!location remove <name>` - Monitor specific pinball venues
+
+**General Commands:**
+- `!regions` - List all available pinball regions
+- `!interval <minutes>` - Set polling interval (minimum 15 minutes)
+- `!notifications <type>` - Set notification types (machines, comments, all)
+- `!status` - Show current configuration and all monitored targets
+- `!start` - Start monitoring all configured targets
 - `!stop` - Stop monitoring for this channel
-- `!status` - View current channel configuration
-- `!machines` - Manual list of current machines in area
+- `!check` - Immediately check for changes across all targets
+- `!test` - Run 30-second simulation for testing
 
 ### Example Setup
 ```
-!configure location 30.2672 -97.7431    # Austin, TX coordinates
-!configure radius 30                      # 30 mile radius
-!configure notifications machines         # Only machine additions/removals
-!start                                   # Begin monitoring
+!region add austin                       # Monitor Austin region
+!region add montreal                     # Add Montreal region
+!latlong add 40.7128 -74.0060 15        # Add NYC area with 15mi radius
+!location add "Bender Bar"               # Add specific venue
+!interval 30                             # Check every 30 minutes
+!start                                   # Begin monitoring all targets
 ```

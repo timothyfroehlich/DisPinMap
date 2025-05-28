@@ -23,20 +23,30 @@ class Database:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             
-            # Channel configurations table
+            # Channel configurations table (general settings only)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS channel_configs (
                     channel_id INTEGER PRIMARY KEY,
                     guild_id INTEGER NOT NULL,
-                    region_name TEXT,
-                    latitude REAL,
-                    longitude REAL,
-                    radius_miles INTEGER DEFAULT 25,
                     poll_rate_minutes INTEGER DEFAULT 60,
                     notification_types TEXT DEFAULT 'machines',
                     is_active BOOLEAN DEFAULT FALSE,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Monitoring targets table - supports multiple targets per channel
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS monitoring_targets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    channel_id INTEGER NOT NULL,
+                    target_type TEXT NOT NULL, -- 'region', 'latlong', 'location'
+                    target_name TEXT NOT NULL, -- region name, "lat,lon,radius", or location name
+                    target_data TEXT, -- JSON for additional data if needed
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (channel_id) REFERENCES channel_configs (channel_id),
+                    UNIQUE (channel_id, target_type, target_name)
                 )
             """)
             
@@ -148,8 +158,12 @@ class Database:
             cursor = conn.cursor()
             
             cursor.execute("""
-                SELECT * FROM channel_configs WHERE is_active = TRUE
-                AND (region_name IS NOT NULL OR (latitude IS NOT NULL AND longitude IS NOT NULL))
+                SELECT cc.* FROM channel_configs cc
+                WHERE cc.is_active = TRUE
+                AND EXISTS (
+                    SELECT 1 FROM monitoring_targets mt 
+                    WHERE mt.channel_id = cc.channel_id
+                )
             """)
             
             return [dict(row) for row in cursor.fetchall()]
@@ -264,4 +278,51 @@ class Database:
                 WHERE id IN ({placeholders})
             """, change_ids)
             
+            conn.commit()
+    
+    def add_monitoring_target(self, channel_id: int, target_type: str, target_name: str, target_data: str = None):
+        """Add a monitoring target for a channel"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    INSERT INTO monitoring_targets (channel_id, target_type, target_name, target_data)
+                    VALUES (?, ?, ?, ?)
+                """, (channel_id, target_type, target_name, target_data))
+                conn.commit()
+            except sqlite3.IntegrityError:
+                # Target already exists
+                raise Exception(f"Target '{target_name}' of type '{target_type}' is already being monitored")
+    
+    def remove_monitoring_target(self, channel_id: int, target_type: str, target_name: str):
+        """Remove a monitoring target for a channel"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                DELETE FROM monitoring_targets 
+                WHERE channel_id = ? AND target_type = ? AND target_name = ?
+            """, (channel_id, target_type, target_name))
+            
+            if cursor.rowcount == 0:
+                raise Exception(f"Target '{target_name}' of type '{target_type}' not found")
+            
+            conn.commit()
+    
+    def get_monitoring_targets(self, channel_id: int) -> List[Dict[str, Any]]:
+        """Get all monitoring targets for a channel"""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT * FROM monitoring_targets WHERE channel_id = ? ORDER BY target_type, target_name
+            """, (channel_id,))
+            
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def clear_monitoring_targets(self, channel_id: int):
+        """Remove all monitoring targets for a channel"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM monitoring_targets WHERE channel_id = ?", (channel_id,))
             conn.commit()

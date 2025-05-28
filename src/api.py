@@ -146,6 +146,65 @@ async def fetch_region_machines(region_name: str) -> List[Dict[str, Any]]:
         raise Exception(f"Failed to fetch machines from region '{region_name}': {e}")
 
 
+async def search_location_by_name(location_name: str) -> List[Dict[str, Any]]:
+    """Search for specific pinball locations by name across all regions"""
+    try:
+        regions = await get_all_regions()
+        matching_locations = []
+        location_name_lower = location_name.lower().strip()
+        
+        # Search through all regions for matching location names
+        for region in regions:
+            try:
+                response = requests.get(f'https://pinballmap.com/api/v1/region/{region["name"]}/locations.json')
+                response.raise_for_status()
+                locations = response.json()['locations']
+                
+                for location in locations:
+                    if location_name_lower in location.get('name', '').lower():
+                        location['region_name'] = region['name']
+                        matching_locations.append(location)
+                        
+            except requests.RequestException:
+                # Skip this region if we can't fetch data
+                continue
+        
+        return matching_locations
+    except Exception as e:
+        raise Exception(f"Failed to search for location '{location_name}': {e}")
+
+
+async def fetch_location_machines(location_id: int, region_name: str) -> List[Dict[str, Any]]:
+    """Fetch machines from a specific location"""
+    try:
+        response = requests.get(f'https://pinballmap.com/api/v1/location/{location_id}/machine_details.json')
+        response.raise_for_status()
+        machines_data = response.json()['machines']
+        
+        # Get location info
+        location_response = requests.get(f'https://pinballmap.com/api/v1/region/{region_name}/locations.json')
+        location_response.raise_for_status()
+        locations = location_response.json()['locations']
+        
+        location_info = next((loc for loc in locations if loc['id'] == location_id), None)
+        location_name = location_info['name'] if location_info else f"Location {location_id}"
+        
+        all_machines = []
+        for machine in machines_data:
+            all_machines.append({
+                'location_id': location_id,
+                'location_name': location_name,
+                'machine_id': machine['id'],
+                'machine_name': machine.get('name', 'Unknown'),
+                'manufacturer': machine.get('manufacturer'),
+                'year': machine.get('year')
+            })
+        
+        return all_machines
+    except requests.RequestException as e:
+        raise Exception(f"Failed to fetch machines from location {location_id}: {e}")
+
+
 async def fetch_austin_machines() -> Dict[str, Any]:
     """Fetch machines from Austin region (for compatibility)"""
     try:

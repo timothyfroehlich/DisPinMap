@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from discord.ext import tasks
 from database import Database
-from api import fetch_machines_for_location, fetch_region_machines
+from api import fetch_machines_for_location, fetch_region_machines, fetch_location_machines
 
 
 class MachineMonitor:
@@ -74,28 +74,43 @@ class MachineMonitor:
             return False
     
     async def _poll_channel(self, config: Dict[str, Any]):
-        """Poll a single channel for machine changes"""
+        """Poll a single channel for machine changes across all its targets"""
         try:
-            # Fetch current machines - either by region or lat/lon
-            if config.get('region_name'):
-                machines = await fetch_region_machines(config['region_name'])
-            elif config.get('latitude') and config.get('longitude'):
-                machines = await fetch_machines_for_location(
-                    config['latitude'], 
-                    config['longitude'], 
-                    config['radius_miles']
-                )
-            else:
-                print(f"Channel {config['channel_id']} has no valid location configuration")
+            channel_id = config['channel_id']
+            targets = self.db.get_monitoring_targets(channel_id)
+            
+            if not targets:
+                print(f"Channel {channel_id} has no monitoring targets")
                 return
             
+            all_machines = []
+            
+            # Fetch from all targets
+            for target in targets:
+                if target['target_type'] == 'region':
+                    machines = await fetch_region_machines(target['target_name'])
+                    all_machines.extend(machines)
+                    
+                elif target['target_type'] == 'latlong':
+                    parts = target['target_name'].split(',')
+                    if len(parts) >= 3:
+                        lat, lon, radius = float(parts[0]), float(parts[1]), int(parts[2])
+                        machines = await fetch_machines_for_location(lat, lon, radius)
+                        all_machines.extend(machines)
+                        
+                elif target['target_type'] == 'location':
+                    if target['target_data']:
+                        location_id, region_name = target['target_data'].split(':')
+                        machines = await fetch_location_machines(int(location_id), region_name)
+                        all_machines.extend(machines)
+            
             # Update tracking and detect changes
-            self.db.update_machine_tracking(config['channel_id'], machines)
+            self.db.update_machine_tracking(channel_id, all_machines)
             
             # Send notifications
-            notifications = self.db.get_pending_notifications(config['channel_id'])
-            if notifications and config['notification_types'] in ['machines', 'all']:
-                await self._send_notifications(config['channel_id'], notifications)
+            notifications = self.db.get_pending_notifications(channel_id)
+            if notifications and config.get('notification_types', 'machines') in ['machines', 'all']:
+                await self._send_notifications(channel_id, notifications)
                 
         except Exception as e:
             print(f"Error polling channel {config['channel_id']}: {e}")

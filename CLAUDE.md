@@ -38,13 +38,20 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 - `asyncio` - For background tasks and scheduling
 
 ## Configuration Commands
-- `!configure location <lat> <lon>` - Set center point for machine searches
-- `!configure radius <miles>` - Set search radius in miles
-- `!configure poll_rate <minutes>` - Set polling interval (minimum 15 minutes)
-- `!configure notifications <type>` - Set notification types (machines, comments, all)
-- `!status` - Show current channel configuration
-- `!start` - Start monitoring for this channel
+**Multiple Target Monitoring:**
+- `!region add <name>` / `!region remove <name>` - Monitor entire pinball regions
+- `!latlong add <lat> <lon> <radius>` / `!latlong remove <lat> <lon>` - Monitor coordinate areas
+- `!location add <name>` / `!location remove <name>` - Monitor specific pinball venues
+
+**General Commands:**
+- `!regions` - List all available pinball regions
+- `!interval <minutes>` - Set polling interval (minimum 15 minutes)
+- `!notifications <type>` - Set notification types (machines, comments, all)
+- `!status` - Show current channel configuration and all monitored targets
+- `!start` - Start monitoring all configured targets
 - `!stop` - Stop monitoring for this channel
+- `!check` - Immediately check for changes across all targets
+- `!test` - Run 30-second simulation for testing
 
 ## Setup Requirements
 - Discord bot token in `.env` file
@@ -52,24 +59,24 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 - Channels configured via bot commands before monitoring starts
 
 ## Development Status
-**Last Updated**: May 26, 2025
+**Last Updated**: May 28, 2025
 
-**Completed**:
-- ✅ Basic Discord bot with `!hello`, `!ping`, `!machines` commands
-- ✅ Updated documentation with expanded feature requirements  
-- ✅ Database schema design and implementation (`database.py`)
-  - Channel configurations with location/radius/poll rate settings
-  - Machine tracking for change detection
-  - Notification queue system
-  - Data persistence across restarts
-
-**Next Steps** (see todo list):
+**✅ Completed Features**:
+- Complete multiple target monitoring system supporting regions, coordinates, and individual venues
+- Region-based location setting with 98 global pinball regions and fuzzy search
+- Individual pinball venue monitoring with cross-region search
+- Coordinate-based monitoring with custom radius settings
+- Modular architecture with focused files (src/, test/ directories)
 - Background polling system with configurable intervals
-- Configuration commands (`!configure`, `!start`, `!stop`, `!status`)
-- Integration of database with bot commands
 - Machine addition/removal detection and notifications
+- Configuration commands with add/remove functionality for each target type
+- Comprehensive status display and immediate check functionality
+- Test simulation system for development and demonstration
 
 **Current Architecture**:
-- `bot.py` - Main Discord bot with basic commands
-- `database.py` - Complete SQLite database layer
-- API integration working with pinballmap.com Austin region
+- `bot.py` - Simple launcher in root
+- `src/main.py` - Main Discord bot with command handlers
+- `src/database.py` - SQLite database with monitoring targets support
+- `src/api.py` - Pinball Map API integration with region/location search
+- `src/monitor.py` - Background monitoring and notification system
+- `test/test_simulation.py` - Testing and simulation tools
