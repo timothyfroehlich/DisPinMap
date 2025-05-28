@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from discord.ext import tasks
 from database import Database
-from api import fetch_machines_for_location
+from api import fetch_machines_for_location, fetch_region_machines
 
 
 class MachineMonitor:
@@ -76,12 +76,18 @@ class MachineMonitor:
     async def _poll_channel(self, config: Dict[str, Any]):
         """Poll a single channel for machine changes"""
         try:
-            # Fetch current machines for this location
-            machines = await fetch_machines_for_location(
-                config['latitude'], 
-                config['longitude'], 
-                config['radius_miles']
-            )
+            # Fetch current machines - either by region or lat/lon
+            if config.get('region_name'):
+                machines = await fetch_region_machines(config['region_name'])
+            elif config.get('latitude') and config.get('longitude'):
+                machines = await fetch_machines_for_location(
+                    config['latitude'], 
+                    config['longitude'], 
+                    config['radius_miles']
+                )
+            else:
+                print(f"Channel {config['channel_id']} has no valid location configuration")
+                return
             
             # Update tracking and detect changes
             self.db.update_machine_tracking(config['channel_id'], machines)

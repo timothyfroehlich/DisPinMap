@@ -28,6 +28,7 @@ class Database:
                 CREATE TABLE IF NOT EXISTS channel_configs (
                     channel_id INTEGER PRIMARY KEY,
                     guild_id INTEGER NOT NULL,
+                    region_name TEXT,
                     latitude REAL,
                     longitude REAL,
                     radius_miles INTEGER DEFAULT 25,
@@ -148,7 +149,7 @@ class Database:
             
             cursor.execute("""
                 SELECT * FROM channel_configs WHERE is_active = TRUE
-                AND latitude IS NOT NULL AND longitude IS NOT NULL
+                AND (region_name IS NOT NULL OR (latitude IS NOT NULL AND longitude IS NOT NULL))
             """)
             
             return [dict(row) for row in cursor.fetchall()]
