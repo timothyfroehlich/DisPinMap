@@ -14,6 +14,10 @@ class Database:
         self.db_path = db_path
         self.init_database()
     
+    def _get_connection(self):
+        """Get a database connection (for context manager use)"""
+        return sqlite3.connect(self.db_path)
+    
     def init_database(self):
         """Initialize database tables"""
         with sqlite3.connect(self.db_path) as conn:
