@@ -80,7 +80,11 @@ async def add_region(ctx, region_name: str):
     try:
         region = await find_region_by_name(region_name)
         db.add_monitoring_target(ctx.channel.id, 'region', region['name'])
-        await ctx.send(f"✅ Added region: **{region['name']}**")
+        
+        # Auto-start monitoring
+        db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
+        
+        await ctx.send(f"✅ Added region: **{region['name']}** - Monitoring started!")
     except Exception as e:
         await ctx.send(f"❌ Error adding region: {str(e)}")
 
@@ -124,7 +128,11 @@ async def add_latlong(ctx, latitude: float, longitude: float, radius: int):
         
         target_name = f"{latitude},{longitude},{radius}"
         db.add_monitoring_target(ctx.channel.id, 'latlong', target_name)
-        await ctx.send(f"✅ Added coordinates: **{latitude}, {longitude}** ({radius} mile radius)")
+        
+        # Auto-start monitoring
+        db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
+        
+        await ctx.send(f"✅ Added coordinates: **{latitude}, {longitude}** ({radius} mile radius) - Monitoring started!")
     except Exception as e:
         await ctx.send(f"❌ Error adding coordinates: {str(e)}")
 
@@ -183,7 +191,11 @@ async def add_location(ctx, *, location_name: str):
             location = matching_locations[0]
             target_data = f"{location['id']}:{location['region_name']}"
             db.add_monitoring_target(ctx.channel.id, 'location', location['name'], target_data)
-            await ctx.send(f"✅ Added location: **{location['name']}** (in {location['region_name']})")
+            
+            # Auto-start monitoring
+            db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
+            
+            await ctx.send(f"✅ Added location: **{location['name']}** (in {location['region_name']}) - Monitoring started!")
         else:
             # Multiple matches - show options
             message = f"Multiple locations found for '{location_name}':\n"

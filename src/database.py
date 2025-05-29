@@ -136,14 +136,10 @@ class Database:
             else:
                 # Create new config
                 cursor.execute("""
-                    INSERT INTO channel_configs (channel_id, guild_id, latitude, longitude, 
-                                               radius_miles, poll_rate_minutes, notification_types, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO channel_configs (channel_id, guild_id, poll_rate_minutes, notification_types, is_active)
+                    VALUES (?, ?, ?, ?, ?)
                 """, (
                     channel_id, guild_id,
-                    kwargs.get('latitude'),
-                    kwargs.get('longitude'),
-                    kwargs.get('radius_miles', 25),
                     kwargs.get('poll_rate_minutes', 60),
                     kwargs.get('notification_types', 'machines'),
                     kwargs.get('is_active', False)
