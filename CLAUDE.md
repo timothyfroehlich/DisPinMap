@@ -15,21 +15,22 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 - Set up Discord bot application at https://discord.com/developers/applications
 
 ## Core Features
-- **Background Monitoring**: Continuously polls pinballmap.com API at configurable intervals (default: 1 hour)
+- **Background Monitoring**: Continuously polls pinballmap.com user submissions API at configurable intervals (default: 1 hour)
 - **Multi-Channel Support**: Each Discord channel can have independent configuration
-- **Notification Types**: 
-  - Machine additions/removals
-  - Machine comments and condition updates
-- **Configurable Search**: Custom location center point and search radius per channel
-- **Data Persistence**: Retains all configurations and tracking data across bot restarts
-- **Change Detection**: Tracks machine states to identify additions, removals, and updates
+- **Submission Types**: 
+  - Machine additions/removals (new_lmx, remove_machine)
+  - Machine condition updates (new_condition)
+- **Efficient Targeting**: Direct coordinate-based and location-specific monitoring
+- **Data Persistence**: Retains all configurations and seen submission tracking across bot restarts
+- **Duplicate Prevention**: Tracks seen submission IDs to prevent repeat notifications
 
 ## Project Architecture
 - **Main bot file**: `bot.py` - Discord bot logic and command handlers
 - **Background Tasks**: Async polling system for continuous API monitoring
-- **Data Storage**: SQLite database for channel configs and machine state tracking
-- **API Integration**: pinballmap.com API integration with error handling and rate limiting
-- **Configuration System**: Per-channel settings for location, radius, poll rate, and notification preferences
+- **Data Storage**: SQLite database for channel configs and submission tracking
+- **API Integration**: pinballmap.com user submissions API with error handling and rate limiting
+- **Command System**: Shared command logic between Discord bot and CLI testing
+- **Configuration System**: Per-channel settings for targets, poll rate, and notification preferences
 
 ## Dependencies
 - `discord.py` - Discord API wrapper
@@ -38,19 +39,17 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 - `asyncio` - For background tasks and scheduling
 
 ## Configuration Commands
-**Multiple Target Monitoring:**
-- `!region add <name>` / `!region remove <name>` - Monitor entire pinball regions
+**Target Monitoring:**
 - `!latlong add <lat> <lon> <radius>` / `!latlong remove <lat> <lon>` - Monitor coordinate areas
-- `!location add <name>` / `!location remove <name>` - Monitor specific pinball venues
+- `!location add <id_or_name>` / `!location remove <id>` - Monitor specific locations by ID or name
 
 **General Commands:**
-- `!regions` - List all available pinball regions
 - `!interval <minutes>` - Set polling interval (minimum 15 minutes)
 - `!notifications <type>` - Set notification types (machines, comments, all)
 - `!status` - Show current channel configuration and all monitored targets
 - `!start` - Start monitoring all configured targets
 - `!stop` - Stop monitoring for this channel
-- `!check` - Immediately check for changes across all targets
+- `!check` - Immediately check for new submissions across all targets
 - `!test` - Run 30-second simulation for testing
 
 ## Setup Requirements
@@ -62,21 +61,22 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 **Last Updated**: May 28, 2025
 
 **✅ Completed Features**:
-- Complete multiple target monitoring system supporting regions, coordinates, and individual venues
-- Region-based location setting with 98 global pinball regions and fuzzy search
-- Individual pinball venue monitoring with cross-region search
-- Coordinate-based monitoring with custom radius settings
-- Modular architecture with focused files (src/, test/ directories)
-- Background polling system with configurable intervals
-- Machine addition/removal detection and notifications
-- Configuration commands with add/remove functionality for each target type
+- Efficient submission-based monitoring using pinballmap.com user submissions API
+- Coordinate-based monitoring with custom radius settings (uses list_within_range API)
+- Individual location monitoring by ID or name search (uses location API)
+- Modular architecture with shared command logic between Discord bot and CLI testing
+- Background polling system with configurable intervals and 24-hour lookback
+- Submission tracking to prevent duplicate notifications
+- Configuration commands with add/remove functionality for coordinates and locations
 - Comprehensive status display and immediate check functionality
-- Test simulation system for development and demonstration
+- CLI testing system for development without Discord server
 
 **Current Architecture**:
 - `bot.py` - Simple launcher in root
-- `src/main.py` - Main Discord bot with command handlers
-- `src/database.py` - SQLite database with monitoring targets support
-- `src/api.py` - Pinball Map API integration with region/location search
-- `src/monitor.py` - Background monitoring and notification system
+- `src/main.py` - Main Discord bot with command handlers (uses shared CommandHandler)
+- `src/commands.py` - Shared command logic for both Discord bot and CLI testing
+- `src/database.py` - SQLite database with submission tracking and monitoring targets
+- `src/api.py` - Pinball Map user submissions API integration with date filtering
+- `src/monitor.py` - Background monitoring and notification system using submissions
+- `test_cli.py` - CLI testing tool for command validation
 - `test/test_simulation.py` - Testing and simulation tools
