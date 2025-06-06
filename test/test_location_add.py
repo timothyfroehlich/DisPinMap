@@ -2,12 +2,8 @@
 Unit test for location add command with actual PinballMap API calls
 """
 
-import asyncio
 import unittest
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+from test_utils import run_async_test, find_location_in_suggestions
 
 from api import search_location_by_name
 
@@ -29,7 +25,7 @@ class TestLocationAdd(unittest.TestCase):
             self.assertEqual(location_data['id'], 26454)  # Known ID from API
             self.assertIn('austin pinball collective', location_data['name'].lower())
         
-        asyncio.run(run_test())
+        run_async_test(run_test)
 
     def test_lyon_fuzzy_search(self):
         """Test that searching for Lyon returns fuzzy match suggestions including Lyons Classic Pinball"""
@@ -42,16 +38,10 @@ class TestLocationAdd(unittest.TestCase):
             self.assertGreater(len(suggestions), 0)
             
             # Should include Lyons Classic Pinball (ID: 2477)
-            found_lyons = False
-            for suggestion in suggestions:
-                if suggestion['id'] == 2477:
-                    found_lyons = True
-                    self.assertEqual(suggestion['name'], 'Lyons Classic Pinball')
-                    break
-            
+            found_lyons = find_location_in_suggestions(suggestions, 2477, 'Lyons Classic Pinball')
             self.assertTrue(found_lyons, "Should find Lyons Classic Pinball in suggestions")
         
-        asyncio.run(run_test())
+        run_async_test(run_test)
 
     def test_district_multiple_results(self):
         """Test that searching for District returns multiple suggestions including District 82 Pinball"""
@@ -64,16 +54,10 @@ class TestLocationAdd(unittest.TestCase):
             self.assertGreaterEqual(len(suggestions), 5, "Should return at least 5 results for District search")
             
             # Should include District 82 Pinball (ID: 10406)
-            found_district82 = False
-            for suggestion in suggestions:
-                if suggestion['id'] == 10406:
-                    found_district82 = True
-                    self.assertEqual(suggestion['name'], 'District 82 Pinball')
-                    break
-            
+            found_district82 = find_location_in_suggestions(suggestions, 10406, 'District 82 Pinball')
             self.assertTrue(found_district82, "Should find District 82 Pinball in suggestions")
         
-        asyncio.run(run_test())
+        run_async_test(run_test)
 
 
 if __name__ == '__main__':

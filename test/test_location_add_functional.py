@@ -3,30 +3,11 @@ Functional tests for the full !location add command flow
 Tests the complete command handling including bot responses
 """
 
-import asyncio
 import unittest
-from unittest.mock import Mock
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+from test_utils import MockContext, run_async_test, verify_database_targets, count_suggestion_lines
 
 from commands import CommandHandler
 from database import Database
-
-
-class MockContext:
-    """Mock Discord message context for testing"""
-    def __init__(self, channel_id=12345, guild_id=67890):
-        self.channel = Mock()
-        self.channel.id = channel_id
-        self.guild = Mock()
-        self.guild.id = guild_id
-        self.messages = []
-    
-    async def send(self, message: str):
-        """Capture sent messages"""
-        self.messages.append(message)
 
 
 class TestLocationAddFunctional(unittest.TestCase):
@@ -56,14 +37,7 @@ class TestLocationAddFunctional(unittest.TestCase):
                 self.assertIn("Monitoring started!", final_message)
                 
                 # Verify location was added to database
-                try:
-                    targets = self.db.get_monitoring_targets(self.ctx.channel.id)
-                    location_targets = [t for t in targets if t['target_type'] == 'location']
-                    self.assertEqual(len(location_targets), 1)
-                    self.assertEqual(location_targets[0]['target_data'], '26454')
-                except Exception:
-                    # If database operations fail, the command handler would fail too
-                    pass
+                self.assertTrue(verify_database_targets(self.db, self.ctx.channel.id, 1, '26454'))
             else:
                 # Suggestion case (single result treated as suggestion)
                 self.assertIn("Austin Pinball Collective", final_message)
@@ -71,15 +45,9 @@ class TestLocationAddFunctional(unittest.TestCase):
                 self.assertIn("Did you mean one of these?", final_message)
                 
                 # Verify no location was added to database for suggestions
-                try:
-                    targets = self.db.get_monitoring_targets(self.ctx.channel.id)
-                    location_targets = [t for t in targets if t['target_type'] == 'location']
-                    self.assertEqual(len(location_targets), 0)
-                except Exception:
-                    # Tables might not exist in test DB, which is expected for suggestion cases
-                    pass
+                self.assertTrue(verify_database_targets(self.db, self.ctx.channel.id, 0))
         
-        asyncio.run(run_test())
+        run_async_test(run_test)
 
     def test_single_fuzzy_match_lyon(self):
         """Test !location add Lyon - should return suggestion for Lyons Classic Pinball"""
@@ -96,16 +64,10 @@ class TestLocationAddFunctional(unittest.TestCase):
             self.assertIn("ID: 2477", message)
             self.assertIn("Please use `!location add <ID>` with the ID of the correct location", message)
             
-            # Verify no location was added to database (if tables exist)
-            try:
-                targets = self.db.get_monitoring_targets(self.ctx.channel.id)
-                location_targets = [t for t in targets if t['target_type'] == 'location']
-                self.assertEqual(len(location_targets), 0)
-            except Exception:
-                # Tables might not exist in test DB, which is expected for suggestion cases
-                pass
+            # Verify no location was added to database
+            self.assertTrue(verify_database_targets(self.db, self.ctx.channel.id, 0))
         
-        asyncio.run(run_test())
+        run_async_test(run_test)
 
     def test_multiple_fuzzy_matches_district(self):
         """Test !location add District - should return multiple suggestions including District 82 Pinball"""
@@ -123,20 +85,13 @@ class TestLocationAddFunctional(unittest.TestCase):
             self.assertIn("Please use `!location add <ID>` with the ID of the correct location", message)
             
             # Should show multiple results (up to 5)
-            lines = message.split('\\n')  # Note: the message uses escaped newlines
-            suggestion_lines = [line for line in lines if line.strip() and any(line.strip().startswith(f'{i}.') for i in range(1, 6))]
-            self.assertGreaterEqual(len(suggestion_lines), 5, f"Should show at least 5 suggestions, got: {suggestion_lines}")
+            suggestion_count = count_suggestion_lines(message)
+            self.assertGreaterEqual(suggestion_count, 5, f"Should show at least 5 suggestions, got: {suggestion_count}")
             
-            # Verify no location was added to database (if tables exist)
-            try:
-                targets = self.db.get_monitoring_targets(self.ctx.channel.id)
-                location_targets = [t for t in targets if t['target_type'] == 'location']
-                self.assertEqual(len(location_targets), 0)
-            except Exception:
-                # Tables might not exist in test DB, which is expected for suggestion cases
-                pass
+            # Verify no location was added to database
+            self.assertTrue(verify_database_targets(self.db, self.ctx.channel.id, 0))
         
-        asyncio.run(run_test())
+        run_async_test(run_test)
 
 
 if __name__ == '__main__':
