@@ -91,7 +91,7 @@ def count_suggestion_lines(message: str) -> int:
     Returns:
         Number of numbered suggestion lines found
     """
-    lines = message.split('\\n')  # Bot messages use escaped newlines
+    lines = message.split('\n')  # Bot messages use actual newlines now
     suggestion_lines = [
         line for line in lines 
         if line.strip() and any(line.strip().startswith(f'{i}.') for i in range(1, 6))
