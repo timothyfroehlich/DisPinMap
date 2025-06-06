@@ -62,7 +62,7 @@ db.sqlite3
 db.sqlite3-journal
 
 # Project specific database
-pinball_bot.db
+*.db
 
 # Flask stuff:
 instance/
