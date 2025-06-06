@@ -40,11 +40,22 @@ async def on_ready():
     monitor.start_monitoring()
 
 @client.event
-async def on_command(ctx):
-    """Logs incoming commands"""
-    if ctx.command is None:
+async def on_message(message):
+    """Log commands immediately when received, before processing"""
+    if message.author == client.user:
         return
-    print(f"COMMAND RECEIVED from {ctx.author} in #{ctx.channel} (Guild: {ctx.guild}): {ctx.message.content}")
+    
+    # Check if it's a command and log it immediately
+    if message.content.startswith('!'):
+        print(f"COMMAND RECEIVED from {message.author} in #{message.channel} (Guild: {message.guild}): {message.content}")
+    
+    # Process the command
+    await client.process_commands(message)
+
+@client.event
+async def on_command(ctx):
+    """Command event handler"""
+    pass
 
 @client.event
 async def on_command_error(ctx, error):

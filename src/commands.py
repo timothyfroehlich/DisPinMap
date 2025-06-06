@@ -123,10 +123,10 @@ class CommandHandler:
                 elif status == 'suggestions':
                     suggestions = data
                     if suggestions:
-                        message = f"Location \'{location_input_stripped}\' not found directly. Did you mean one of these? (Up to 5 shown)\\n"
+                        message = f"Location '{location_input_stripped}' not found directly. Did you mean one of these? (Up to 5 shown)\n"
                         for i, loc in enumerate(suggestions):
-                            message += f"{i+1}. **{loc['name']}** (ID: {loc['id']})\\n"
-                        message += "\\nPlease use `!location add <ID>` with the ID of the correct location."
+                            message += f"{i+1}. **{loc['name']}** (ID: {loc['id']})\n"
+                        message += "\nPlease use `!location add <ID>` with the ID of the correct location."
                         await ctx.send(message)
                     else: # Should ideally be caught by \'not_found\', but as a fallback
                         await ctx.send(f"❌ No locations found matching \'{location_input_stripped}\'.")

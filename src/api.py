@@ -110,7 +110,7 @@ async def fetch_location_details(location_id: int) -> Dict[str, Any]:
         if 'errors' in data: # PinballMap API returns errors in a list for this endpoint
             error_message = data['errors'][0] if isinstance(data['errors'], list) and data['errors'] else str(data['errors'])
             raise Exception(f"Location details for {location_id} not found: {error_message}")
-        return data.get('location', {}) # The actual location data is under the 'location' key
+        return data # The location data is at the root level, not under a 'location' key
     except Exception as e:
         print(f"Error fetching location details for ID {location_id}: {e}")
         return {}
