@@ -7,19 +7,29 @@ from database import Database
 from monitor import MachineMonitor
 from commands import CommandHandler
 
-# Add test directory to path for test_simulation import
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'test'))
-from test_simulation import TestSimulation
+# Test simulation removed - no longer supported
 
 load_dotenv()
 
 # Bot setup
 intents = discord.Intents.default()
 intents.message_content = True
-client = commands.Bot(command_prefix='!', intents=intents)
+
+# Custom Context for logging
+class LoggingContext(commands.Context):
+    async def send(self, content=None, *, tts=False, embed=None, file=None, files=None, delete_after=None, nonce=None, allowed_mentions=None, reference=None, mention_author=None):
+        if content: # Log only if there is text content
+            print(f"BOT REPLY in #{self.channel} to {self.author}: {content}")
+        # Call the original send method
+        return await super().send(content=content, tts=tts, embed=embed, file=file, files=files, delete_after=delete_after, nonce=nonce, allowed_mentions=allowed_mentions, reference=reference, mention_author=mention_author)
+
+class LoggingBot(commands.Bot):
+    async def get_context(self, message, *, cls=LoggingContext):
+        return await super().get_context(message, cls=cls)
+
+client = LoggingBot(command_prefix='!', intents=intents)
 db = Database()
 monitor = MachineMonitor(client, db)
-test_sim = TestSimulation(client, db)
 command_handler = CommandHandler(db)
 
 
@@ -28,6 +38,32 @@ async def on_ready():
     print(f'{client.user} has connected to Discord!')
     # Start monitoring when bot is ready
     monitor.start_monitoring()
+
+@client.event
+async def on_command(ctx):
+    """Logs incoming commands"""
+    if ctx.command is None:
+        return
+    print(f"COMMAND RECEIVED from {ctx.author} in #{ctx.channel} (Guild: {ctx.guild}): {ctx.message.content}")
+
+@client.event
+async def on_command_error(ctx, error):
+    """Logs command errors and informs the user."""
+    if isinstance(error, commands.CommandNotFound):
+        print(f"COMMAND NOT FOUND from {ctx.author} in #{ctx.channel}: {ctx.message.content}")
+        # Optionally, send a message to the user, or just log it.
+        # await ctx.send(f"❌ Command not found: `{ctx.invoked_with}`")
+        return
+    elif isinstance(error, commands.MissingRequiredArgument):
+        # This is handled by specific command error handlers, but good to log here too.
+        print(f"COMMAND ERROR (Missing Arg) from {ctx.author} for `!{ctx.command.qualified_name}`: {error}")
+        # The specific command's error handler (e.g., add_location_error) will send the user-facing message.
+    elif isinstance(error, commands.CommandInvokeError):
+        print(f"COMMAND ERROR (Invoke) from {ctx.author} for `!{ctx.command.qualified_name}`: {error.original}")
+        await ctx.send(f"❌ An unexpected error occurred while running `!{ctx.command.qualified_name}`. Please check the logs or contact the admin.")
+    else:
+        print(f"COMMAND ERROR (Unhandled) from {ctx.author} for `!{ctx.command.qualified_name}`: {error}")
+        await ctx.send(f"❌ An unexpected error occurred: {error}")
 
 
 # Region commands removed - no longer supported
@@ -64,6 +100,13 @@ async def add_location(ctx, *, location_input: str):
     """Add a specific pinball location to monitor (by ID or name)"""
     await command_handler.handle_location_add(ctx, location_input)
 
+@add_location.error
+async def add_location_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("❌ You need to provide a location ID or name. Example: `!location add 1234` or `!location add \"Location Name\"`")
+    else:
+        await ctx.send(f"❌ An unexpected error occurred with `!location add`: {error}")
+
 
 @location_group.command(name='remove')
 async def remove_location(ctx, *, location_input: str):
@@ -79,7 +122,7 @@ async def set_poll_rate(ctx, minutes: int):
     if minutes < 15:
         await ctx.send("❌ Poll interval must be at least 15 minutes")
         return
-    
+
     try:
         db.update_channel_config(ctx.channel.id, ctx.guild.id, poll_rate_minutes=minutes)
         await ctx.send(f"✅ Poll interval set to {minutes} minutes")
@@ -90,7 +133,7 @@ async def set_poll_rate(ctx, minutes: int):
 @client.command(name='notifications')
 async def set_notifications(ctx, notification_type: str):
     """Set notification types
-    
+
     Examples:
     !notifications machines   (machine additions/removals only)
     !notifications comments   (condition updates only)
@@ -99,7 +142,7 @@ async def set_notifications(ctx, notification_type: str):
     if notification_type not in valid_types:
         await ctx.send(f"❌ Invalid notification type. Choose from: {', '.join(valid_types)}")
         return
-    
+
     try:
         db.update_channel_config(ctx.channel.id, ctx.guild.id, notification_types=notification_type)
         await ctx.send(f"✅ Notifications set to: **{notification_type}**")
@@ -117,7 +160,7 @@ async def status(ctx):
 async def start_monitoring(ctx):
     """Start monitoring pinball machines for this channel"""
     targets = db.get_monitoring_targets(ctx.channel.id)
-    
+
     if not targets:
         await ctx.send("❌ No monitoring targets configured. Use `!latlong add` or `!location add` to set up monitoring first.")
         return
@@ -135,7 +178,7 @@ async def start_monitoring(ctx):
         else:
             db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
             poll_rate = config['poll_rate_minutes']
-        
+
         target_count = len(targets)
         await ctx.send(f"✅ Started monitoring {target_count} target(s)! I'll check for changes every {poll_rate} minutes.")
     except Exception as e:
@@ -164,32 +207,7 @@ async def check_now(ctx):
     await command_handler.handle_check(ctx)
 
 
-@client.command(name='test')
-async def test_simulation(ctx):
-    """Run a 30-second simulation of machine changes for testing"""
-    config = db.get_channel_config(ctx.channel.id)
-
-    if not config:
-        await ctx.send("❌ No configuration found. Set up monitoring first with `!latlong add` or `!location add`.")
-        return
-
-    try:
-        # Temporarily ensure the channel is active for testing
-        original_status = config['is_active']
-        if not original_status:
-            db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
-
-        await ctx.send("🧪 Starting test simulation... This will run for 30 seconds!")
-        result = await test_sim.run_test_simulation(ctx.channel.id, 30)
-
-        # Restore original status
-        if not original_status:
-            db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=original_status)
-
-        print(result)  # Log the result
-
-    except Exception as e:
-        await ctx.send(f"❌ Test simulation failed: {str(e)}")
+# Test simulation command removed - no longer supported
 
 
 

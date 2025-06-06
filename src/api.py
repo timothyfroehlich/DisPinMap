@@ -161,30 +161,4 @@ async def search_location_by_name(location_name: str) -> Dict[str, Any]:
         return {'status': 'not_found', 'data': None}
 
 
-# Legacy function for compatibility (used in test simulation)
-async def fetch_austin_machines() -> Dict[str, Any]:
-    """Fetch submissions from Austin area (for compatibility with existing test code)"""
-    try:
-        # Austin coordinates
-        submissions = await fetch_submissions_for_coordinates(30.2672, -97.7431, 25)
-
-        # Convert to legacy format expected by test code
-        locations = []
-        seen_locations = set()
-
-        for submission in submissions:
-            location_id = submission.get('location_id')
-            if location_id and location_id not in seen_locations:
-                locations.append({
-                    'id': location_id,
-                    'name': submission.get('location_name', f'Location {location_id}'),
-                    'lat': submission.get('lat'),
-                    'lon': submission.get('lon'),
-                    'machine_count': 1  # Simplified
-                })
-                seen_locations.add(location_id)
-
-        return {'locations': locations}
-
-    except Exception as e:
-        raise Exception(f"Failed to fetch Austin submissions: {e}")
+# Legacy function removed - test simulation no longer supported
