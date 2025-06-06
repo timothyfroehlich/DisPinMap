@@ -27,7 +27,7 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 ## Project Architecture
 - **Main bot file**: `bot.py` - Discord bot logic and command handlers
 - **Background Tasks**: Async polling system for continuous API monitoring
-- **Data Storage**: SQLite database for channel configs and submission tracking
+- **Data Storage**: SQLAlchemy ORM with SQLite backend for channel configs and submission tracking
 - **API Integration**: pinballmap.com user submissions API with error handling and rate limiting
 - **Command System**: Shared command logic between Discord bot and CLI testing
 - **Configuration System**: Per-channel settings for targets, poll rate, and notification preferences
@@ -35,7 +35,7 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 ## Dependencies
 - `discord.py` - Discord API wrapper
 - `requests` - HTTP library for API calls
-- `sqlite3` - Database for persistent storage
+- `sqlalchemy` - Modern Python SQL toolkit and ORM for database operations
 - `asyncio` - For background tasks and scheduling
 
 ## Configuration Commands

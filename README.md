@@ -9,6 +9,9 @@ A Python Discord bot that continuously monitors the pinballmap.com API for chang
 - **Real-Time Updates**: Instant notifications when machines are added or removed
 - **Flexible Configuration**: Mix and match coordinate areas and specific locations
 
+## Recent Updates
+🔄 **Database Migration to SQLAlchemy**: We're migrating from raw SQLite to SQLAlchemy for better testability, cleaner code, and improved database handling. This migration enhances the development experience while maintaining full backward compatibility.
+
 ## Setup
 1. **Prerequisites**: Python 3.8+ installed
 2. **Clone and Install**:
