@@ -18,6 +18,8 @@ class MockContext:
         self.guild = Mock()
         self.guild.id = guild_id
         self.messages = []
+        # Alias for compatibility with different test expectations
+        self.sent_messages = self.messages
     
     async def send(self, message: str):
         """Capture sent messages"""

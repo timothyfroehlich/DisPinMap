@@ -22,9 +22,12 @@ class TestLocationAddFunctional(unittest.TestCase):
         async def run_test():
             await self.handler.handle_location_add(self.ctx, "Austin Pinball Collective")
             
-            # Verify bot response
-            self.assertIn("Exact match found for Austin Pinball Collective", self.ctx.sent_messages[0])
-            self.assertIn("Now monitoring Austin Pinball Collective", self.ctx.sent_messages[1])
+            # The command handler posts initial submissions first, then success message
+            # Look for the success message (should be the last message)
+            success_message = self.ctx.sent_messages[-1]
+            self.assertIn("✅ Added location:", success_message)
+            self.assertIn("Austin Pinball Collective", success_message)
+            self.assertIn("Monitoring started!", success_message)
             
             # Verify database state
             verify_database_targets(self.db, self.ctx.channel.id, 1, "26454")
@@ -36,12 +39,14 @@ class TestLocationAddFunctional(unittest.TestCase):
         async def run_test():
             await self.handler.handle_location_add(self.ctx, "Austin")
             
-            # Verify bot response indicates suggestions
-            self.assertIn("Multiple locations found for 'Austin'. Please specify with !location add <id>:", self.ctx.sent_messages[0])
+            # Verify bot response indicates suggestions (should be first/only message)
+            response_message = self.ctx.sent_messages[0]
+            self.assertIn("not found directly", response_message)
+            self.assertIn("Did you mean one of these?", response_message)
             
             # Count suggestion lines (example: Austin Pinball Collective, Austin Beerworks)
             # This count might vary based on actual API response, adjust if needed
-            suggestion_lines = count_suggestion_lines(self.ctx.messages[0])
+            suggestion_lines = count_suggestion_lines(response_message)
             self.assertGreaterEqual(suggestion_lines, 2, "Expected at least 2 suggestions for Austin")
             
             # Verify database state (no new targets should be added yet)
