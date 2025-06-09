@@ -3,9 +3,9 @@ Unit test for location add command with actual PinballMap API calls
 """
 
 import unittest
-from test_utils import run_async_test, find_location_in_suggestions
 
-from api import search_location_by_name
+from src.api import search_location_by_name
+from .test_utils import run_async_test, find_location_in_suggestions
 
 
 class TestLocationAdd(unittest.TestCase):

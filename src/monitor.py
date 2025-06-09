@@ -7,8 +7,12 @@ import sqlite3
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from discord.ext import tasks
-from database import Database
-from api import fetch_submissions_for_coordinates, fetch_submissions_for_location
+try:
+    from .database import Database
+    from .api import fetch_submissions_for_coordinates, fetch_submissions_for_location
+except ImportError:
+    from database import Database
+    from api import fetch_submissions_for_coordinates, fetch_submissions_for_location
 
 
 class MachineMonitor:

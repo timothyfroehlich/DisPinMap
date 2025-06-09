@@ -5,17 +5,13 @@ Tests that commands are logged immediately before processing.
 """
 
 import sys
-import os
 import asyncio
 import io
 from contextlib import redirect_stdout, redirect_stderr
 from unittest.mock import AsyncMock, patch, MagicMock
 
-# Add src directory to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-from database import Database
-from commands import CommandHandler
+from src.database import Database
+from src.commands import CommandHandler
 
 class MockChannel:
     def __init__(self, channel_id=999999999):
@@ -116,8 +112,7 @@ async def test_location_id_lookup():
     print("\n🧪 Testing location ID lookup...")
     
     # Test the API call that's failing
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-    from api import fetch_location_details
+    from src.api import fetch_location_details
     
     try:
         # Test with the failing ID from your example

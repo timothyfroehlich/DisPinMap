@@ -80,3 +80,7 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 - `src/monitor.py` - Background monitoring and notification system using submissions
 - `test_cli.py` - CLI testing tool for command validation
 - `test/test_simulation.py` - Testing and simulation tools
+
+## Development Guidelines
+- Use the typing library to keep things strongly typed
+- For significant changes, make sure that all tests pass before you finish up

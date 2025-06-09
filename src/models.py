@@ -4,7 +4,7 @@ Defines the database schema using SQLAlchemy ORM
 """
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from typing import Optional
@@ -38,6 +38,7 @@ class MonitoringTarget(Base):
     target_type = Column(String, nullable=False)  # 'latlong', 'location'
     target_name = Column(String, nullable=False)  # "lat,lon,radius" or location name
     target_data = Column(String)  # location_id for location targets
+    poll_rate_minutes = Column(Integer, default=60)  # Individual poll rate per target
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships

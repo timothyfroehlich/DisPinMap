@@ -3,16 +3,11 @@ Common utilities for testing location add functionality
 """
 
 import asyncio
-import sys
-import os
 from unittest.mock import Mock
 from typing import List, Dict, Any, Optional
 
-# Add src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-from commands import CommandHandler
-from database import Database
+from src.commands import CommandHandler
+from src.database import Database
 
 
 class MockContext:

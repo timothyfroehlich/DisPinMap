@@ -1,11 +1,16 @@
-import os
-import sys
-import discord
+import discord  # Assuming discord is used here, adjust if not
 from discord.ext import commands
 from dotenv import load_dotenv
-from database import Database
-from monitor import MachineMonitor
-from commands import CommandHandler
+import os  # Added for os.getenv
+
+try:
+    from .database import Database
+    from .monitor import MachineMonitor
+    from .commands import CommandHandler
+except ImportError:
+    from database import Database
+    from monitor import MachineMonitor
+    from commands import CommandHandler
 
 # Test simulation removed - no longer supported
 
@@ -44,11 +49,11 @@ async def on_message(message):
     """Log commands immediately when received, before processing"""
     if message.author == client.user:
         return
-    
+
     # Check if it's a command and log it immediately
     if message.content.startswith('!'):
         print(f"COMMAND RECEIVED from {message.author} in #{message.channel} (Guild: {message.guild}): {message.content}")
-    
+
     # Process the command
     await client.process_commands(message)
 
@@ -127,18 +132,17 @@ async def remove_location(ctx, *, location_input: str):
 
 
 
-@client.command(name='interval')
-async def set_poll_rate(ctx, minutes: int):
-    """Set polling interval in minutes (minimum 15)"""
-    if minutes < 15:
-        await ctx.send("❌ Poll interval must be at least 15 minutes")
-        return
-
-    try:
-        db.update_channel_config(ctx.channel.id, ctx.guild.id, poll_rate_minutes=minutes)
-        await ctx.send(f"✅ Poll interval set to {minutes} minutes")
-    except Exception as e:
-        await ctx.send(f"❌ Error setting poll interval: {str(e)}")
+@client.command(name='poll_rate')
+async def set_poll_rate(ctx, minutes: int, target_selector: str = None):
+    """Set polling rate for monitoring targets
+    
+    Usage:
+    !poll_rate 30           - Set all targets to 30 minutes
+    !poll_rate 30 all       - Set all targets to 30 minutes  
+    !poll_rate 45 3         - Set target #3 to 45 minutes
+    
+    Use !status to see target numbers"""
+    await command_handler.handle_poll_rate(ctx, minutes, target_selector)
 
 
 @client.command(name='notifications')

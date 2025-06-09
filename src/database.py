@@ -7,7 +7,10 @@ from sqlalchemy import create_engine, select, delete
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, Dict, List, Any
-from models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
+try:
+    from .models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
+except ImportError:
+    from models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
 
 
 class Database:
@@ -109,14 +112,15 @@ class Database:
             ]
     
     # Monitoring target methods
-    def add_monitoring_target(self, channel_id: int, target_type: str, target_name: str, target_data: str = None):
+    def add_monitoring_target(self, channel_id: int, target_type: str, target_name: str, target_data: str = None, poll_rate_minutes: int = 60):
         """Add a monitoring target for a channel"""
         with self.get_session() as session:
             target = MonitoringTarget(
                 channel_id=channel_id,
                 target_type=target_type,
                 target_name=target_name,
-                target_data=target_data
+                target_data=target_data,
+                poll_rate_minutes=poll_rate_minutes
             )
             session.add(target)
             
@@ -142,12 +146,12 @@ class Database:
             session.commit()
     
     def get_monitoring_targets(self, channel_id: int) -> List[Dict[str, Any]]:
-        """Get all monitoring targets for a channel"""
+        """Get all monitoring targets for a channel, ordered by ID for consistent numbering"""
         with self.get_session() as session:
             stmt = (
                 select(MonitoringTarget)
                 .where(MonitoringTarget.channel_id == channel_id)
-                .order_by(MonitoringTarget.target_type, MonitoringTarget.target_name)
+                .order_by(MonitoringTarget.id)
             )
             targets = session.execute(stmt).scalars().all()
             
@@ -158,6 +162,7 @@ class Database:
                     'target_type': target.target_type,
                     'target_name': target.target_name,
                     'target_data': target.target_data,
+                    'poll_rate_minutes': target.poll_rate_minutes,
                     'created_at': target.created_at
                 }
                 for target in targets
@@ -169,6 +174,28 @@ class Database:
             stmt = delete(MonitoringTarget).where(MonitoringTarget.channel_id == channel_id)
             session.execute(stmt)
             session.commit()
+    
+    def update_monitoring_target_poll_rate(self, target_id: int, poll_rate_minutes: int) -> bool:
+        """Update poll rate for a specific monitoring target"""
+        with self.get_session() as session:
+            target = session.get(MonitoringTarget, target_id)
+            if target:
+                target.poll_rate_minutes = poll_rate_minutes
+                session.commit()
+                return True
+            return False
+    
+    def update_channel_monitoring_targets_poll_rate(self, channel_id: int, poll_rate_minutes: int) -> int:
+        """Update poll rate for all monitoring targets in a channel. Returns number of targets updated."""
+        with self.get_session() as session:
+            stmt = select(MonitoringTarget).where(MonitoringTarget.channel_id == channel_id)
+            targets = session.execute(stmt).scalars().all()
+            
+            for target in targets:
+                target.poll_rate_minutes = poll_rate_minutes
+            
+            session.commit()
+            return len(targets)
     
     # Seen submissions methods
     def mark_submissions_seen(self, channel_id: int, submission_ids: List[int]):

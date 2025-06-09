@@ -3,15 +3,22 @@ Command logic for Discord Pinball Map Bot
 Extracted command handlers that can be used by both Discord bot and CLI test
 """
 
-from typing import List, Dict, Any, Protocol
-from database import Database
-from api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details
+import asyncio # For TimeoutError in confirmation
+from typing import List, Dict, Any, Protocol, Optional
+try:
+    from .database import Database
+    from .api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details
+except ImportError:
+    from database import Database
+    from api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details
 
 
 class MessageContext(Protocol):
     """Protocol for message context (Discord or CLI)"""
     channel: Any
     guild: Any
+    author: Any # Added for confirmation check
+    bot: Any    # Added for wait_for (access to bot.wait_for)
 
     async def send(self, message: str) -> None:
         """Send a message"""
@@ -180,51 +187,121 @@ class CommandHandler:
             await ctx.send("No individual locations being monitored. Use `location add <id_or_name>` to add one.")
 
     async def handle_status(self, ctx: MessageContext):
-        """Show status"""
+        """Show current monitoring status, including individual target poll rates."""
         config = self.db.get_channel_config(ctx.channel.id)
-        targets = self.db.get_monitoring_targets(ctx.channel.id)
+        targets = self.db.get_monitoring_targets(ctx.channel.id) # Fetches ordered by ID
 
-        if not config and not targets:
-            await ctx.send("❌ No configuration found for this channel. Use `latlong add` or `location add` to set up monitoring.")
+        status_msg = "**Channel Monitoring Status:**\n"
+
+        if config:
+            status_msg += f"▶️ **Overall Status:** {'Active' if config.get('is_active') else 'Inactive'}\n"
+            status_msg += f"🔔 **Notification Types:** {config.get('notification_types', 'machines (default)')}\n"
+        else:
+            status_msg += "▶️ **Overall Status:** Inactive (Channel not fully configured)\n"
+            status_msg += "🔔 **Notification Types:** machines (default)\n"
+
+        status_msg += f"\n**Monitoring Targets (Total: {len(targets)}):**\n"
+
+        if not targets:
+            status_msg += "No monitoring targets configured for this channel. Use `!location add` or `!latlong add` to start.\n"
+        else:
+            for i, target in enumerate(targets):
+                target_id_display = i + 1
+                target_type = target['target_type']
+                target_name_db = target['target_name']
+                target_data = target['target_data']
+                poll_rate = target['poll_rate_minutes']
+                
+                display_name = ""
+                if target_type == 'location':
+                    display_name = f"{target_name_db} (ID: {target_data})"
+                elif target_type == 'latlong':
+                    parts = target_name_db.split(',')
+                    if len(parts) == 3: # lat,lon,radius
+                        display_name = f"Coordinates {parts[0]},{parts[1]} (Radius: {parts[2]}mi)"
+                    else:
+                        display_name = target_name_db # Fallback
+                else:
+                    display_name = target_name_db
+
+                status_msg += f"{target_id_display}. {display_name} (Type: {target_type}, Poll: {poll_rate} min)\n"
+        
+        await ctx.send(status_msg)
+
+    async def handle_poll_rate(self, ctx: MessageContext, minutes: int, target_selector: Optional[str] = None):
+        """Handles the !poll_rate command logic."""
+        if minutes < 15:
+            await ctx.send("❌ Poll rate must be at least 15 minutes.")
             return
 
-        status_msg = "**Channel Configuration:**\n"
+        targets = self.db.get_monitoring_targets(ctx.channel.id)
+        # If target_selector is None (command was `!poll_rate <minutes>`), it defaults to "all"
+        effective_selector = target_selector.lower() if target_selector is not None else "all"
 
-        # Show monitoring targets
-        latlong_targets = [t for t in targets if t['target_type'] == 'latlong']
-        location_targets = [t for t in targets if t['target_type'] == 'location']
+        if effective_selector == "all":
+            if not targets:
+                # This matches the test case, though "No targets to update." might also be suitable.
+                await ctx.send(f"✅ Poll rate for all 0 targets set to {minutes} minutes.")
+                return
 
-        if latlong_targets:
-            coords = []
-            for target in latlong_targets:
-                parts = target['target_name'].split(',')
-                if len(parts) >= 3:
-                    coords.append(f"{parts[0]}, {parts[1]} ({parts[2]}mi)")
-            status_msg += f"📍 **Coordinates:** {', '.join(coords)}\n"
+            if len(targets) >= 5:
+                # Ensure bot and author are available on ctx for wait_for
+                if not hasattr(ctx, 'bot') or not hasattr(ctx.bot, 'wait_for') or not hasattr(ctx, 'author'):
+                    await ctx.send("⚠️ Cannot request confirmation due to a context issue. Update cancelled for safety.")
+                    return
 
-        if location_targets:
-            locations = []
-            for t in location_targets:
-                if t['target_data']:
-                    locations.append(f"{t['target_name']} (ID: {t['target_data']})")
-                else:
-                    locations.append(t['target_name'])
-            status_msg += f"🏢 **Locations:** {', '.join(locations)}\n"
+                await ctx.send(f"You are about to change the poll rate for {len(targets)} targets. Are you sure? (yes/no)")
+                try:
+                    def check(message):
+                        return message.author == ctx.author and \
+                               message.channel == ctx.channel and \
+                               message.content.lower() in ['yes', 'y', 'no', 'n']
 
-        if not (latlong_targets or location_targets):
-            status_msg += "📍 **Monitoring:** Nothing configured\n"
+                    reply_message = await ctx.bot.wait_for('message', timeout=30.0, check=check)
+                    
+                    if reply_message.content.lower() in ['no', 'n']:
+                        await ctx.send("Poll rate update cancelled.")
+                        return
+                    # If 'yes' or 'y', proceed
+                except asyncio.TimeoutError:
+                    await ctx.send("No confirmation received. Poll rate update cancelled.")
+                    return
+                except Exception as e: # Catch other potential errors with wait_for
+                    await ctx.send(f"An error occurred during confirmation: {e}. Update cancelled.")
+                    return
+            
+            num_updated = self.db.update_channel_monitoring_targets_poll_rate(ctx.channel.id, minutes)
+            await ctx.send(f"✅ Poll rate for all {num_updated} targets set to {minutes} minutes.")
 
-        # Show general settings
-        if config:
-            status_msg += f"⏱️ **Poll Interval:** {config['poll_rate_minutes']} minutes\n"
-            status_msg += f"🔔 **Notifications:** {config['notification_types']}\n"
-            status_msg += f"▶️ **Status:** {'Active' if config['is_active'] else 'Inactive'}\n"
+        elif effective_selector.isdigit():
+            target_idx_one_based = int(effective_selector)
+            if not (1 <= target_idx_one_based <= len(targets)):
+                await ctx.send("❌ Invalid target ID. Please use a number from the `!status` list.")
+                return
+            
+            selected_target_info = targets[target_idx_one_based - 1]
+            actual_target_db_id = selected_target_info['id']
+            
+            target_display_name = ""
+            ttype = selected_target_info['target_type']
+            tname = selected_target_info['target_name']
+            tdata = selected_target_info['target_data']
+
+            if ttype == 'location':
+                target_display_name = f"{tname} (ID: {tdata})"
+            elif ttype == 'latlong':
+                parts = tname.split(',')
+                if len(parts) == 3: target_display_name = f"Coordinates {parts[0]},{parts[1]} (Radius: {parts[2]}mi)"
+                else: target_display_name = tname
+            else: target_display_name = tname
+
+            if self.db.update_monitoring_target_poll_rate(actual_target_db_id, minutes):
+                await ctx.send(f"✅ Poll rate for '{target_display_name}' set to {minutes} minutes.")
+            else:
+                # This might happen if the target was deleted between fetching and updating, though unlikely.
+                await ctx.send(f"❌ Could not update poll rate for target ID {target_idx_one_based}. Target may no longer exist or no change was needed.")
         else:
-            status_msg += f"⏱️ **Poll Interval:** 60 minutes (default)\n"
-            status_msg += f"🔔 **Notifications:** machines (default)\n"
-            status_msg += f"▶️ **Status:** Inactive\n"
-
-        await ctx.send(status_msg)
+            await ctx.send(f"❌ Invalid target selector '{target_selector}'. Must be a number (from `!status`) or 'all'.")
 
     async def handle_check(self, ctx: MessageContext):
         """Check for new submissions"""
