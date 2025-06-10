@@ -4,3 +4,6 @@ python-dotenv
 sqlalchemy>=2.0.0
 pytest
 pytest-asyncio
+google-cloud-secret-manager
+google-cloud-sql-connector[pg8000]
+aiohttp

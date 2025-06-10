@@ -3,6 +3,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 import logging
+import asyncio
+from aiohttp import web
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +28,68 @@ except ImportError:
 
 
 load_dotenv()
+
+
+async def get_discord_token() -> str:
+    """Get Discord token from GCP Secret Manager or .env file"""
+    secret_name = os.getenv('DISCORD_TOKEN_SECRET_NAME')
+    
+    if secret_name:
+        # Try to get token from GCP Secret Manager
+        try:
+            from google.cloud import secretmanager
+            client = secretmanager.SecretManagerServiceClient()
+            project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
+            if not project_id:
+                logger.error("GOOGLE_CLOUD_PROJECT environment variable not set")
+                raise ValueError("GOOGLE_CLOUD_PROJECT environment variable required for Secret Manager")
+            
+            name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
+            response = client.access_secret_version(request={"name": name})
+            token = response.payload.data.decode("UTF-8")
+            logger.info("Successfully retrieved Discord token from Secret Manager")
+            return token
+            
+        except ImportError:
+            logger.error("google-cloud-secret-manager not available")
+            raise ImportError("Install google-cloud-secret-manager for GCP Secret Manager support")
+        except Exception as e:
+            logger.error(f"Failed to retrieve token from Secret Manager: {e}")
+            raise
+    else:
+        # Fall back to .env file
+        token = os.getenv('DISCORD_BOT_TOKEN')
+        if not token:
+            logger.error("DISCORD_BOT_TOKEN not found in environment variables")
+            raise ValueError("Discord token not found in .env file or Secret Manager")
+        
+        logger.info("Using Discord token from .env file")
+        return token
+
+
+async def handle_health_check(request):
+    """Health check endpoint for Cloud Run"""
+    return web.Response(text="OK", status=200)
+
+
+async def start_http_server():
+    """Start HTTP server for health checks"""
+    app = web.Application()
+    app.router.add_get('/', handle_health_check)
+    app.router.add_get('/health', handle_health_check)
+    
+    # Get port from environment (Cloud Run sets this)
+    port = int(os.getenv('PORT', 8080))
+    host = '0.0.0.0'  # Listen on all interfaces for Cloud Run
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host, port)
+    await site.start()
+    
+    logger.info(f"HTTP health check server started on {host}:{port}")
+    return runner
+
 
 # Bot setup
 intents = discord.Intents.default()
@@ -255,15 +319,28 @@ async def check_now(ctx):
 
 
 
-def main():
-    """Main function to start the bot"""
-    token = os.getenv('DISCORD_BOT_TOKEN')
-    if not token:
-        logger.error("Error: DISCORD_BOT_TOKEN not found in environment variables.")
-        logger.error("Please create a .env file with your Discord bot token.")
+async def main():
+    """Main function to start the bot and HTTP server"""
+    try:
+        # Get Discord token from Secret Manager or .env file
+        token = await get_discord_token()
+        
+        # Start HTTP server for health checks
+        http_runner = await start_http_server()
+        
+        # Start the Discord bot (non-blocking)
+        logger.info("Starting Discord bot...")
+        await client.start(token)
+        
+    except Exception as e:
+        logger.error(f"Failed to start application: {e}")
         exit(1)
+    finally:
+        # Cleanup HTTP server if it was started
+        if 'http_runner' in locals():
+            await http_runner.cleanup()
 
-    client.run(token)
 
 if __name__ == '__main__':
-    main()
+    # Run the main async function
+    asyncio.run(main())

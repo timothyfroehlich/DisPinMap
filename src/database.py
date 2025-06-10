@@ -7,6 +7,10 @@ from sqlalchemy import create_engine, select, delete
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, Dict, List, Any
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 try:
     from .models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
 except ImportError:
@@ -15,19 +19,73 @@ except ImportError:
 
 class Database:
     def __init__(self, db_path: str = "pinball_bot.db"):
-        """Initialize database with SQLAlchemy"""
-        if db_path == ":memory:":
-            # For in-memory databases (testing)
-            self.engine = create_engine("sqlite:///:memory:", echo=False)
+        """Initialize database with SQLAlchemy - supports both SQLite and PostgreSQL"""
+        db_type = os.getenv('DB_TYPE', 'sqlite').lower()
+        
+        if db_type == 'postgres':
+            self.engine = self._create_postgres_engine()
         else:
-            # For file databases
-            self.engine = create_engine(f"sqlite:///{db_path}", echo=False)
+            # SQLite (default for local development and testing)
+            if db_path == ":memory:":
+                # For in-memory databases (testing)
+                self.engine = create_engine("sqlite:///:memory:", echo=False)
+            else:
+                # For file databases
+                self.engine = create_engine(f"sqlite:///{db_path}", echo=False)
         
         # Create session factory
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         
         # Create all tables
         self.init_database()
+    
+    def _create_postgres_engine(self):
+        """Create PostgreSQL engine using Google Cloud SQL Connector"""
+        try:
+            from google.cloud.sql.connector import Connector
+        except ImportError:
+            logger.error("google-cloud-sql-connector not available for PostgreSQL connection")
+            raise ImportError("Install google-cloud-sql-connector[pg8000] for PostgreSQL support")
+        
+        # Get required environment variables
+        instance_connection_name = os.getenv('DB_INSTANCE_CONNECTION_NAME')
+        db_user = os.getenv('DB_USER')
+        db_pass = os.getenv('DB_PASS')
+        db_name = os.getenv('DB_NAME')
+        
+        if not all([instance_connection_name, db_user, db_pass, db_name]):
+            missing_vars = [var for var, val in [
+                ('DB_INSTANCE_CONNECTION_NAME', instance_connection_name),
+                ('DB_USER', db_user),
+                ('DB_PASS', db_pass),
+                ('DB_NAME', db_name)
+            ] if not val]
+            logger.error(f"Missing required environment variables for PostgreSQL: {missing_vars}")
+            raise ValueError(f"Missing required environment variables: {missing_vars}")
+        
+        # Initialize Cloud SQL Connector
+        connector = Connector()
+        
+        def getconn():
+            """Create database connection using Cloud SQL Connector"""
+            conn = connector.connect(
+                instance_connection_name,
+                "pg8000",
+                user=db_user,
+                password=db_pass,
+                db=db_name,
+            )
+            return conn
+        
+        # Create SQLAlchemy engine with the connector
+        engine = create_engine(
+            "postgresql+pg8000://",
+            creator=getconn,
+            echo=False
+        )
+        
+        logger.info(f"Created PostgreSQL engine for instance: {instance_connection_name}")
+        return engine
     
     def init_database(self) -> None:
         """Initialize database tables"""

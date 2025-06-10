@@ -10,21 +10,76 @@ A Python Discord bot that continuously monitors the pinballmap.com API for chang
 - **Flexible Configuration**: Mix and match coordinate areas and specific locations
 
 ## Recent Updates
-🔄 **Database Migration to SQLAlchemy**: We're migrating from raw SQLite to SQLAlchemy for better testability, cleaner code, and improved database handling. This migration enhances the development experience while maintaining full backward compatibility.
+🚀 **GCP Deployment Ready**: Added containerization and Google Cloud Platform deployment support with Terraform infrastructure as code.
 
-## Setup
-1. **Prerequisites**: Python 3.8+ installed
+## Deployment Options
+
+### Local Development Setup
+1. **Prerequisites**: Python 3.11+ installed
 2. **Clone and Install**:
    ```bash
    git clone <repository-url>
-   cd DiscordPinballMap
+   cd DisPinMap
    source venv/bin/activate
    pip install -r requirements.txt
    ```
-3. **Discord Bot Setup**:
-   - Create bot at https://discord.com/developers/applications
-   - Copy bot token to `.env` file: `DISCORD_BOT_TOKEN=your_token_here`
-   - Invite bot to your server with permissions: Send Messages, Read Message History, Use External Emojis
+3. **Environment Setup**:
+   - Copy `.env.example` to `.env`
+   - Add your Discord bot token: `DISCORD_BOT_TOKEN=your_token_here`
+   - Discord Bot Setup:
+     - Create bot at https://discord.com/developers/applications
+     - Invite bot to your server with permissions: Send Messages, Read Message History, Use External Emojis
+
+### Google Cloud Platform Deployment
+
+**Prerequisites:**
+- [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and configured
+- [Terraform](https://www.terraform.io/downloads) installed
+- [Docker](https://docs.docker.com/get-docker/) installed
+
+**Deployment Steps:**
+
+1. **Authentication**:
+   ```bash
+   gcloud auth login
+   gcloud auth application-default login
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+
+2. **Infrastructure Setup**:
+   ```bash
+   cd terraform
+   terraform init
+   terraform plan -var="gcp_project_id=YOUR_PROJECT_ID" -var="gcp_region=us-central1"
+   terraform apply -var="gcp_project_id=YOUR_PROJECT_ID" -var="gcp_region=us-central1"
+   ```
+
+3. **Container Build and Deploy**:
+   ```bash
+   # Get the Artifact Registry URL from terraform output
+   REPO_URL=$(terraform output -raw artifact_registry_repository_url)
+   
+   # Build and push container
+   docker build -t $REPO_URL/dispinmap-bot:latest .
+   docker push $REPO_URL/dispinmap-bot:latest
+   ```
+
+4. **⚠️ IMPORTANT: Manual Discord Token Setup**:
+   After `terraform apply` completes successfully, you **MUST** manually add your Discord bot token to Google Secret Manager:
+   
+   - Go to [Secret Manager](https://console.cloud.google.com/security/secret-manager) in the GCP Console
+   - Find the secret named `dispinmap-bot-discord-token` (or check `terraform output discord_token_secret_id`)
+   - Click "Add Version" and paste your Discord bot token
+   - The Cloud Run service will automatically restart and pick up the token
+
+5. **Verify Deployment**:
+   ```bash
+   # Check service URL
+   terraform output cloud_run_service_url
+   
+   # Test health endpoint
+   curl $(terraform output -raw cloud_run_service_url)/health
+   ```
 
 ## Usage
 
