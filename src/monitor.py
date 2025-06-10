@@ -3,10 +3,12 @@ Monitor module for Discord Pinball Map Bot
 Handles background polling and notification sending using the new submission-based approach
 """
 
-import sqlite3
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from discord.ext import tasks
+import logging
+
+logger = logging.getLogger(__name__)
 try:
     from .database import Database
     from .api import fetch_submissions_for_coordinates, fetch_submissions_for_location
@@ -21,13 +23,13 @@ class MachineMonitor:
         self.db = database
         self.monitor_task = None
     
-    def start_monitoring(self):
+    def start_monitoring(self) -> None:
         """Start the background monitoring task"""
         if self.monitor_task is None or not self.monitor_task.is_running():
             self.monitor_task = self._create_monitor_task()
             self.monitor_task.start()
     
-    def stop_monitoring(self):
+    def stop_monitoring(self) -> None:
         """Stop the background monitoring task"""
         if self.monitor_task and self.monitor_task.is_running():
             self.monitor_task.cancel()
@@ -46,7 +48,7 @@ class MachineMonitor:
                         await self._poll_channel(config)
                         
             except Exception as e:
-                print(f"Error in monitor_submissions task: {e}")
+                logger.error(f"Error in monitor_submissions task: {e}")
         
         @monitor_submissions.before_loop
         async def before_monitor():
@@ -70,7 +72,7 @@ class MachineMonitor:
             return True  # For now, always poll (the task loop handles timing)
                 
         except Exception as e:
-            print(f"Error checking poll time for channel {config['channel_id']}: {e}")
+            logger.error(f"Error checking poll time for channel {config['channel_id']}: {e}")
             return False
     
     async def _poll_channel(self, config: Dict[str, Any]):
@@ -80,7 +82,7 @@ class MachineMonitor:
             targets = self.db.get_monitoring_targets(channel_id)
             
             if not targets:
-                print(f"Channel {channel_id} has no monitoring targets")
+                logger.debug(f"Channel {channel_id} has no monitoring targets")
                 return
             
             all_submissions = []
@@ -108,17 +110,17 @@ class MachineMonitor:
             new_submissions = self.db.filter_new_submissions(channel_id, all_submissions)
             
             # Send notifications for new submissions
-            if new_submissions and config.get('notification_types', 'machines') in ['machines', 'all']:
-                await self._send_notifications(channel_id, new_submissions)
+            if new_submissions:
+                await self._send_notifications(channel_id, new_submissions, config.get('notification_types', 'machines'))
                 
                 # Mark submissions as seen
                 submission_ids = [s['id'] for s in new_submissions]
                 self.db.mark_submissions_seen(channel_id, submission_ids)
                 
         except Exception as e:
-            print(f"Error polling channel {config['channel_id']}: {e}")
+            logger.error(f"Error polling channel {config['channel_id']}: {e}")
     
-    async def _send_notifications(self, channel_id: int, submissions: List[Dict[str, Any]]):
+    async def _send_notifications(self, channel_id: int, submissions: List[Dict[str, Any]], notification_types: str = 'machines'):
         """Send submission notifications to a channel"""
         if not submissions:
             return
@@ -126,7 +128,7 @@ class MachineMonitor:
         try:
             channel = self.bot.get_channel(channel_id)
             if not channel:
-                print(f"Could not find channel {channel_id}")
+                logger.warning(f"Could not find channel {channel_id}")
                 return
             
             # Group submissions by type
@@ -134,8 +136,22 @@ class MachineMonitor:
             removals = [s for s in submissions if s.get('submission_type') == 'remove_machine']
             conditions = [s for s in submissions if s.get('submission_type') == 'new_condition']
             
+            # Filter notifications based on notification type preference
+            if notification_types == 'machines':
+                # Only send machine additions and removals
+                notifications_to_send = additions + removals
+            elif notification_types == 'comments':
+                # Only send condition updates
+                notifications_to_send = conditions
+            elif notification_types == 'all':
+                # Send everything
+                notifications_to_send = submissions
+            else:
+                # Default to machines only
+                notifications_to_send = additions + removals
+            
             # Send addition notifications
-            if additions:
+            if additions and notification_types in ['machines', 'all']:
                 if len(additions) == 1:
                     submission = additions[0]
                     message = f"🆕 **{submission.get('machine_name', 'Unknown Machine')}** added at **{submission.get('location_name', 'Unknown Location')}** by {submission.get('user_name', 'Anonymous')}"
@@ -151,7 +167,7 @@ class MachineMonitor:
                     await channel.send(message)
             
             # Send removal notifications
-            if removals:
+            if removals and notification_types in ['machines', 'all']:
                 if len(removals) == 1:
                     submission = removals[0]
                     message = f"🗑️ **{submission.get('machine_name', 'Unknown Machine')}** removed from **{submission.get('location_name', 'Unknown Location')}** by {submission.get('user_name', 'Anonymous')}"
@@ -167,7 +183,7 @@ class MachineMonitor:
                     await channel.send(message)
             
             # Send condition update notifications
-            if conditions:
+            if conditions and notification_types in ['comments', 'all']:
                 for submission in conditions[:5]:  # Limit condition updates
                     message = f"🔧 **{submission.get('machine_name', 'Unknown Machine')}** at **{submission.get('location_name', 'Unknown Location')}**"
                     if submission.get('comment'):
@@ -176,4 +192,4 @@ class MachineMonitor:
                     await channel.send(message)
             
         except Exception as e:
-            print(f"Error sending notifications to channel {channel_id}: {e}")
+            logger.error(f"Error sending notifications to channel {channel_id}: {e}")

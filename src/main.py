@@ -1,7 +1,19 @@
-import discord  # Assuming discord is used here, adjust if not
+import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-import os  # Added for os.getenv
+import os
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('bot.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 try:
     from .database import Database
@@ -12,7 +24,6 @@ except ImportError:
     from monitor import MachineMonitor
     from commands import CommandHandler
 
-# Test simulation removed - no longer supported
 
 load_dotenv()
 
@@ -23,8 +34,8 @@ intents.message_content = True
 # Custom Context for logging
 class LoggingContext(commands.Context):
     async def send(self, content=None, *, tts=False, embed=None, file=None, files=None, delete_after=None, nonce=None, allowed_mentions=None, reference=None, mention_author=None):
-        if content: # Log only if there is text content
-            print(f"BOT REPLY in #{self.channel} to {self.author}: {content}")
+        if content:
+            logger.info(f"BOT REPLY in #{self.channel} to {self.author}: {content}")
         # Call the original send method
         return await super().send(content=content, tts=tts, embed=embed, file=file, files=files, delete_after=delete_after, nonce=nonce, allowed_mentions=allowed_mentions, reference=reference, mention_author=mention_author)
 
@@ -40,7 +51,7 @@ command_handler = CommandHandler(db)
 
 @client.event
 async def on_ready():
-    print(f'{client.user} has connected to Discord!')
+    logger.info(f'{client.user} has connected to Discord!')
     # Start monitoring when bot is ready
     monitor.start_monitoring()
 
@@ -52,7 +63,7 @@ async def on_message(message):
 
     # Check if it's a command and log it immediately
     if message.content.startswith('!'):
-        print(f"COMMAND RECEIVED from {message.author} in #{message.channel} (Guild: {message.guild}): {message.content}")
+        logger.info(f"COMMAND RECEIVED from {message.author} in #{message.channel} (Guild: {message.guild}): {message.content}")
 
     # Process the command
     await client.process_commands(message)
@@ -66,23 +77,22 @@ async def on_command(ctx):
 async def on_command_error(ctx, error):
     """Logs command errors and informs the user."""
     if isinstance(error, commands.CommandNotFound):
-        print(f"COMMAND NOT FOUND from {ctx.author} in #{ctx.channel}: {ctx.message.content}")
+        logger.warning(f"COMMAND NOT FOUND from {ctx.author} in #{ctx.channel}: {ctx.message.content}")
         # Optionally, send a message to the user, or just log it.
         # await ctx.send(f"❌ Command not found: `{ctx.invoked_with}`")
         return
     elif isinstance(error, commands.MissingRequiredArgument):
         # This is handled by specific command error handlers, but good to log here too.
-        print(f"COMMAND ERROR (Missing Arg) from {ctx.author} for `!{ctx.command.qualified_name}`: {error}")
+        logger.warning(f"COMMAND ERROR (Missing Arg) from {ctx.author} for `!{ctx.command.qualified_name}`: {error}")
         # The specific command's error handler (e.g., add_location_error) will send the user-facing message.
     elif isinstance(error, commands.CommandInvokeError):
-        print(f"COMMAND ERROR (Invoke) from {ctx.author} for `!{ctx.command.qualified_name}`: {error.original}")
+        logger.error(f"COMMAND ERROR (Invoke) from {ctx.author} for `!{ctx.command.qualified_name}`: {error.original}")
         await ctx.send(f"❌ An unexpected error occurred while running `!{ctx.command.qualified_name}`. Please check the logs or contact the admin.")
     else:
-        print(f"COMMAND ERROR (Unhandled) from {ctx.author} for `!{ctx.command.qualified_name}`: {error}")
+        logger.error(f"COMMAND ERROR (Unhandled) from {ctx.author} for `!{ctx.command.qualified_name}`: {error}")
         await ctx.send(f"❌ An unexpected error occurred: {error}")
 
 
-# Region commands removed - no longer supported
 
 
 @client.group(name='latlong')
@@ -240,7 +250,6 @@ async def check_now(ctx):
     await command_handler.handle_check(ctx)
 
 
-# Test simulation command removed - no longer supported
 
 
 
@@ -250,8 +259,8 @@ def main():
     """Main function to start the bot"""
     token = os.getenv('DISCORD_BOT_TOKEN')
     if not token:
-        print("Error: DISCORD_BOT_TOKEN not found in environment variables.")
-        print("Please create a .env file with your Discord bot token.")
+        logger.error("Error: DISCORD_BOT_TOKEN not found in environment variables.")
+        logger.error("Please create a .env file with your Discord bot token.")
         exit(1)
 
     client.run(token)

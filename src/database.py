@@ -29,7 +29,7 @@ class Database:
         # Create all tables
         self.init_database()
     
-    def init_database(self):
+    def init_database(self) -> None:
         """Initialize database tables"""
         Base.metadata.create_all(bind=self.engine)
     
@@ -37,28 +37,31 @@ class Database:
         """Get a database session"""
         return self.SessionLocal()
     
-    def close(self):
+    def close(self) -> None:
         """Close database connections"""
         self.engine.dispose()
     
     # Channel configuration methods
     def get_channel_config(self, channel_id: int) -> Optional[Dict[str, Any]]:
         """Get configuration for a specific channel"""
-        with self.get_session() as session:
-            config = session.get(ChannelConfig, channel_id)
-            if config:
-                return {
-                    'channel_id': config.channel_id,
-                    'guild_id': config.guild_id,
-                    'poll_rate_minutes': config.poll_rate_minutes,
-                    'notification_types': config.notification_types,
-                    'is_active': config.is_active,
-                    'created_at': config.created_at,
-                    'updated_at': config.updated_at
-                }
+        try:
+            with self.get_session() as session:
+                config = session.get(ChannelConfig, channel_id)
+                if config:
+                    return {
+                        'channel_id': config.channel_id,
+                        'guild_id': config.guild_id,
+                        'poll_rate_minutes': config.poll_rate_minutes,
+                        'notification_types': config.notification_types,
+                        'is_active': config.is_active,
+                        'created_at': config.created_at,
+                        'updated_at': config.updated_at
+                    }
+                return None
+        except Exception:
             return None
     
-    def update_channel_config(self, channel_id: int, guild_id: int, **kwargs):
+    def update_channel_config(self, channel_id: int, guild_id: int, **kwargs) -> None:
         """Update or create channel configuration"""
         with self.get_session() as session:
             config = session.get(ChannelConfig, channel_id)
@@ -112,7 +115,7 @@ class Database:
             ]
     
     # Monitoring target methods
-    def add_monitoring_target(self, channel_id: int, target_type: str, target_name: str, target_data: str = None, poll_rate_minutes: int = 60):
+    def add_monitoring_target(self, channel_id: int, target_type: str, target_name: str, target_data: str = None, poll_rate_minutes: int = 60) -> None:
         """Add a monitoring target for a channel"""
         with self.get_session() as session:
             target = MonitoringTarget(
@@ -130,7 +133,7 @@ class Database:
                 session.rollback()
                 raise Exception(f"Target '{target_name}' of type '{target_type}' is already being monitored")
     
-    def remove_monitoring_target(self, channel_id: int, target_type: str, target_name: str):
+    def remove_monitoring_target(self, channel_id: int, target_type: str, target_name: str) -> None:
         """Remove a monitoring target for a channel"""
         with self.get_session() as session:
             stmt = delete(MonitoringTarget).where(
@@ -168,7 +171,7 @@ class Database:
                 for target in targets
             ]
     
-    def clear_monitoring_targets(self, channel_id: int):
+    def clear_monitoring_targets(self, channel_id: int) -> None:
         """Remove all monitoring targets for a channel"""
         with self.get_session() as session:
             stmt = delete(MonitoringTarget).where(MonitoringTarget.channel_id == channel_id)
@@ -198,7 +201,7 @@ class Database:
             return len(targets)
     
     # Seen submissions methods
-    def mark_submissions_seen(self, channel_id: int, submission_ids: List[int]):
+    def mark_submissions_seen(self, channel_id: int, submission_ids: List[int]) -> None:
         """Mark submissions as seen for a channel"""
         if not submission_ids:
             return
@@ -251,7 +254,7 @@ class Database:
             )
             return list(session.execute(stmt).scalars().all())
     
-    def clear_seen_submissions(self, channel_id: int):
+    def clear_seen_submissions(self, channel_id: int) -> None:
         """Clear seen submissions for a channel"""
         with self.get_session() as session:
             stmt = delete(SeenSubmission).where(SeenSubmission.channel_id == channel_id)

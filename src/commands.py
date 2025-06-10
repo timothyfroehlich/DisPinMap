@@ -3,7 +3,7 @@ Command logic for Discord Pinball Map Bot
 Extracted command handlers that can be used by both Discord bot and CLI test
 """
 
-import asyncio # For TimeoutError in confirmation
+import asyncio
 from typing import List, Dict, Any, Protocol, Optional
 try:
     from .database import Database
@@ -17,8 +17,8 @@ class MessageContext(Protocol):
     """Protocol for message context (Discord or CLI)"""
     channel: Any
     guild: Any
-    author: Any # Added for confirmation check
-    bot: Any    # Added for wait_for (access to bot.wait_for)
+    author: Any
+    bot: Any
 
     async def send(self, message: str) -> None:
         """Send a message"""
@@ -69,9 +69,12 @@ class CommandHandler:
             matching_target = None
             for target in latlong_targets:
                 parts = target['target_name'].split(',')
-                if len(parts) >= 2 and float(parts[0]) == lat and float(parts[1]) == lon:
-                    matching_target = target
-                    break
+                if len(parts) >= 2:
+                    target_lat, target_lon = float(parts[0]), float(parts[1])
+                    # Use small epsilon for float comparison to handle precision issues
+                    if abs(target_lat - lat) < 1e-6 and abs(target_lon - lon) < 1e-6:
+                        matching_target = target
+                        break
 
             if not matching_target:
                 await ctx.send(f"❌ Coordinates {lat}, {lon} not found in monitoring list")
@@ -373,6 +376,11 @@ class CommandHandler:
                         lat, lon, radius = float(parts[0]), float(parts[1]), int(parts[2])
                         submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
                         target_descriptions.append(f"coordinates **{lat}, {lon}** ({radius}mi)")
+                        all_submissions.extend(submissions)
+                    elif len(parts) == 2:
+                        lat, lon = float(parts[0]), float(parts[1])
+                        submissions = await fetch_submissions_for_coordinates(lat, lon)
+                        target_descriptions.append(f"coordinates **{lat}, {lon}** (default radius)")
                         all_submissions.extend(submissions)
 
                 elif target['target_type'] == 'location':

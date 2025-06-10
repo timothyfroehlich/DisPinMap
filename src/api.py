@@ -7,13 +7,17 @@ import requests
 import asyncio
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
+import urllib.parse
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def rate_limited_request(url: str, max_retries: int = 3, base_delay: float = 1.0) -> requests.Response:
     """Make a rate-limited request with exponential backoff"""
     # Extract endpoint for cleaner debug message
     endpoint = url.split('/')[-1].split('.json')[0]
-    print(f"🌐 API: {endpoint}")
+    logger.info(f"🌐 API: {endpoint}")
 
     for attempt in range(max_retries):
         try:
@@ -21,7 +25,7 @@ async def rate_limited_request(url: str, max_retries: int = 3, base_delay: float
             if response.status_code == 429:  # Too Many Requests
                 if attempt < max_retries - 1:
                     delay = base_delay * (2 ** attempt)  # Exponential backoff
-                    print(f"Rate limited, waiting {delay} seconds before retry {attempt + 1}/{max_retries}")
+                    logger.warning(f"Rate limited, waiting {delay} seconds before retry {attempt + 1}/{max_retries}")
                     await asyncio.sleep(delay)
                     continue
                 else:
@@ -34,7 +38,7 @@ async def rate_limited_request(url: str, max_retries: int = 3, base_delay: float
         except requests.exceptions.RequestException as e:
             if attempt < max_retries - 1:
                 delay = base_delay * (2 ** attempt)
-                print(f"Request failed, retrying in {delay} seconds: {e}")
+                logger.warning(f"Request failed, retrying in {delay} seconds: {e}")
                 await asyncio.sleep(delay)
             else:
                 raise
@@ -66,7 +70,7 @@ async def fetch_submissions_for_coordinates(lat: float, lon: float, radius_miles
         return data.get('user_submissions', [])
 
     except Exception as e:
-        print(f"Error fetching submissions for coordinates {lat}, {lon}: {e}")
+        logger.error(f"Error fetching submissions for coordinates {lat}, {lon}: {e}")
         return []
 
 
@@ -86,7 +90,7 @@ async def fetch_submissions_for_location(location_id: int) -> List[Dict[str, Any
         return data.get('user_submissions', [])
 
     except Exception as e:
-        print(f"Error fetching submissions for location {location_id}: {e}")
+        logger.error(f"Error fetching submissions for location {location_id}: {e}")
         return []
 
 
@@ -94,14 +98,13 @@ async def fetch_location_autocomplete(query: str) -> List[Dict[str, Any]]:
     """Fetch location suggestions using by_location_name search"""
     try:
         # Use the working API endpoint instead of autocomplete
-        import urllib.parse
         encoded_query = urllib.parse.quote(query)
         url = f'https://pinballmap.com/api/v1/locations.json?by_location_name={encoded_query}'
         response = await rate_limited_request(url)
         data = response.json()
         return data.get('locations', [])
     except Exception as e:
-        print(f"Error fetching location autocomplete for '{query}': {e}")
+        logger.error(f"Error fetching location autocomplete for '{query}': {e}")
         return []
 
 async def fetch_location_details(location_id: int) -> Dict[str, Any]:
@@ -115,7 +118,7 @@ async def fetch_location_details(location_id: int) -> Dict[str, Any]:
             raise Exception(f"Location details for {location_id} not found: {error_message}")
         return data # The location data is at the root level, not under a 'location' key
     except Exception as e:
-        print(f"Error fetching location details for ID {location_id}: {e}")
+        logger.error(f"Error fetching location details for ID {location_id}: {e}")
         return {}
 
 
@@ -159,7 +162,7 @@ async def search_location_by_name(location_name: str) -> Dict[str, Any]:
         return {'status': 'suggestions', 'data': autocomplete_results[:5]}
 
     except Exception as e:
-        print(f"Error in search_location_by_name for '{location_name}': {e}")
+        logger.error(f"Error in search_location_by_name for '{location_name}': {e}")
         # Fallback to not_found in case of unexpected errors during the process
         return {'status': 'not_found', 'data': None}
 
@@ -170,11 +173,21 @@ async def geocode_city_name(city_name: str) -> Dict[str, Any]:
     Returns: {'status': 'success', 'lat': float, 'lon': float, 'display_name': str} or {'status': 'error', 'message': str}
     """
     try:
-        import urllib.parse
+        # Input sanitization
+        if not city_name or not isinstance(city_name, str):
+            return {'status': 'error', 'message': 'City name must be a non-empty string'}
+        
+        city_name = city_name.strip()
+        if len(city_name) > 200:  # Reasonable limit for city names
+            return {'status': 'error', 'message': 'City name too long (max 200 characters)'}
+        
+        # Remove potentially dangerous characters
+        if any(char in city_name for char in ['<', '>', '"', "'", '&', '\n', '\r', '\t']):
+            return {'status': 'error', 'message': 'City name contains invalid characters'}
         
         # Try multiple formats if the first one fails
         search_terms = [
-            city_name.strip(),  # Original format
+            city_name,  # Original format
         ]
         
         # If there's a comma, try variations
@@ -240,5 +253,5 @@ async def geocode_city_name(city_name: str) -> Dict[str, Any]:
         return {'status': 'error', 'message': f"No results found for city: {city_name}"}
         
     except Exception as e:
-        print(f"Error geocoding city '{city_name}': {e}")
+        logger.error(f"Error geocoding city '{city_name}': {e}")
         return {'status': 'error', 'message': f"Geocoding failed: {str(e)}"}
