@@ -93,6 +93,10 @@ class MachineMonitor:
                         lat, lon, radius = float(parts[0]), float(parts[1]), int(parts[2])
                         submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
                         all_submissions.extend(submissions)
+                    elif len(parts) == 2:
+                        lat, lon = float(parts[0]), float(parts[1])
+                        submissions = await fetch_submissions_for_coordinates(lat, lon)  # No radius (use API default)
+                        all_submissions.extend(submissions)
                         
                 elif target['target_type'] == 'location':
                     if target['target_data']:

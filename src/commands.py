@@ -7,10 +7,10 @@ import asyncio # For TimeoutError in confirmation
 from typing import List, Dict, Any, Protocol, Optional
 try:
     from .database import Database
-    from .api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details
+    from .api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details, geocode_city_name
 except ImportError:
     from database import Database
-    from api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details
+    from api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details, geocode_city_name
 
 
 class MessageContext(Protocol):
@@ -29,18 +29,24 @@ class CommandHandler:
     def __init__(self, db: Database):
         self.db = db
 
-    async def handle_latlong_add(self, ctx: MessageContext, lat: float, lon: float, radius: int):
+    async def handle_latlong_add(self, ctx: MessageContext, lat: float, lon: float, radius: int = None):
         """Add coordinate monitoring"""
         try:
             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
                 await ctx.send("❌ Invalid coordinates. Latitude must be -90 to 90, longitude -180 to 180")
                 return
 
-            if radius < 1 or radius > 100:
+            if radius is not None and (radius < 1 or radius > 100):
                 await ctx.send("❌ Radius must be between 1 and 100 miles")
                 return
 
-            target_name = f"{lat},{lon},{radius}"
+            # Use default radius if none provided
+            if radius is None:
+                target_name = f"{lat},{lon}"
+                radius_display = "default"
+            else:
+                target_name = f"{lat},{lon},{radius}"
+                radius_display = f"{radius} miles"
             self.db.add_monitoring_target(ctx.channel.id, 'latlong', target_name)
 
             # Auto-start monitoring and fetch initial submissions
@@ -50,7 +56,7 @@ class CommandHandler:
             submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
             await self._post_initial_submissions(ctx, submissions, "coordinate area")
 
-            await ctx.send(f"✅ Added coordinates: **{lat}, {lon}** ({radius} mile radius) - Monitoring started!")
+            await ctx.send(f"✅ Added coordinates: **{lat}, {lon}** ({radius_display} radius) - Monitoring started!")
         except Exception as e:
             await ctx.send(f"❌ Error adding coordinates: {str(e)}")
 
@@ -83,9 +89,9 @@ class CommandHandler:
 
         if latlong_targets:
             coords = [t['target_name'] for t in latlong_targets]
-            await ctx.send(f"**Monitored coordinates:** {', '.join(coords)}\nUse `latlong add <lat> <lon> <radius>` or `latlong remove <lat> <lon>`")
+            await ctx.send(f"**Monitored coordinates:** {', '.join(coords)}\nUse `latlong add <lat> <lon> [radius]` or `latlong remove <lat> <lon>`")
         else:
-            await ctx.send("No coordinates being monitored. Use `latlong add <lat> <lon> <radius>` to add some.")
+            await ctx.send("No coordinates being monitored. Use `latlong add <lat> <lon> [radius]` to add some.")
 
     async def handle_location_add(self, ctx: MessageContext, location_input: str):
         """Add location monitoring (by ID or name)"""
@@ -185,6 +191,48 @@ class CommandHandler:
             await ctx.send(f"**Monitored locations:** {', '.join(locations)}\nUse `location add <id_or_name>` or `location remove <id>`")
         else:
             await ctx.send("No individual locations being monitored. Use `location add <id_or_name>` to add one.")
+
+    async def handle_city_add(self, ctx: MessageContext, city_name: str, radius: int = None):
+        """Add city monitoring by geocoding the city name to coordinates"""
+        try:
+            # Geocode the city name
+            geocode_result = await geocode_city_name(city_name)
+            
+            if geocode_result['status'] == 'error':
+                await ctx.send(f"❌ {geocode_result['message']}")
+                return
+                
+            lat = geocode_result['lat']
+            lon = geocode_result['lon']
+            display_name = geocode_result['display_name']
+            
+            # Validate optional radius
+            if radius is not None and (radius < 1 or radius > 100):
+                await ctx.send("❌ Radius must be between 1 and 100 miles")
+                return
+            
+            # Create target name
+            if radius is None:
+                target_name = f"{lat},{lon}"
+                radius_display = "default"
+            else:
+                target_name = f"{lat},{lon},{radius}"
+                radius_display = f"{radius} miles"
+                
+            # Add as latlong target (same underlying mechanism)
+            self.db.add_monitoring_target(ctx.channel.id, 'latlong', target_name)
+            
+            # Auto-start monitoring and fetch initial submissions
+            self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
+            
+            # Fetch and post initial submissions
+            submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
+            await self._post_initial_submissions(ctx, submissions, f"city: {display_name}")
+            
+            await ctx.send(f"✅ Added city: **{display_name}** ({radius_display} radius) - Monitoring started!")
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error adding city: {str(e)}")
 
     async def handle_status(self, ctx: MessageContext):
         """Show current monitoring status, including individual target poll rates."""

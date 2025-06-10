@@ -93,8 +93,8 @@ async def latlong_group(ctx):
 
 
 @latlong_group.command(name='add')
-async def add_latlong(ctx, latitude: float, longitude: float, radius: int):
-    """Add lat/lon coordinates to monitor"""
+async def add_latlong(ctx, latitude: float, longitude: float, radius: int = None):
+    """Add lat/lon coordinates to monitor (radius optional)"""
     await command_handler.handle_latlong_add(ctx, latitude, longitude, radius)
 
 
@@ -130,6 +130,17 @@ async def remove_location(ctx, *, location_input: str):
     await command_handler.handle_location_remove(ctx, location_input)
 
 
+@client.command(name='city')
+async def add_city(ctx, *, city_name: str):
+    """Add a city to monitor by name (e.g., "Austin, TX" or "Philadelphia, PA")"""
+    await command_handler.handle_city_add(ctx, city_name)
+
+@add_city.error
+async def add_city_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("❌ You need to provide a city name.\n\n**Examples:**\n• `!city Austin, TX`\n• `!city Philadelphia, PA`\n• `!city London, UK`")
+    else:
+        await ctx.send(f"❌ An unexpected error occurred with `!city`: {error}")
 
 
 @client.command(name='poll_rate')
@@ -163,6 +174,13 @@ async def set_notifications(ctx, notification_type: str):
         await ctx.send(f"✅ Notifications set to: **{notification_type}**")
     except Exception as e:
         await ctx.send(f"❌ Error setting notifications: {str(e)}")
+
+@set_notifications.error
+async def set_notifications_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("❌ You need to specify a notification type.\n\n**Examples:**\n• `!notifications machines` - machine additions/removals only\n• `!notifications comments` - condition updates only\n• `!notifications all` - everything")
+    else:
+        await ctx.send(f"❌ An unexpected error occurred with `!notifications`: {error}")
 
 
 @client.command(name='status')

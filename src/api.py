@@ -51,11 +51,14 @@ def get_yesterday_date() -> str:
     return yesterday.strftime('%Y-%m-%d')
 
 
-async def fetch_submissions_for_coordinates(lat: float, lon: float, radius_miles: int) -> List[Dict[str, Any]]:
+async def fetch_submissions_for_coordinates(lat: float, lon: float, radius_miles: int = None) -> List[Dict[str, Any]]:
     """Fetch user submissions within radius of given coordinates"""
     try:
         yesterday = get_yesterday_date()
-        url = f'https://pinballmap.com/api/v1/user_submissions/list_within_range.json?lat={lat}&lon={lon}&max_distance={radius_miles}&min_date_of_submission={yesterday}'
+        if radius_miles is not None:
+            url = f'https://pinballmap.com/api/v1/user_submissions/list_within_range.json?lat={lat}&lon={lon}&max_distance={radius_miles}&min_date_of_submission={yesterday}'
+        else:
+            url = f'https://pinballmap.com/api/v1/user_submissions/list_within_range.json?lat={lat}&lon={lon}&min_date_of_submission={yesterday}'
 
         response = await rate_limited_request(url)
         data = response.json()
@@ -161,4 +164,81 @@ async def search_location_by_name(location_name: str) -> Dict[str, Any]:
         return {'status': 'not_found', 'data': None}
 
 
-# Legacy function removed - test simulation no longer supported
+async def geocode_city_name(city_name: str) -> Dict[str, Any]:
+    """
+    Geocode a city name to latitude/longitude coordinates using Open-Meteo API
+    Returns: {'status': 'success', 'lat': float, 'lon': float, 'display_name': str} or {'status': 'error', 'message': str}
+    """
+    try:
+        import urllib.parse
+        
+        # Try multiple formats if the first one fails
+        search_terms = [
+            city_name.strip(),  # Original format
+        ]
+        
+        # If there's a comma, try variations
+        if ',' in city_name:
+            # Try without comma
+            search_terms.append(city_name.replace(',', ' ').strip())
+            
+            # Try just the city name (first part before comma)
+            city_part = city_name.split(',')[0].strip()
+            if city_part not in search_terms:
+                search_terms.append(city_part)
+        
+        # If there are US state abbreviations, try with full state names
+        state_mapping = {
+            'TX': 'Texas', 'CA': 'California', 'NY': 'New York', 'FL': 'Florida',
+            'PA': 'Pennsylvania', 'IL': 'Illinois', 'OH': 'Ohio', 'GA': 'Georgia',
+            'NC': 'North Carolina', 'MI': 'Michigan', 'NJ': 'New Jersey', 'VA': 'Virginia',
+            'WA': 'Washington', 'AZ': 'Arizona', 'MA': 'Massachusetts', 'TN': 'Tennessee',
+            'IN': 'Indiana', 'MD': 'Maryland', 'MO': 'Missouri', 'WI': 'Wisconsin',
+            'CO': 'Colorado', 'MN': 'Minnesota', 'SC': 'South Carolina', 'AL': 'Alabama',
+            'LA': 'Louisiana', 'KY': 'Kentucky', 'OR': 'Oregon', 'OK': 'Oklahoma'
+        }
+        
+        # Handle state abbreviations more intelligently  
+        for state_abbr, state_full in state_mapping.items():
+            if f' {state_abbr.upper()}' in f' {city_name.upper()}' or f' {state_abbr.lower()}' in f' {city_name.lower()}':
+                # Try the full state name version
+                expanded = city_name.replace(state_abbr, state_full).replace(state_abbr.lower(), state_full).replace(',', ' ')
+                search_terms.append(' '.join(expanded.split()))
+                
+                # Also try just the city name without the state
+                city_parts = city_name.split()
+                if len(city_parts) > 1:
+                    for i, part in enumerate(city_parts):
+                        if part.upper() == state_abbr.upper() or part.lower() == state_abbr.lower():
+                            city_only = ' '.join(city_parts[:i] + city_parts[i+1:]).strip()
+                            if city_only and city_only not in search_terms:
+                                search_terms.append(city_only)
+        
+        # If there are multiple spaces, also try with single spaces
+        normalized = ' '.join(city_name.split())
+        if normalized not in search_terms:
+            search_terms.append(normalized)
+        
+        for search_term in search_terms:
+            encoded_city = urllib.parse.quote(search_term)
+            url = f'https://geocoding-api.open-meteo.com/v1/search?name={encoded_city}&count=5'
+            
+            response = await rate_limited_request(url)
+            data = response.json()
+            
+            results = data.get('results', [])
+            if results:
+                # Use the first result
+                location = results[0]
+                return {
+                    'status': 'success',
+                    'lat': location['latitude'],
+                    'lon': location['longitude'], 
+                    'display_name': f"{location['name']}, {location.get('admin1', '')}, {location.get('country', '')}".strip(', ')
+                }
+        
+        return {'status': 'error', 'message': f"No results found for city: {city_name}"}
+        
+    except Exception as e:
+        print(f"Error geocoding city '{city_name}': {e}")
+        return {'status': 'error', 'message': f"Geocoding failed: {str(e)}"}

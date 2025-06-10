@@ -6,8 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Python Discord bot that continuously monitors the pinballmap.com API for changes in pinball machine locations and posts automated updates to configured Discord channels. The bot supports multiple channels with different notification types and customizable search parameters.
 
 ## Common Development Commands
-- **Activate virtual environment**: `source venv/bin/activate`
+- **Activate virtual environment**: `source venv/bin/activate` (ALWAYS use venv for development)
 - **Install dependencies**: `pip install -r requirements.txt`
+- **Run tests**: `source venv/bin/activate && python -m pytest -v`
 - **Run the bot**: `python bot.py`
 
 ## Setup Requirements
