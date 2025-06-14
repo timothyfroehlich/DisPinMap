@@ -9,6 +9,18 @@ A Python Discord bot that continuously monitors the pinballmap.com API for chang
 - **Real-Time Updates**: Instant notifications when machines are added or removed
 - **Flexible Configuration**: Mix and match coordinate areas and specific locations
 
+## Dependencies
+
+- Python 3.8+
+- Discord.py
+- SQLite3
+- Requests
+
+## API Documentation
+
+- [Open-Meteo Geocoding API](https://open-meteo.com/en/docs/geocoding-api) - Used for city name to coordinates conversion
+- [Pinball Map API](https://pinballmap.com/api/v1/docs) - Used for fetching pinball machine data
+
 ## Recent Updates
 🚀 **GCP Deployment Ready**: Added containerization and Google Cloud Platform deployment support with Terraform infrastructure as code.
 
@@ -58,7 +70,7 @@ A Python Discord bot that continuously monitors the pinballmap.com API for chang
    ```bash
    # Get the Artifact Registry URL from terraform output
    REPO_URL=$(terraform output -raw artifact_registry_repository_url)
-   
+
    # Build and push container
    docker build -t $REPO_URL/dispinmap-bot:latest .
    docker push $REPO_URL/dispinmap-bot:latest
@@ -66,7 +78,7 @@ A Python Discord bot that continuously monitors the pinballmap.com API for chang
 
 4. **⚠️ IMPORTANT: Manual Discord Token Setup**:
    After `terraform apply` completes successfully, you **MUST** manually add your Discord bot token to Google Secret Manager:
-   
+
    - Go to [Secret Manager](https://console.cloud.google.com/security/secret-manager) in the GCP Console
    - Find the secret named `dispinmap-bot-discord-token` (or check `terraform output discord_token_secret_id`)
    - Click "Add Version" and paste your Discord bot token
@@ -76,7 +88,7 @@ A Python Discord bot that continuously monitors the pinballmap.com API for chang
    ```bash
    # Check service URL
    terraform output cloud_run_service_url
-   
+
    # Test health endpoint
    curl $(terraform output -raw cloud_run_service_url)/health
    ```

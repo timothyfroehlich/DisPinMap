@@ -200,20 +200,20 @@ class CommandHandler:
         try:
             # Geocode the city name
             geocode_result = await geocode_city_name(city_name)
-            
+
             if geocode_result['status'] == 'error':
                 await ctx.send(f"❌ {geocode_result['message']}")
                 return
-                
+
             lat = geocode_result['lat']
             lon = geocode_result['lon']
             display_name = geocode_result['display_name']
-            
+
             # Validate optional radius
             if radius is not None and (radius < 1 or radius > 100):
                 await ctx.send("❌ Radius must be between 1 and 100 miles")
                 return
-            
+
             # Create target name
             if radius is None:
                 target_name = f"{lat},{lon}"
@@ -221,19 +221,19 @@ class CommandHandler:
             else:
                 target_name = f"{lat},{lon},{radius}"
                 radius_display = f"{radius} miles"
-                
+
             # Add as latlong target (same underlying mechanism)
             self.db.add_monitoring_target(ctx.channel.id, 'latlong', target_name)
-            
+
             # Auto-start monitoring and fetch initial submissions
             self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
-            
+
             # Fetch and post initial submissions
             submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
             await self._post_initial_submissions(ctx, submissions, f"city: {display_name}")
-            
+
             await ctx.send(f"✅ Added city: **{display_name}** ({radius_display} radius) - Monitoring started!")
-            
+
         except Exception as e:
             await ctx.send(f"❌ Error adding city: {str(e)}")
 
@@ -262,7 +262,7 @@ class CommandHandler:
                 target_name_db = target['target_name']
                 target_data = target['target_data']
                 poll_rate = target['poll_rate_minutes']
-                
+
                 display_name = ""
                 if target_type == 'location':
                     display_name = f"{target_name_db} (ID: {target_data})"
@@ -276,7 +276,7 @@ class CommandHandler:
                     display_name = target_name_db
 
                 status_msg += f"{target_id_display}. {display_name} (Type: {target_type}, Poll: {poll_rate} min)\n"
-        
+
         await ctx.send(status_msg)
 
     async def handle_poll_rate(self, ctx: MessageContext, minutes: int, target_selector: Optional[str] = None):
@@ -309,7 +309,7 @@ class CommandHandler:
                                message.content.lower() in ['yes', 'y', 'no', 'n']
 
                     reply_message = await ctx.bot.wait_for('message', timeout=30.0, check=check)
-                    
+
                     if reply_message.content.lower() in ['no', 'n']:
                         await ctx.send("Poll rate update cancelled.")
                         return
@@ -320,7 +320,7 @@ class CommandHandler:
                 except Exception as e: # Catch other potential errors with wait_for
                     await ctx.send(f"An error occurred during confirmation: {e}. Update cancelled.")
                     return
-            
+
             num_updated = self.db.update_channel_monitoring_targets_poll_rate(ctx.channel.id, minutes)
             await ctx.send(f"✅ Poll rate for all {num_updated} targets set to {minutes} minutes.")
 
@@ -329,10 +329,10 @@ class CommandHandler:
             if not (1 <= target_idx_one_based <= len(targets)):
                 await ctx.send("❌ Invalid target ID. Please use a number from the `!status` list.")
                 return
-            
+
             selected_target_info = targets[target_idx_one_based - 1]
             actual_target_db_id = selected_target_info['id']
-            
+
             target_display_name = ""
             ttype = selected_target_info['target_type']
             tname = selected_target_info['target_name']
@@ -355,58 +355,55 @@ class CommandHandler:
             await ctx.send(f"❌ Invalid target selector '{target_selector}'. Must be a number (from `!status`) or 'all'.")
 
     async def handle_check(self, ctx: MessageContext):
-        """Check for new submissions"""
+        """Handles the !check command logic."""
+        await ctx.send("🔍 Checking for new submissions across all targets...")
         targets = self.db.get_monitoring_targets(ctx.channel.id)
-
         if not targets:
-            await ctx.send("❌ No monitoring targets configured. Use `latlong add` or `location add` to set up monitoring first.")
+            await ctx.send("❌ No monitoring targets configured. Use `!latlong add` or `!location add` to set up monitoring first.")
             return
 
-        try:
-            await ctx.send("🔍 Checking for new submissions across all targets...")
+        all_submissions = []
+        new_submissions = []
+        target_descriptions = []
 
-            all_submissions = []
-            target_descriptions = []
+        for target in targets:
+            target_type = target['target_type']
+            target_name = target['target_name']
+            target_data = target.get('target_data')
+            poll_rate = target.get('poll_rate_minutes', 60)
 
-            # Fetch from all targets
-            for target in targets:
-                if target['target_type'] == 'latlong':
-                    parts = target['target_name'].split(',')
-                    if len(parts) >= 3:
-                        lat, lon, radius = float(parts[0]), float(parts[1]), int(parts[2])
-                        submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
-                        target_descriptions.append(f"coordinates **{lat}, {lon}** ({radius}mi)")
-                        all_submissions.extend(submissions)
-                    elif len(parts) == 2:
-                        lat, lon = float(parts[0]), float(parts[1])
-                        submissions = await fetch_submissions_for_coordinates(lat, lon)
-                        target_descriptions.append(f"coordinates **{lat}, {lon}** (default radius)")
-                        all_submissions.extend(submissions)
-
-                elif target['target_type'] == 'location':
-                    if target['target_data']:
-                        location_id = int(target['target_data'])
-                        submissions = await fetch_submissions_for_location(location_id)
-                        target_descriptions.append(f"location **{target['target_name']}**")
-                        all_submissions.extend(submissions)
-
-            # Filter out already seen submissions
-            new_submissions = self.db.filter_new_submissions(ctx.channel.id, all_submissions)
-
-            target_summary = f"{len(targets)} target(s): {', '.join(target_descriptions)}"
-
-            if new_submissions:
-                await self._post_submissions(ctx, new_submissions)
-                # Mark as seen
-                submission_ids = [s['id'] for s in new_submissions]
-                self.db.mark_submissions_seen(ctx.channel.id, submission_ids)
-
-                await ctx.send(f"✅ Found {len(all_submissions)} total submissions across {target_summary}. Posted {len(new_submissions)} new submissions!")
+            if target_type == 'latlong':
+                coords = target_name.split(',')
+                lat, lon = float(coords[0]), float(coords[1])
+                radius = int(coords[2]) if len(coords) > 2 else None
+                submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=False)
+                target_descriptions.append(f"coordinates **{lat}, {lon}** ({radius if radius else 'default radius'})")
+            elif target_type == 'location':
+                location_id = int(target_data) if target_data else None
+                if not location_id:
+                    continue
+                submissions = await fetch_submissions_for_location(location_id, use_min_date=False)
+                target_descriptions.append(f"location **{target_name}**")
             else:
-                await ctx.send(f"✅ Found {len(all_submissions)} submissions across {target_summary}. No new submissions since last check.")
+                continue
 
-        except Exception as e:
-            await ctx.send(f"❌ Error checking for submissions: {str(e)}")
+            all_submissions.extend(submissions)
+
+            # Filter out submissions we've already seen
+            seen_ids = self.db.get_seen_submission_ids(ctx.channel.id)
+            new_submissions.extend([s for s in submissions if s['id'] not in seen_ids])
+
+        target_summary = f"{len(targets)} target(s): {', '.join(target_descriptions)}"
+
+        if new_submissions:
+            await self._post_submissions(ctx, new_submissions)
+            # Mark as seen
+            submission_ids = [s['id'] for s in new_submissions]
+            self.db.mark_submissions_seen(ctx.channel.id, submission_ids)
+
+            await ctx.send(f"✅ Found {len(all_submissions)} total submissions across {target_summary}. Posted {len(new_submissions)} new submissions!")
+        else:
+            await ctx.send(f"✅ Found {len(all_submissions)} submissions across {target_summary}. No new submissions since last check.")
 
     async def _post_initial_submissions(self, ctx: MessageContext, submissions: List[Dict[str, Any]], target_type: str):
         """Post initial submissions when setting up monitoring"""

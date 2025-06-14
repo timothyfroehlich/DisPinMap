@@ -5,17 +5,35 @@ import os
 import logging
 import asyncio
 from aiohttp import web
+import colorama
+from colorama import Fore, Style
+
+# Initialize colorama
+colorama.init()
+
+# Define a custom formatter that colors log levels and removes the filename
+class ColoredFormatter(logging.Formatter):
+    def format(self, record):
+        levelname = record.levelname
+        if levelname == 'DEBUG':
+            levelname = f"{Fore.BLUE}{levelname}{Style.RESET_ALL}"
+        elif levelname == 'INFO':
+            levelname = f"{Fore.GREEN}{levelname}{Style.RESET_ALL}"
+        elif levelname == 'WARNING':
+            levelname = f"{Fore.YELLOW}{levelname}{Style.RESET_ALL}"
+        elif levelname == 'ERROR':
+            levelname = f"{Fore.RED}{levelname}{Style.RESET_ALL}"
+        elif levelname == 'CRITICAL':
+            levelname = f"{Fore.RED}{Style.BRIGHT}{levelname}{Style.RESET_ALL}"
+        record.levelname = levelname
+        return super().format(record)
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('bot.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+handler.setFormatter(ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
 
 try:
     from .database import Database
@@ -33,7 +51,7 @@ load_dotenv()
 async def get_discord_token() -> str:
     """Get Discord token from GCP Secret Manager or .env file"""
     secret_name = os.getenv('DISCORD_TOKEN_SECRET_NAME')
-    
+
     if secret_name:
         # Try to get token from GCP Secret Manager
         try:
@@ -43,13 +61,13 @@ async def get_discord_token() -> str:
             if not project_id:
                 logger.error("GOOGLE_CLOUD_PROJECT environment variable not set")
                 raise ValueError("GOOGLE_CLOUD_PROJECT environment variable required for Secret Manager")
-            
+
             name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
             response = client.access_secret_version(request={"name": name})
             token = response.payload.data.decode("UTF-8")
             logger.info("Successfully retrieved Discord token from Secret Manager")
             return token
-            
+
         except ImportError:
             logger.error("google-cloud-secret-manager not available")
             raise ImportError("Install google-cloud-secret-manager for GCP Secret Manager support")
@@ -62,7 +80,7 @@ async def get_discord_token() -> str:
         if not token:
             logger.error("DISCORD_BOT_TOKEN not found in environment variables")
             raise ValueError("Discord token not found in .env file or Secret Manager")
-        
+
         logger.info("Using Discord token from .env file")
         return token
 
@@ -77,16 +95,16 @@ async def start_http_server():
     app = web.Application()
     app.router.add_get('/', handle_health_check)
     app.router.add_get('/health', handle_health_check)
-    
+
     # Get port from environment (Cloud Run sets this)
     port = int(os.getenv('PORT', 8080))
     host = '0.0.0.0'  # Listen on all interfaces for Cloud Run
-    
+
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, host, port)
     await site.start()
-    
+
     logger.info(f"HTTP health check server started on {host}:{port}")
     return runner
 
@@ -125,9 +143,13 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    # Check if it's a command and log it immediately
+    # Check if the message is a command
     if message.content.startswith('!'):
-        logger.info(f"COMMAND RECEIVED from {message.author} in #{message.channel} (Guild: {message.guild}): {message.content}")
+        command = message.content[1:].split()[0].lower()
+        if command not in client.commands:
+            logger.warning(f"COMMAND NOT FOUND from {message.author} in #{message.channel.name}: {message.content}")
+            await message.channel.send(f"❌ Unknown command: `{command}`. Use `!help` to see available commands.")
+            return
 
     # Process the command
     await client.process_commands(message)
@@ -220,12 +242,12 @@ async def add_city_error(ctx, error):
 @client.command(name='poll_rate')
 async def set_poll_rate(ctx, minutes: int, target_selector: str = None):
     """Set polling rate for monitoring targets
-    
+
     Usage:
     !poll_rate 30           - Set all targets to 30 minutes
-    !poll_rate 30 all       - Set all targets to 30 minutes  
+    !poll_rate 30 all       - Set all targets to 30 minutes
     !poll_rate 45 3         - Set target #3 to 45 minutes
-    
+
     Use !status to see target numbers"""
     await command_handler.handle_poll_rate(ctx, minutes, target_selector)
 
@@ -252,7 +274,7 @@ async def set_notifications(ctx, notification_type: str):
 @set_notifications.error
 async def set_notifications_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("❌ You need to specify a notification type.\n\n**Examples:**\n• `!notifications machines` - machine additions/removals only\n• `!notifications comments` - condition updates only\n• `!notifications all` - everything")
+        await ctx.send("❌ You need to specify a notification type.\n\n**Examples:**\n• `!notifications machines` - machine additions/removals only (default)\n• `!notifications comments` - condition updates only\n• `!notifications all` - everything")
     else:
         await ctx.send(f"❌ An unexpected error occurred with `!notifications`: {error}")
 
@@ -324,14 +346,14 @@ async def main():
     try:
         # Get Discord token from Secret Manager or .env file
         token = await get_discord_token()
-        
+
         # Start HTTP server for health checks
         http_runner = await start_http_server()
-        
+
         # Start the Discord bot (non-blocking)
         logger.info("Starting Discord bot...")
         await client.start(token)
-        
+
     except Exception as e:
         logger.error(f"Failed to start application: {e}")
         exit(1)
