@@ -159,6 +159,27 @@ The bot uses slash commands prefixed with `!`.
 - Docker (for containerization)
 - GCP tools (for deployment)
 
+## Environment Variables
+The bot uses environment variables for configuration, managed through a `.env` file in the project root. Create a `.env` file based on `.env.example` with the following required variables:
+
+```bash
+# Required Variables
+DISCORD_TOKEN=your_discord_bot_token    # Discord bot token from Discord Developer Portal
+DB_TYPE=sqlite                          # Database type: 'sqlite' for local, 'postgresql' for GCP
+
+# Optional Variables (for GCP deployment)
+DB_HOST=your_db_host                    # PostgreSQL host (required for DB_TYPE=postgresql)
+DB_PORT=5432                            # PostgreSQL port
+DB_NAME=your_db_name                    # Database name
+DB_USER=your_db_user                    # Database user
+DB_PASSWORD=your_db_password            # Database password
+```
+
+The `.env` file is automatically loaded by the bot using python-dotenv. Make sure to:
+1. Never commit the `.env` file to version control
+2. Keep `.env.example` updated with all required variables
+3. Set appropriate values for your environment (local development vs GCP)
+
 ## Common Commands
 ```bash
 # Run tests

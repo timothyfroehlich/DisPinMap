@@ -185,7 +185,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         commands.append(f"!notifications {channel_config['notification_types']}")
         commands.append("")
 
-        for target in targets:
+        for i, target in enumerate(targets, 1):
             if target['target_type'] == 'latlong':
                 coords = target['target_name'].split(',')
                 cmd = f"!add coordinates {coords[0]} {coords[1]}"
@@ -197,9 +197,9 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 cmd = f"!add city {target['target_name']}"
 
             if target['poll_rate_minutes'] != channel_config['poll_rate_minutes']:
-                cmd += f"\n!poll_rate {target['poll_rate_minutes']} {target['id']}"
+                cmd += f"\n!poll_rate {target['poll_rate_minutes']} {i}"
             if target['notification_types'] != channel_config['notification_types']:
-                cmd += f"\n!notifications {target['notification_types']} {target['id']}"
+                cmd += f"\n!notifications {target['notification_types']} {i}"
 
             commands.append(cmd)
 
@@ -208,11 +208,11 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
     @commands.command(name='check')
     async def check(self, ctx):
         """Immediately check for new submissions."""
-        # This is a bit of a hack to get the monitor cog.
-        # A better solution would be to use a shared object.
+        # Get the monitor cog and channel config
         monitor_cog = self.bot.get_cog('MachineMonitor')
         if monitor_cog:
-            await monitor_cog.run_checks_for_channel(ctx.channel.id)
+            config = self.db.get_channel_config(ctx.channel.id)
+            await monitor_cog.run_checks_for_channel(ctx.channel.id, config)
         else:
             await self.notifier.log_and_send(ctx, "Error: Could not find the monitor.")
 

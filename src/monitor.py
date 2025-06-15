@@ -36,11 +36,10 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
     @tasks.loop(minutes=1)
     async def monitor_task_loop(self):
         """Main monitoring loop"""
-        active_channels = self.db.get_active_channels()
-        for channel_id in active_channels:
-            config = self.db.get_channel_config(channel_id)
+        active_channel_configs = self.db.get_active_channels()
+        for config in active_channel_configs:
             if await self._should_poll_channel(config):
-                await self.run_checks_for_channel(channel_id, config)
+                await self.run_checks_for_channel(config['channel_id'], config)
 
     async def run_checks_for_channel(self, channel_id: int, config: Dict[str, Any]):
         """Poll a single channel for new submissions across all its targets"""
