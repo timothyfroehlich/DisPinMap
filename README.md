@@ -104,24 +104,24 @@ python bot.py
 ### Configuration Commands
 
 **Target Monitoring:**
-- `!latlong add <lat> <lon> <radius>` / `!latlong remove <lat> <lon>` - Monitor coordinate areas
-- `!location add <location_id>` / `!location remove <location_id>` - Monitor specific locations by ID
+- `!add location <name_or_id>` - Monitor specific locations by ID or name
+- `!add city <name> [radius]` - Monitor city areas with optional radius
+- `!add coordinates <lat> <lon> [radius]` - Monitor coordinate areas with optional radius
+- `!rm <index>` - Remove target by index (use `!list` to see indices)
 
 **General Commands:**
-- `!interval <minutes>` - Set polling interval (minimum 15 minutes)
-- `!notifications <type>` - Set notification types (machines, comments, all)
-- `!status` - Show current configuration and all monitored targets
-- `!start` - Start monitoring all configured targets
-- `!stop` - Stop monitoring for this channel
-- `!check` - Immediately check for changes across all targets
-- `!test` - Run 30-second simulation for testing
+- `!list` - Show all monitored targets with their indices
+- `!export` - Export channel configuration as copy-pasteable commands
+- `!poll_rate <minutes> [target_index]` - Set polling rate for channel or specific target
+- `!notifications <type> [target_index]` - Set notification types (machines, comments, all)
+- `!check` - Immediately check for new submissions across all targets
 
 ### Example Setup
 ```
-!latlong add 40.7128 -74.0060 15        # Add NYC area with 15mi radius
-!location add 12345                      # Add specific location by ID
-!interval 30                             # Check every 30 minutes
-!start                                   # Begin monitoring all targets
+!add city "Austin"        # Add Austin TX
+!add location "Pinballz Arcade"      # Add a specific location by name
+!poll_rate 30                        # Check every 30 minutes
+!notifications all                   # Get all notifications
 ```
 
 ### Finding Location IDs
@@ -129,3 +129,13 @@ To monitor specific locations, you'll need to find their ID from the pinballmap.
 1. Visit https://pinballmap.com
 2. Search for and navigate to the location you want to monitor
 3. The location ID will be in the URL (e.g., `/locations/12345` means ID is 12345)
+
+## Testing Bot Startup
+
+To test that the bot can start up and connect to Discord without running indefinitely, you can use the `--test-startup` flag:
+
+```bash
+python3 src/main.py --test-startup
+```
+
+This will start the bot, wait until it connects to Discord, then immediately shut down and exit. This is useful for CI or for verifying that your environment and token are set up correctly.
