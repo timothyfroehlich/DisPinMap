@@ -23,9 +23,9 @@ def db():
 
 
 @pytest.fixture
-def notifier():
+def notifier(db):
     """Create notifier instance"""
-    return Notifier()
+    return Notifier(db)
 
 
 @pytest.fixture
@@ -61,9 +61,8 @@ class TestAddCommand:
             # Verify API was called
             mock_get.assert_called_once_with(123)
             # Verify user got success message
-            await assert_discord_message(ctx, Messages.Command.Add.SUCCESS.format(
-                target_type="location",
-                name="Test Location (ID: 123)"
+            await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
+                target_type="location **Test Location** (ID: 123)"
             ))
             # Verify database was updated
             verify_database_target(db, ctx.channel.id, 1, 'location')
@@ -89,7 +88,9 @@ class TestAddCommand:
             # Verify API was called
             mock_search.assert_called_once_with("Test Location")
             # Verify user got success message
-            await assert_discord_message(ctx, "Added location:")
+            await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
+                target_type="location **Test Location** (ID: 123)"
+            ))
             # Verify database was updated
             verify_database_target(db, ctx.channel.id, 1, 'location')
 
@@ -102,7 +103,9 @@ class TestAddCommand:
         await monitoring_cog.add.callback(monitoring_cog, ctx, "coordinates", "30.0", "97.0", "10")
 
         # Verify user got success message
-        await assert_discord_message(ctx, "Added coordinates: **30.0, 97.0 with a 10 mile radius** - Monitoring started!")
+        await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
+            target_type="coordinates **30.0, 97.0**"
+        ))
         # Verify database was updated
         verify_database_target(db, ctx.channel.id, 1, 'latlong')
 
@@ -112,19 +115,23 @@ class TestAddCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!add city Austin,TX"
 
-        with patch('src.cogs.monitoring.geocode_city_name', new_callable=AsyncMock) as mock_geocode:
+        with patch('src.cogs.monitoring.geocode_city_name', new_callable=AsyncMock) as mock_geocode, \
+             patch('src.cogs.monitoring.fetch_submissions_for_coordinates', new_callable=AsyncMock) as mock_fetch:
             mock_geocode.return_value = {
                 'status': 'success',
                 'lat': 30.2672,
                 'lon': -97.7431,
                 'display_name': 'Austin, Texas, US'
             }
+            mock_fetch.return_value = []
             await monitoring_cog.add.callback(monitoring_cog, ctx, "city", "Austin,TX")
 
             # Verify API was called
             mock_geocode.assert_called_once_with("Austin,TX")
             # Verify user got success message
-            await assert_discord_message(ctx, "Added city: **Austin, Texas, US** - Monitoring started!")
+            await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
+                target_type="city **Austin, Texas, US**"
+            ))
             # Verify database was updated
             verify_database_target(db, ctx.channel.id, 1, 'city')
 

@@ -18,7 +18,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         self.db = db
         self.notifier = notifier
 
-    def _sort_and_limit_submissions(self, submissions: list, limit: int = 5) -> list:
+    def _sort_submissions(self, submissions: list) -> list:
         """Sorts submissions by date and returns the most recent ones."""
         if not submissions:
             return []
@@ -32,7 +32,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 return datetime.min
 
         sorted_submissions = sorted(submissions, key=sort_key, reverse=True)
-        return sorted_submissions[:limit]
+        return sorted_submissions
 
     @commands.command(name='add')
     async def add(self, ctx, target_type: str, *args):
@@ -247,13 +247,8 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
                     submissions = await fetch_submissions_for_location(location_id, use_min_date=False)
-                    latest_submissions = self._sort_and_limit_submissions(submissions)
-                    await self.notifier.post_initial_submissions(ctx, latest_submissions, f"location **{location_name}** (ID: {location_id})")
-
-                    await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
-                        target_type="location",
-                        name=f"{location_name} (ID: {location_id})"
-                    ))
+                    sorted_submissions = self._sort_submissions(submissions)
+                    await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"location **{location_name}** (ID: {location_id})")
                 else:
                     await self.notifier.log_and_send(ctx, Messages.Command.Add.LOCATION_NOT_FOUND.format(
                         location_id=location_id
@@ -272,13 +267,8 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
                     submissions = await fetch_submissions_for_location(location_id, use_min_date=False)
-                    latest_submissions = self._sort_and_limit_submissions(submissions)
-                    await self.notifier.post_initial_submissions(ctx, latest_submissions, f"location **{location_name}** (ID: {location_id})")
-
-                    await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
-                        target_type="location",
-                        name=f"{location_name} (ID: {location_id})"
-                    ))
+                    sorted_submissions = self._sort_submissions(submissions)
+                    await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"location **{location_name}** (ID: {location_id})")
                 elif status == 'suggestions':
                     await self.notifier.log_and_send(ctx, Messages.Command.Add.LOCATION_SUGGESTIONS.format(
                         search_term=location_input_stripped,
@@ -306,8 +296,8 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
             submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=False)
-            latest_submissions = self._sort_and_limit_submissions(submissions)
-            await self.notifier.post_initial_submissions(ctx, latest_submissions, f"coordinates **{lat}, {lon}**")
+            sorted_submissions = self._sort_submissions(submissions)
+            await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"coordinates **{lat}, {lon}**")
 
             radius_info = f" with a {radius} mile radius" if radius else ""
             await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
@@ -341,8 +331,8 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
             submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=False)
-            latest_submissions = self._sort_and_limit_submissions(submissions)
-            await self.notifier.post_initial_submissions(ctx, latest_submissions, f"city **{display_name}**")
+            sorted_submissions = self._sort_submissions(submissions)
+            await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"city **{display_name}**")
 
             await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
                 target_type="city",

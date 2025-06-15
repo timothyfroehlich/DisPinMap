@@ -6,11 +6,14 @@ import logging
 from typing import List, Dict, Any
 
 from .messages import Messages
+from .database import Database
 
 logger = logging.getLogger(__name__)
 
 class Notifier:
     """Handles formatting and sending messages"""
+    def __init__(self, db: Database):
+        self.db = db
 
     async def log_and_send(self, ctx, message: str):
         """Helper method to log and send messages"""
@@ -18,15 +21,29 @@ class Notifier:
         if hasattr(ctx, 'author') and hasattr(ctx, 'channel'):
             logger.info(f'Sent message to {ctx.author.name} ({ctx.author.id}) in channel {ctx.channel.name} ({ctx.channel.id}): {message}')
 
+    def _filter_submissions_by_type(self, submissions: List[Dict[str, Any]], notification_type: str) -> List[Dict[str, Any]]:
+        """Filter submissions based on notification type."""
+        if notification_type == 'machines':
+            return [s for s in submissions if s.get('submission_type') in ['new_lmx', 'remove_machine']]
+        elif notification_type == 'comments':
+            return [s for s in submissions if s.get('submission_type') == 'new_condition']
+        return submissions
+
     async def post_initial_submissions(self, ctx, submissions: List[Dict[str, Any]], target_type: str):
         """Post initial submissions for a new target"""
-        if submissions:
+        channel_config = self.db.get_channel_config(ctx.channel.id)
+        notification_type = channel_config.get('notification_types', 'all')
+
+        filtered_submissions = self._filter_submissions_by_type(submissions, notification_type)
+
+        latest_submissions = filtered_submissions[:5]
+
+        if latest_submissions:
             await self.log_and_send(ctx, Messages.Notification.Initial.FOUND.format(
-                count=len(submissions),
+                count=len(latest_submissions),
                 target_type=target_type
             ))
-            # Only show the first 5 submissions
-            await self.post_submissions(ctx, submissions[:5])
+            await self.post_submissions(ctx, latest_submissions, channel_config)
         else:
             await self.log_and_send(ctx, Messages.Notification.Initial.NONE.format(target_type=target_type))
 
@@ -34,12 +51,7 @@ class Notifier:
         """Post submissions to the channel"""
         # Filter submissions based on notification type
         if config and 'notification_types' in config:
-            notification_type = config['notification_types']
-            if notification_type == 'machines':
-                submissions = [s for s in submissions if s.get('submission_type') in ['new_lmx', 'remove_machine']]
-            elif notification_type == 'comments':
-                submissions = [s for s in submissions if s.get('submission_type') == 'new_condition']
-            # 'all' type doesn't need filtering
+            submissions = self._filter_submissions_by_type(submissions, config['notification_types'])
 
         # Skip sleep in test mode
         if not hasattr(ctx, 'sent_messages'):
