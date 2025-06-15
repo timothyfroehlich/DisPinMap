@@ -58,7 +58,24 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     """Handle command errors"""
     logger.error(f"An error occurred in command '{ctx.command}': {error}")
-    if isinstance(error, commands.CommandInvokeError):
+    if isinstance(error, commands.MissingRequiredArgument):
+        command_name = ctx.command.name
+        message = ""
+        if command_name == 'add':
+            message = "❌ Please specify a target type (location, coordinates, or city). Usage: `!add <type> [...]`"
+        elif command_name == 'rm':
+            message = "❌ Please specify the index of the target to remove. Usage: `!rm <index>`"
+        elif command_name == 'poll_rate':
+            message = "❌ Please specify the poll rate in minutes. Usage: `!poll_rate <minutes> [target_index]`"
+        elif command_name == 'notifications':
+            message = "❌ Please specify the notification type. Usage: `!notifications <type> [target_index]`\nValid types are: `machines`, `comments`, `all`"
+
+        if message:
+            await ctx.send(message)
+        else:
+            await ctx.send(f"❌ Missing argument: `{error.param.name}`. Please check the command's usage.")
+
+    elif isinstance(error, commands.CommandInvokeError):
         if ctx.command:
             await ctx.send(Messages.Command.Error.COMMAND.format(command=ctx.command.qualified_name))
         else:
@@ -70,15 +87,15 @@ async def main():
     """Async entry point for the bot"""
     # Create shared instances (not cogs)
     database = Database()
-    
+
     # Import notifier after other imports
     try:
         from .notifier import Notifier
     except ImportError:
         from notifier import Notifier
-    
-    notifier = Notifier()
-    
+
+    notifier = Notifier(database)
+
     # Store shared instances on bot for cogs to access
     bot.database = database
     bot.notifier = notifier

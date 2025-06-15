@@ -49,9 +49,6 @@ class Messages:
             INVALID_RADIUS = "❌ Radius must be between 1 and 100 miles"
             """No format parameters."""
 
-            MISSING_ARG = "❌ Please specify a target type (location, coordinates, or city) and its parameters."
-            """No format parameters."""
-
             MISSING_LOCATION = "❌ Please provide a location name or ID. Usage: `!add location <name_or_id>`"
             MISSING_COORDS = "❌ Please provide latitude and longitude. Usage: `!add coordinates <lat> <lon> [radius]`"
             INVALID_COORDS_FORMAT = "❌ Invalid coordinates. Please provide valid numbers."
@@ -71,6 +68,17 @@ class Messages:
             """Format parameters:
             - search_term: str - The search term that yielded no results
             """
+
+            INVALID_INDEX = "❌ Invalid index. Please use a number between 1 and {max_index}"
+            """Format parameters:
+            - max_index: int - Maximum valid index
+            """
+
+            INVALID_INDEX_NUMBER = "❌ Please provide a valid number for the index"
+            """No format parameters."""
+
+            INVALID_TARGET_INDEX = "❌ Invalid target index. Please provide a number."
+            """No format parameters."""
 
         class Remove:
             """Messages for the remove command."""
@@ -92,11 +100,6 @@ class Messages:
             """Format parameters:
             - max_index: int - Maximum valid index
             """
-
-            MISSING_ARG = "❌ Please specify the index of the target to remove (use !list to see indices)."
-            """No format parameters."""
-
-            MISSING_INDEX = "❌ Please specify the index of the target to remove (use !list to see indices)."
 
             INVALID_INDEX_NUMBER = "❌ Please provide a valid number for the index"
             """No format parameters."""
@@ -145,11 +148,6 @@ class Messages:
             INVALID_RATE = "❌ Poll rate must be at least 1 minute"
             """No format parameters."""
 
-            MISSING_ARG = "❌ Please specify the poll rate in minutes."
-            """No format parameters."""
-
-            MISSING_RATE = "❌ Please specify the poll rate in minutes."
-
         class Notifications:
             """Messages for the notifications command."""
             SUCCESS_TARGET = "✅ Set notifications to {notification_type} for target {target_id}"
@@ -168,11 +166,6 @@ class Messages:
             - valid_types: str - Comma-separated list of valid notification types
             """
 
-            MISSING_ARG = "❌ Please specify the notification type (machines, comments, or all)."
-            """No format parameters."""
-
-            MISSING_TYPE = "❌ Please specify the notification type (machines, comments, or all)."
-
         class Error:
             """Error messages."""
             COMMAND = "❌ An unexpected error occurred while running `!{command}`. Please check the logs or contact the admin."
@@ -184,9 +177,6 @@ class Messages:
             """Format parameters:
             - error: str - Error message
             """
-
-            MISSING_ARGS = "❌ Please specify a target type (location, coordinates, or city) and its parameters."
-            """No format parameters."""
 
         class Status:
             """Status command messages."""
@@ -201,7 +191,7 @@ class Messages:
 
         class Machine:
             """Machine-related notifications."""
-            ADDED = "🆕 **{machine_name}** added at **{location_name}** by {user_name}"
+            ADDED = "🎮 **{machine_name}** added at **{location_name}** by {user_name}"
             """Format parameters:
             - machine_name: str - Name of the machine
             - location_name: str - Name of the location
@@ -215,7 +205,7 @@ class Messages:
             - user_name: str - Name of the user who removed it
             """
 
-            MULTIPLE_ADDED = "🆕 **{count} New Pinball Machines Added!**\n{machines}{remaining_text}"
+            MULTIPLE_ADDED = "🎮 **{count} New Pinball Machines Added!**\n{machines}{remaining_text}"
             """Format parameters:
             - count: int - Number of machines added
             - machines: str - List of machines added
@@ -262,57 +252,7 @@ class Messages:
 
         class Error:
             """Error messages."""
-            UNEXPECTED = "❌ An unexpected error occurred while running `!{command}`. Please check the logs or contact the admin."
-            """Format parameters:
-            - command: str - Name of the command that failed
-            """
-
-            UNHANDLED = "❌ An unexpected error occurred: {error}"
+            UNEXPECTED = "❌ An unexpected error occurred while running the command"
             """Format parameters:
             - error: str - Error message
-            """
-
-            MISSING_ARG = "❌ Please specify the {arg_name}."
-            """Format parameters:
-            - arg_name: str - Name of the missing argument
-            """
-
-            TEST_LOCATION_NOT_FOUND = "❌ Test location {location_id} not found"
-            """Format parameters:
-            - location_id: int - The location ID that was not found
-            """
-
-            RESPONSE_MISSING_FIELD = "Response missing '{field}' field"
-            """Format parameters:
-            - field: str - Name of the missing field
-            """
-
-            DATA_MISSING_FIELD = "{data_type} missing required field: {field}"
-            """Format parameters:
-            - data_type: str - Type of data (Location, Submission, etc.)
-            - field: str - Name of the missing field
-            """
-
-            INVALID_TIMESTAMP = "Invalid timestamp format: {timestamp}"
-            """Format parameters:
-            - timestamp: str - The invalid timestamp
-            """
-
-            INVALID_COORDINATE_TYPE = "{coord_type} must be a number, got {type}"
-            """Format parameters:
-            - coord_type: str - Type of coordinate (Latitude/Longitude)
-            - type: str - The invalid type received
-            """
-
-        class Status:
-            """Status messages."""
-            BOT_READY = "{bot_name} has connected to Discord!"
-            """Format parameters:
-            - bot_name: str - Name of the bot
-            """
-
-            MONITORING_STARTED = "Monitoring started for {target_type}: {target_name}"
-            """Format parameters:
-            - target_type: str - Type of target
-            - target_name: str - Name of the target
             """

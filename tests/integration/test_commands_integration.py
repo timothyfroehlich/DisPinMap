@@ -23,9 +23,9 @@ def db():
 
 
 @pytest.fixture
-def notifier():
+def notifier(db):
     """Create notifier instance"""
-    return Notifier()
+    return Notifier(db)
 
 
 @pytest.fixture

@@ -3,6 +3,22 @@
 ## Project Overview
 This is a Python Discord bot that continuously monitors the pinballmap.com API for changes in pinball machine locations and posts automated updates to configured Discord channels. The bot supports multiple channels with different notification types and customizable search parameters. It is designed for deployment on Google Cloud Platform (GCP) but can also be run locally.
 
+## Product Decisions
+
+### Notification Filtering
+- Initial submissions when adding a new target are filtered according to the channel's notification settings
+- Default notification type is 'machines' (additions/removals only)
+- Available notification types:
+  - `machines`: Only machine additions and removals
+  - `comments`: Only condition updates and comments
+  - `all`: All submission types
+
+### Submission History
+- When adding a new target, the bot displays the 5 most recent submissions
+- Submissions are sorted by creation date (newest first)
+- The history display respects the channel's notification type settings
+- Submissions older than 24 hours are not included in initial display
+
 ## Core Technologies
 - **Language**: Python 3.11+
 - **Discord API**: `discord.py` - Use [Discord.py documentation](https://discordpy.readthedocs.io/) for all bot development
