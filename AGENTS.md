@@ -5,7 +5,7 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 
 ## Core Technologies
 - **Language**: Python 3.11+
-- **Discord API**: `discord.py`
+- **Discord API**: `discord.py` - Use [Discord.py documentation](https://discordpy.readthedocs.io/) for all bot development
 - **Database**: SQLAlchemy ORM with support for SQLite (local) and PostgreSQL (GCP)
 - **API Communication**: `requests` and `aiohttp`
 - **Testing**: `pytest` with `pytest-asyncio` and `pytest-xdist`
@@ -21,11 +21,16 @@ DisPinMap/
 ├── src/                    # Main source code
 │   ├── __init__.py
 │   ├── api.py              # Pinball Map and Geocoding API clients
-│   ├── commands.py         # Bot command logic
+│   ├── cogs/               # Discord.py command cogs
+│   │   ├── config.py       # Configuration commands (poll_rate, notifications)
+│   │   └── monitoring.py   # Monitoring commands (add, remove, list, export)
 │   ├── database.py         # Database models and session management
+│   ├── logging.py          # Logging configuration
 │   ├── main.py             # Main application entry point and Discord client setup
 │   ├── messages.py         # Centralized user-facing messages
-│   ├── monitor.py          # Background monitoring task
+│   ├── models.py           # SQLAlchemy database models
+│   ├── monitor.py          # Background monitoring task (as cog)
+│   ├── notifier.py         # Discord message formatting and sending
 │   └── utils.py            # Shared utilities
 ├── terraform/              # Terraform scripts for GCP infrastructure
 ├── tests/                  # Test suite
