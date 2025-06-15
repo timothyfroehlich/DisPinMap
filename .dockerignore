@@ -26,9 +26,9 @@ venv/
 # Documentation
 *.md
 !README.md
+!AGENT_TASKS.md
 
 # Test files
-test/
 .pytest_cache/
 
 # Terraform
@@ -37,6 +37,16 @@ terraform/
 *.tfstate
 *.tfstate.*
 *.tfvars
+*.tf
+*.tf.json
+*.tfvars.json
+.terraformrc
+terraform.rc
+
+# Project specific
+.cursor/
+cloud_sql_proxy
+CLAUDE.md
 
 # Other
 .claude/
