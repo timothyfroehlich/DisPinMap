@@ -102,7 +102,6 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             logger.error(f"Error checking poll time for channel {config.get('channel_id')}: {e}")
             return False
 
-
     @monitor_task_loop.before_loop
     async def before_monitor_task_loop(self):
         await self.bot.wait_until_ready()

@@ -108,29 +108,9 @@ async def main():
     # Load monitor cog
     await bot.load_extension('src.monitor')
 
-    # Get Discord token from env var or Secret Manager
     token = os.getenv('DISCORD_TOKEN')
     if not token:
-        logger.info("DISCORD_TOKEN env var not found, trying Secret Manager")
-        try:
-            from google.cloud import secretmanager
-            secret_client = secretmanager.SecretManagerServiceClient()
-            project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
-            token_secret_name = os.getenv('DISCORD_TOKEN_SECRET_NAME')
-
-            if not all([project_id, token_secret_name]):
-                raise ValueError("GOOGLE_CLOUD_PROJECT and DISCORD_TOKEN_SECRET_NAME env vars required")
-
-            secret_name = f"projects/{project_id}/secrets/{token_secret_name}/versions/latest"
-            response = secret_client.access_secret_version(request={"name": secret_name})
-            token = response.payload.data.decode("UTF-8")
-            logger.info("Successfully loaded Discord token from Secret Manager")
-        except Exception as e:
-            logger.critical(f"Failed to get Discord token from Secret Manager: {e}")
-            sys.exit(1)
-
-    if not token:
-        logger.critical("Discord token not found in env or Secret Manager.")
+        logger.critical("DISCORD_TOKEN environment variable not set.")
         sys.exit(1)
 
     await bot.start(token)

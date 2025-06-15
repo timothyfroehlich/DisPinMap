@@ -46,7 +46,6 @@ resource "google_sql_database_instance" "postgres_instance" {
 
   settings {
     tier = "db-f1-micro"
-    activation_policy = "ALWAYS"
 
     ip_configuration {
       ipv4_enabled = true
@@ -81,10 +80,6 @@ resource "google_sql_user" "db_user" {
   name     = "${var.service_name}-user"
   instance = google_sql_database_instance.postgres_instance.name
   password = random_password.db_password.result
-
-  depends_on = [
-    google_sql_database_instance.postgres_instance
-  ]
 }
 
 # Secret Manager secret for Discord token (empty - must be populated manually)
