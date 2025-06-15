@@ -17,10 +17,11 @@ class ConfigCog(commands.Cog, name="Configuration"):
         self.notifier = notifier
 
     @commands.command(name='poll_rate')
-    async def poll_rate(self, ctx, minutes: int, target_selector: Optional[str] = None):
+    async def poll_rate(self, ctx, minutes: str, target_selector: Optional[str] = None):
         """Set poll rate for channel or specific target."""
         try:
-            if minutes < 1:
+            minutes_int = int(minutes)
+            if minutes_int < 1:
                 await self.notifier.log_and_send(ctx, Messages.Command.PollRate.INVALID_RATE)
                 return
 
@@ -36,10 +37,10 @@ class ConfigCog(commands.Cog, name="Configuration"):
                         ctx.channel.id,
                         target['target_type'],
                         target['target_name'],
-                        poll_rate_minutes=minutes
+                        poll_rate_minutes=minutes_int
                     )
                     await self.notifier.log_and_send(ctx, Messages.Command.PollRate.SUCCESS_TARGET.format(
-                        minutes=minutes,
+                        minutes=minutes_int,
                         target_id=target_id
                     ))
                 except ValueError:
@@ -48,7 +49,7 @@ class ConfigCog(commands.Cog, name="Configuration"):
                 self.db.update_channel_config(
                     ctx.channel.id,
                     ctx.guild.id,
-                    poll_rate_minutes=minutes
+                    poll_rate_minutes=minutes_int
                 )
                 targets = self.db.get_monitoring_targets(ctx.channel.id)
                 for target in targets:
@@ -57,9 +58,9 @@ class ConfigCog(commands.Cog, name="Configuration"):
                             ctx.channel.id,
                             target['target_type'],
                             target['target_name'],
-                            poll_rate_minutes=minutes
+                            poll_rate_minutes=minutes_int
                         )
-                await self.notifier.log_and_send(ctx, Messages.Command.PollRate.SUCCESS_CHANNEL.format(minutes=minutes))
+                await self.notifier.log_and_send(ctx, Messages.Command.PollRate.SUCCESS_CHANNEL.format(minutes=minutes_int))
         except ValueError:
             await self.notifier.log_and_send(ctx, Messages.Command.PollRate.ERROR)
 
@@ -113,7 +114,7 @@ async def setup(bot):
     # Get shared instances from bot
     database = getattr(bot, 'database', None)
     notifier = getattr(bot, 'notifier', None)
-    
+
     if database is None or notifier is None:
         raise RuntimeError("Database and Notifier must be initialized on bot before loading cogs")
 

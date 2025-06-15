@@ -102,10 +102,7 @@ class TestAddCommand:
         await monitoring_cog.add.callback(monitoring_cog, ctx, "coordinates", "30.0", "97.0", "10")
 
         # Verify user got success message
-        await assert_discord_message(ctx, Messages.Command.Add.SUCCESS.format(
-            target_type="coordinates",
-            name="30.0, 97.0 (10 miles radius)"
-        ))
+        await assert_discord_message(ctx, "Added coordinates: **30.0, 97.0 with a 10 mile radius** - Monitoring started!")
         # Verify database was updated
         verify_database_target(db, ctx.channel.id, 1, 'latlong')
 
@@ -127,12 +124,9 @@ class TestAddCommand:
             # Verify API was called
             mock_geocode.assert_called_once_with("Austin,TX")
             # Verify user got success message
-            await assert_discord_message(ctx, Messages.Command.Add.SUCCESS.format(
-                target_type="city",
-                name="Austin,TX (default radius)"
-            ))
+            await assert_discord_message(ctx, "Added city: **Austin, Texas, US** - Monitoring started!")
             # Verify database was updated
-            verify_database_target(db, ctx.channel.id, 1, 'latlong')
+            verify_database_target(db, ctx.channel.id, 1, 'city')
 
     @pytest.mark.asyncio
     async def test_add_invalid_type(self, monitoring_cog, db):

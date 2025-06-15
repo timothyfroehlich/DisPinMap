@@ -3,6 +3,7 @@ Cog for monitoring-related commands
 """
 import logging
 from typing import Optional
+from datetime import datetime
 from discord.ext import commands
 from src.database import Database
 from src.api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details, geocode_city_name
@@ -17,6 +18,22 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         self.db = db
         self.notifier = notifier
 
+    def _sort_and_limit_submissions(self, submissions: list, limit: int = 5) -> list:
+        """Sorts submissions by date and returns the most recent ones."""
+        if not submissions:
+            return []
+
+        # Sort by 'created_at' descending (newest first)
+        # Handles potential parsing errors gracefully
+        def sort_key(s):
+            try:
+                return datetime.fromisoformat(s['created_at'].replace('Z', '+00:00'))
+            except (ValueError, TypeError, KeyError):
+                return datetime.min
+
+        sorted_submissions = sorted(submissions, key=sort_key, reverse=True)
+        return sorted_submissions[:limit]
+
     @commands.command(name='add')
     async def add(self, ctx, target_type: str, *args):
         """Add a new monitoring target. Usage: !add <location|coordinates|city> <args>"""
@@ -25,7 +42,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 if not args:
                     await self.notifier.log_and_send(ctx, Messages.Command.Add.MISSING_LOCATION)
                     return
-                await self._handle_location_add(ctx, args[0])
+                await self._handle_location_add(ctx, " ".join(args))
             elif target_type == 'coordinates':
                 if len(args) < 2:
                     await self.notifier.log_and_send(ctx, Messages.Command.Add.MISSING_COORDS)
@@ -61,7 +78,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             ))
 
     @commands.command(name='rm')
-    async def remove(self, ctx, index: int):
+    async def remove(self, ctx, index: str):
         """Remove a monitoring target by its index from the list."""
         try:
             targets = self.db.get_monitoring_targets(ctx.channel.id)
@@ -70,11 +87,12 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 await self.notifier.log_and_send(ctx, Messages.Command.Remove.NO_TARGETS)
                 return
 
-            if index < 1 or index > len(targets):
+            index_int = int(index)
+            if index_int < 1 or index_int > len(targets):
                 await self.notifier.log_and_send(ctx, Messages.Command.Remove.INVALID_INDEX.format(max_index=len(targets)))
                 return
 
-            target = targets[index - 1]
+            target = targets[index_int - 1]
             self.db.remove_monitoring_target(ctx.channel.id, target['target_type'], target['target_name'])
 
             if target['target_type'] == 'latlong':
@@ -228,8 +246,9 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     self.db.add_monitoring_target(ctx.channel.id, 'location', location_name, str(location_id))
                     self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
-                    submissions = await fetch_submissions_for_location(location_id)
-                    await self.notifier.post_initial_submissions(ctx, submissions, f"location **{location_name}** (ID: {location_id})")
+                    submissions = await fetch_submissions_for_location(location_id, use_min_date=False)
+                    latest_submissions = self._sort_and_limit_submissions(submissions)
+                    await self.notifier.post_initial_submissions(ctx, latest_submissions, f"location **{location_name}** (ID: {location_id})")
 
                     await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
                         target_type="location",
@@ -252,93 +271,91 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     self.db.add_monitoring_target(ctx.channel.id, 'location', location_name, str(location_id))
                     self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
-                    submissions = await fetch_submissions_for_location(location_id)
-                    await self.notifier.post_initial_submissions(ctx, submissions, f"location **{location_name}** (ID: {location_id})")
+                    submissions = await fetch_submissions_for_location(location_id, use_min_date=False)
+                    latest_submissions = self._sort_and_limit_submissions(submissions)
+                    await self.notifier.post_initial_submissions(ctx, latest_submissions, f"location **{location_name}** (ID: {location_id})")
 
                     await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
                         target_type="location",
                         name=f"{location_name} (ID: {location_id})"
                     ))
                 elif status == 'suggestions':
-                    suggestions = data
-                    if suggestions:
-                        suggestions_text = "\n".join(
-                            f"{i}. **{loc['name']}** (ID: {loc['id']})"
-                            for i, loc in enumerate(suggestions[:5], 1)
-                        )
-                        await self.notifier.log_and_send(ctx, Messages.Command.Add.SUGGESTIONS.format(
-                            search_term=location_input_stripped,
-                            suggestions=suggestions_text
-                        ))
-                    else:
-                        await self.notifier.log_and_send(ctx, Messages.Command.Add.NO_LOCATIONS.format(search_term=location_input_stripped))
-                else:
-                    await self.notifier.log_and_send(ctx, Messages.Command.Add.NO_LOCATIONS.format(search_term=location_input_stripped))
+                    await self.notifier.log_and_send(ctx, Messages.Command.Add.LOCATION_SUGGESTIONS.format(
+                        search_term=location_input_stripped,
+                        suggestions="\n".join([f"• {loc['name']} (ID: {loc['id']})" for loc in data])
+                    ))
+                else: # not_found or error
+                    await self.notifier.log_and_send(ctx, Messages.Command.Add.NO_LOCATIONS.format(
+                        search_term=location_input_stripped
+                    ))
         except Exception as e:
+            logger.error(f"Error handling location add for '{location_input}': {e}")
             await self.notifier.log_and_send(ctx, Messages.Command.Add.ERROR.format(
-                target_type="location",
+                target_type='location',
                 error_message=str(e)
             ))
 
     async def _handle_coordinates_add(self, ctx, lat: float, lon: float, radius: Optional[int] = None):
+        """Handle adding a coordinate-based monitoring target."""
         try:
-            if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
-                await self.notifier.log_and_send(ctx, Messages.Command.Add.INVALID_COORDS)
-                return
+            target_name = f"{lat},{lon}"
+            if radius:
+                target_name += f",{radius}"
 
-            if radius is not None and (radius < 1 or radius > 100):
-                await self.notifier.log_and_send(ctx, Messages.Command.Add.INVALID_RADIUS)
-                return
-
-            target_name = f"{lat},{lon},{radius}" if radius else f"{lat},{lon}"
             self.db.add_monitoring_target(ctx.channel.id, 'latlong', target_name)
             self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
-            submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
-            await self.notifier.post_initial_submissions(ctx, submissions, "coordinate area")
+            submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=False)
+            latest_submissions = self._sort_and_limit_submissions(submissions)
+            await self.notifier.post_initial_submissions(ctx, latest_submissions, f"coordinates **{lat}, {lon}**")
 
-            radius_display = f"{radius} miles" if radius else "default"
+            radius_info = f" with a {radius} mile radius" if radius else ""
             await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
                 target_type="coordinates",
-                name=f"{lat}, {lon} ({radius_display} radius)"
+                name=f"{lat}, {lon}{radius_info}"
             ))
         except Exception as e:
+            logger.error(f"Error handling coordinates add for '{lat}, {lon}': {e}")
             await self.notifier.log_and_send(ctx, Messages.Command.Add.ERROR.format(
-                target_type="coordinates",
+                target_type='coordinates',
                 error_message=str(e)
             ))
 
     async def _handle_city_add(self, ctx, city_name: str, radius: Optional[int] = None):
-        try:
-            if radius is not None and (radius < 1 or radius > 100):
-                await self.notifier.log_and_send(ctx, Messages.Command.Add.INVALID_RADIUS)
-                return
+        """Handle adding a city-based monitoring target."""
+        result = await geocode_city_name(city_name)
+        status = result.get('status')
 
-            coords = await geocode_city_name(city_name)
-            if coords.get('status') != 'success':
-                await self.notifier.log_and_send(ctx, Messages.Command.Add.ERROR.format(
-                    target_type="city",
-                    error_message=coords.get('message', 'Could not find coordinates for city')
-                ))
-                return
+        if status == 'success':
+            lat = result['lat']
+            lon = result['lon']
+            display_name = result['display_name']
 
-            lat, lon = coords['lat'], coords['lon']
-            target_name = f"{lat},{lon},{radius}" if radius else f"{lat},{lon}"
-            self.db.add_monitoring_target(ctx.channel.id, 'latlong', target_name)
+            target_name = display_name
+            target_data = f"{lat},{lon}"
+            if radius:
+                target_name += f" ({radius} miles)"
+                target_data += f",{radius}"
+
+            self.db.add_monitoring_target(ctx.channel.id, 'city', target_name, target_data)
             self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
-            submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
-            await self.notifier.post_initial_submissions(ctx, submissions, f"city **{city_name}**")
+            submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=False)
+            latest_submissions = self._sort_and_limit_submissions(submissions)
+            await self.notifier.post_initial_submissions(ctx, latest_submissions, f"city **{display_name}**")
 
-            radius_display = f"{radius} miles" if radius else "default"
             await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
                 target_type="city",
-                name=f"{city_name} ({radius_display} radius)"
+                name=target_name
             ))
-        except Exception as e:
-            await self.notifier.log_and_send(ctx, Messages.Command.Add.ERROR.format(
-                target_type="city",
-                error_message=str(e)
+        elif status == 'multiple':
+            await self.notifier.log_and_send(ctx, Messages.Command.Add.CITY_SUGGESTIONS.format(
+                city_name=city_name,
+                suggestions="\n".join([f"• {name}" for name in result['suggestions']])
+            ))
+        else: # error
+            await self.notifier.log_and_send(ctx, Messages.Command.Add.CITY_NOT_FOUND.format(
+                city_name=city_name
             ))
 
 async def setup(bot):
@@ -346,7 +363,7 @@ async def setup(bot):
     # Get shared instances from bot
     database = getattr(bot, 'database', None)
     notifier = getattr(bot, 'notifier', None)
-    
+
     if database is None or notifier is None:
         raise RuntimeError("Database and Notifier must be initialized on bot before loading cogs")
 

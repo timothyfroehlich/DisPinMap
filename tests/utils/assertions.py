@@ -13,12 +13,16 @@ from src.messages import Messages
 
 class MockContext:
     """Mock Discord context for testing commands."""
-    def __init__(self, channel_id: int, guild_id: int):
+    def __init__(self, channel_id: int, guild_id: int, bot=None):
+        self.bot = bot
         self.channel = type('Channel', (), {'id': channel_id})()
         self.guild = type('Guild', (), {'id': guild_id})()
         self.message = type('Message', (), {'content': '', 'author': type('Author', (), {'name': 'TestUser'})()})()
         self.send = AsyncMock()
         self.sent_messages: List[str] = []
+
+        if self.bot and hasattr(self.bot, 'notifier'):
+            self.notifier = self.bot.notifier
 
 async def assert_discord_message(ctx: MockContext, expected_content: str):
     """
