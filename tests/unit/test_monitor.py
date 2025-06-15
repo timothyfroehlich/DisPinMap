@@ -53,17 +53,17 @@ class TestMonitorTask:
     async def test_should_poll_channel(self, monitor):
         """Test channel polling decision logic"""
         channel_id = 123
-        config = {'channel_id': channel_id, 'poll_rate_minutes': 60}
 
-        # First poll should always be true
+        # Never polled before, should be true
+        config = {'channel_id': channel_id, 'poll_rate_minutes': 60, 'last_poll_at': None}
         assert await monitor._should_poll_channel(config) is True
 
-        # After a poll, it should be false
-        monitor.last_poll_times[channel_id] = datetime.now()
+        # Polled recently, should be false
+        config['last_poll_at'] = datetime.now()
         assert await monitor._should_poll_channel(config) is False
 
-        # After time has passed, it should be true
-        monitor.last_poll_times[channel_id] = datetime.now() - timedelta(minutes=61)
+        # Polled long ago, should be true
+        config['last_poll_at'] = datetime.now() - timedelta(minutes=61)
         assert await monitor._should_poll_channel(config) is True
 
     @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
@@ -72,7 +72,9 @@ class TestMonitorTask:
         channel_id = 123
         guild_id = 456
         db.add_monitoring_target(channel_id, 'location', 'Test Location', '12345')
-        config = db.update_channel_config(channel_id, guild_id)
+        db.update_channel_config(channel_id, guild_id)
+        config = db.get_channel_config(channel_id)
+        config['last_poll_at'] = None
 
         submission = generate_submission_data(1)
         mock_fetch.return_value = [submission]
@@ -86,14 +88,16 @@ class TestMonitorTask:
         assert not db.filter_new_submissions(channel_id, [submission])
 
     @patch('src.monitor.fetch_submissions_for_coordinates', new_callable=AsyncMock)
-    async def test_run_checks_for_channel_latlong(self, mock_fetch, monitor, db, mock_notifier):
-        """Test running checks for a channel with a latlong target"""
+    async def test_run_checks_for_channel_coordinates(self, mock_fetch, monitor, db, mock_notifier):
+        """Test running checks for a channel with a coordinate target"""
         channel_id = 123
         guild_id = 456
         db.add_monitoring_target(channel_id, 'latlong', '30.1,-97.2,10', '30.1,-97.2,10')
-        config = db.update_channel_config(channel_id, guild_id)
+        db.update_channel_config(channel_id, guild_id)
+        config = db.get_channel_config(channel_id)
+        config['last_poll_at'] = None
 
-        submission = generate_submission_data(1)
+        submission = generate_submission_data(2)
         mock_fetch.return_value = [submission]
 
         await monitor.run_checks_for_channel(channel_id, config)
@@ -102,15 +106,31 @@ class TestMonitorTask:
         mock_notifier.post_submissions.assert_called_once()
         assert not db.filter_new_submissions(channel_id, [submission])
 
-    async def test_run_checks_no_targets(self, monitor, db, mock_notifier):
-        """Test running checks for a channel with no targets"""
+    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    async def test_run_checks_no_new_submissions(self, mock_fetch, monitor, db, mock_notifier):
+        """Test running checks when no new submissions are found"""
         channel_id = 123
         guild_id = 456
-        config = db.update_channel_config(channel_id, guild_id)
+        db.add_monitoring_target(channel_id, 'location', 'Test Location', '12345')
+        db.update_channel_config(channel_id, guild_id)
+        config = db.get_channel_config(channel_id)
+        config['last_poll_at'] = None
+
+        mock_fetch.return_value = []
 
         await monitor.run_checks_for_channel(channel_id, config)
 
         mock_notifier.post_submissions.assert_not_called()
+
+    async def test_run_checks_no_targets(self, monitor, db, mock_notifier):
+        """Test running checks for a channel with no targets"""
+        channel_id = 123
+        config = {'channel_id': channel_id, 'last_poll_at': None}
+
+        await monitor.run_checks_for_channel(channel_id, config)
+
+        mock_notifier.post_submissions.assert_not_called()
+        # Note: update_channel_last_poll_time should be called but we can't easily assert on real db
 
     @patch('src.monitor.MachineMonitor._should_poll_channel', new_callable=AsyncMock)
     @patch('src.monitor.MachineMonitor.run_checks_for_channel', new_callable=AsyncMock)
