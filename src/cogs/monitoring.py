@@ -230,7 +230,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         monitor_cog = self.bot.get_cog('MachineMonitor')
         if monitor_cog:
             config = self.db.get_channel_config(ctx.channel.id)
-            await monitor_cog.run_checks_for_channel(ctx.channel.id, config)
+            await monitor_cog.run_checks_for_channel(ctx.channel.id, config, is_manual_check=True)
         else:
             await self.notifier.log_and_send(ctx, "Error: Could not find the monitor.")
 
@@ -334,10 +334,6 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             sorted_submissions = self._sort_submissions(submissions)
             await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"city **{display_name}**")
 
-            await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
-                target_type="city",
-                name=target_name
-            ))
         elif status == 'multiple':
             await self.notifier.log_and_send(ctx, Messages.Command.Add.CITY_SUGGESTIONS.format(
                 city_name=city_name,

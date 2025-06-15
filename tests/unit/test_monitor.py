@@ -79,13 +79,15 @@ class TestMonitorTask:
         submission = generate_submission_data(1)
         mock_fetch.return_value = [submission]
 
-        await monitor.run_checks_for_channel(channel_id, config)
+        result = await monitor.run_checks_for_channel(channel_id, config)
 
         mock_fetch.assert_called_once_with(12345)
         mock_notifier.post_submissions.assert_called_once()
         db.filter_new_submissions(channel_id, [submission])
         # assert that submission is now marked as seen
         assert not db.filter_new_submissions(channel_id, [submission])
+        # assert that new submissions were found
+        assert result is True
 
     @patch('src.monitor.fetch_submissions_for_coordinates', new_callable=AsyncMock)
     async def test_run_checks_for_channel_coordinates(self, mock_fetch, monitor, db, mock_notifier):
@@ -100,11 +102,13 @@ class TestMonitorTask:
         submission = generate_submission_data(2)
         mock_fetch.return_value = [submission]
 
-        await monitor.run_checks_for_channel(channel_id, config)
+        result = await monitor.run_checks_for_channel(channel_id, config)
 
         mock_fetch.assert_called_once_with(30.1, -97.2, 10)
         mock_notifier.post_submissions.assert_called_once()
         assert not db.filter_new_submissions(channel_id, [submission])
+        # assert that new submissions were found
+        assert result is True
 
     @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_run_checks_no_new_submissions(self, mock_fetch, monitor, db, mock_notifier):
@@ -118,19 +122,48 @@ class TestMonitorTask:
 
         mock_fetch.return_value = []
 
-        await monitor.run_checks_for_channel(channel_id, config)
+        result = await monitor.run_checks_for_channel(channel_id, config)
 
         mock_notifier.post_submissions.assert_not_called()
+        # assert that no new submissions were found
+        assert result is False
 
     async def test_run_checks_no_targets(self, monitor, db, mock_notifier):
         """Test running checks for a channel with no targets"""
         channel_id = 123
         config = {'channel_id': channel_id, 'last_poll_at': None}
 
-        await monitor.run_checks_for_channel(channel_id, config)
+        result = await monitor.run_checks_for_channel(channel_id, config)
 
         mock_notifier.post_submissions.assert_not_called()
         # Note: update_channel_last_poll_time should be called but we can't easily assert on real db
+        # assert that no new submissions were found
+        assert result is False
+
+    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    async def test_manual_check_no_new_submissions(self, mock_fetch, monitor, db, mock_notifier):
+        """Test manual check when no new submissions are found"""
+        channel_id = 123
+        guild_id = 456
+        db.add_monitoring_target(channel_id, 'location', 'Test Location', '12345')
+        db.update_channel_config(channel_id, guild_id)
+        config = db.get_channel_config(channel_id)
+        # Set last poll time to 5 minutes ago
+        from datetime import datetime, timedelta
+        config['last_poll_at'] = datetime.now() - timedelta(minutes=5)
+
+        mock_fetch.return_value = []
+
+        result = await monitor.run_checks_for_channel(channel_id, config, is_manual_check=True)
+
+        mock_notifier.post_submissions.assert_not_called()
+        # Should have sent a "Nothing new since X minutes ago" message
+        mock_notifier.log_and_send.assert_called_once()
+        args = mock_notifier.log_and_send.call_args[0]
+        assert "Nothing new since" in args[1]
+        assert "minutes ago" in args[1]
+        # assert that no new submissions were found
+        assert result is False
 
     @patch('src.monitor.MachineMonitor._should_poll_channel', new_callable=AsyncMock)
     @patch('src.monitor.MachineMonitor.run_checks_for_channel', new_callable=AsyncMock)

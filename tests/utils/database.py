@@ -47,15 +47,15 @@ def setup_test_database(db_type: str = 'sqlite', db_path: Optional[str] = None) 
     if db_type == 'sqlite':
         if db_path is None:
             db_path = ':memory:'
-        os.environ['DATABASE_URL'] = f'sqlite:///{db_path}'
+        # Create a fresh SQLite database instance
+        db = Database(db_path)
     elif db_type in ['postgres', 'postgresql']:
-        # Use test database URL from environment or default
+        # For PostgreSQL, we need to set the DATABASE_URL environment variable
+        # since the Database class uses environment variables for PostgreSQL config
         os.environ['DATABASE_URL'] = get_test_db_url(db_type)
+        db = Database()
     else:
         raise ValueError(f"Unsupported database type: {db_type}")
-
-    # Create a fresh database instance
-    db = Database()
 
     # Create tables
     db.init_database()

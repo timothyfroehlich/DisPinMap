@@ -128,7 +128,7 @@ class TestAddCommand:
 
             # Verify API was called
             mock_geocode.assert_called_once_with("Austin,TX")
-            # Verify user got success message
+            # Verify user got initial message (success message was removed as redundant)
             await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
                 target_type="city **Austin, Texas, US**"
             ))

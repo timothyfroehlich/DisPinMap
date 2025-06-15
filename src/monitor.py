@@ -40,8 +40,17 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             if await self._should_poll_channel(config):
                 await self.run_checks_for_channel(config['channel_id'], config)
 
-    async def run_checks_for_channel(self, channel_id: int, config: Dict[str, Any]):
-        """Poll a channel for new submissions based on its monitoring targets"""
+    async def run_checks_for_channel(self, channel_id: int, config: Dict[str, Any], is_manual_check: bool = False):
+        """Poll a channel for new submissions based on its monitoring targets
+        
+        Args:
+            channel_id: Discord channel ID
+            config: Channel configuration
+            is_manual_check: True if this is a manual check via !check command
+            
+        Returns:
+            bool: True if new submissions were found and posted, False otherwise
+        """
         logger.info(f"Polling channel {channel_id}...")
         try:
             # Update last poll time before checking to prevent race conditions on long polls
@@ -50,10 +59,11 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             targets = self.db.get_monitoring_targets(channel_id)
             if not targets:
                 logger.info(f"No targets for channel {channel_id}, skipping.")
-                channel = self.bot.get_channel(channel_id)
-                if channel:
-                    await self.notifier.log_and_send(channel, Messages.Command.Status.NO_TARGETS_TO_CHECK)
-                return
+                if is_manual_check:
+                    channel = self.bot.get_channel(channel_id)
+                    if channel:
+                        await self.notifier.log_and_send(channel, Messages.Command.Status.NO_TARGETS_TO_CHECK)
+                return False
 
             all_submissions = []
             for target in targets:
@@ -79,11 +89,35 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                 if channel:
                     await self.notifier.post_submissions(channel, new_submissions, config)
                     self.db.mark_submissions_seen(channel_id, [s['id'] for s in new_submissions])
+                    return True
                 else:
                     logger.warning(f"Could not find channel {channel_id} to send notifications")
+                    return False
+            else:
+                # No new submissions found
+                if is_manual_check:
+                    channel = self.bot.get_channel(channel_id)
+                    if channel:
+                        # Calculate time since last automatic poll
+                        last_poll = config.get('last_poll_at')
+                        if last_poll:
+                            time_since_poll = datetime.now() - last_poll
+                            minutes_ago = int(time_since_poll.total_seconds() / 60)
+                            if minutes_ago < 1:
+                                time_str = "less than a minute ago"
+                            elif minutes_ago == 1:
+                                time_str = "1 minute ago"
+                            else:
+                                time_str = f"{minutes_ago} minutes ago"
+                        else:
+                            time_str = "an unknown time"
+                        
+                        await self.notifier.log_and_send(channel, f"Nothing new since {time_str}")
+                return False
 
         except Exception as e:
             logger.error(f"Error polling channel {channel_id}: {e}")
+            return False
 
     async def _should_poll_channel(self, config: Dict[str, Any]) -> bool:
         """Check if it's time to poll a channel based on its poll rate"""
