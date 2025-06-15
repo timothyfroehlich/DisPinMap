@@ -1,0 +1,42 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# Logs and databases
+*.log
+*.db
+*.sqlite3
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+test/
+.pytest_cache/
+
+# Terraform
+terraform/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# Other
+.claude/

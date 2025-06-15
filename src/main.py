@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import logging
 import asyncio
+import signal
 from aiohttp import web
 import colorama
 from colorama import Fore, Style
@@ -44,6 +45,10 @@ except ImportError:
     from monitor import MachineMonitor
     from commands import CommandHandler
 
+# Global variables for cleanup
+http_runner = None
+client = None
+monitor = None
 
 load_dotenv()
 
@@ -336,14 +341,46 @@ async def check_now(ctx):
     await command_handler.handle_check(ctx)
 
 
+async def cleanup():
+    """Cleanup function to gracefully shut down the application"""
+    logger.info("Starting graceful shutdown...")
 
+    # Stop monitoring
+    if monitor:
+        logger.info("Stopping monitoring...")
+        monitor.stop_monitoring()
 
+    # Close database connections
+    if db:
+        logger.info("Closing database connections...")
+        db.close()
 
+    # Close Discord client
+    if client:
+        logger.info("Closing Discord client...")
+        await client.close()
 
+    # Cleanup HTTP server
+    if http_runner:
+        logger.info("Cleaning up HTTP server...")
+        await http_runner.cleanup()
+
+    logger.info("Cleanup complete")
+
+def handle_signal(signum, frame):
+    """Handle OS signals for graceful shutdown"""
+    logger.info(f"Received signal {signum}")
+    asyncio.create_task(cleanup())
 
 async def main():
     """Main function to start the bot and HTTP server"""
+    global http_runner, client, monitor
+
     try:
+        # Set up signal handlers
+        signal.signal(signal.SIGTERM, handle_signal)
+        signal.signal(signal.SIGINT, handle_signal)
+
         # Get Discord token from Secret Manager or .env file
         token = await get_discord_token()
 
@@ -356,12 +393,8 @@ async def main():
 
     except Exception as e:
         logger.error(f"Failed to start application: {e}")
+        await cleanup()
         exit(1)
-    finally:
-        # Cleanup HTTP server if it was started
-        if 'http_runner' in locals():
-            await http_runner.cleanup()
-
 
 if __name__ == '__main__':
     # Run the main async function
