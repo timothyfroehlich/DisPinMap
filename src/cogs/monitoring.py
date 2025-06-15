@@ -226,6 +226,11 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
     @commands.command(name='check')
     async def check(self, ctx):
         """Immediately check for new submissions."""
+        targets = self.db.get_monitoring_targets(ctx.channel.id)
+        if not targets:
+            await self.notifier.log_and_send(ctx, Messages.Command.Status.NO_TARGETS_TO_CHECK)
+            return
+            
         # Get the monitor cog and channel config
         monitor_cog = self.bot.get_cog('MachineMonitor')
         if monitor_cog:

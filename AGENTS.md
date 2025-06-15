@@ -15,9 +15,11 @@ This is a Python Discord bot that continuously monitors the pinballmap.com API f
 
 ### Submission History
 - When adding a new target, the bot displays the 5 most recent submissions
+- The `!check` command also displays the 5 most recent submissions for all targets
 - Submissions are sorted by creation date (newest first)
 - The history display respects the channel's notification type settings
-- Submissions older than 24 hours are not included in initial display
+- For initial target display, submissions are fetched without date filtering to show historical context
+- For monitoring, submissions use date filtering to only show recent changes
 
 ## Core Technologies
 - **Language**: Python 3.11+
@@ -101,7 +103,7 @@ The bot uses slash commands prefixed with `!`.
 - `!export` - Export channel configuration as copy-pasteable commands
 - `!poll_rate <minutes> [target_index]` - Set polling rate for channel or specific target
 - `!notifications <type> [target_index]` - Set notification types (machines, comments, all)
-- `!check` - Immediately check for new submissions across all targets
+- `!check` - Show the 5 most recent submissions for all monitored targets (respects notification type)
 
 ## Task Tracking
 
