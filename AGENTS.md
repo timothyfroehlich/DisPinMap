@@ -81,7 +81,7 @@ The bot uses slash commands prefixed with `!`.
 - `!rm <index>` - Remove target by index (use `!list` to see indices)
 
 **General Commands:**
-- `!list` - Show all monitored targets with their indices
+- `!list` or `!ls` - Show all monitored targets with their indices
 - `!export` - Export channel configuration as copy-pasteable commands
 - `!poll_rate <minutes> [target_index]` - Set polling rate for channel or specific target
 - `!notifications <type> [target_index]` - Set notification types (machines, comments, all)

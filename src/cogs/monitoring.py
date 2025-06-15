@@ -110,7 +110,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         except ValueError:
             await self.notifier.log_and_send(ctx, Messages.Command.Remove.INVALID_INDEX_NUMBER)
 
-    @commands.command(name='list')
+    @commands.command(name='list', aliases=['ls'])
     async def list_targets(self, ctx):
         """Show all monitored targets with index numbers."""
         targets = self.db.get_monitoring_targets(ctx.channel.id)

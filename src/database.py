@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import Optional, Dict, List, Any
 import os
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 try:
@@ -118,7 +119,7 @@ class Database:
 
     def drop_all_tables(self, confirm_destructive: bool = False) -> None:
         """Drop all tables - use with caution, mainly for testing
-        
+
         Args:
             confirm_destructive: Must be True to actually drop tables.
                                 This prevents accidental data loss.
@@ -128,14 +129,14 @@ class Database:
                 "drop_all_tables requires confirm_destructive=True to prevent accidental data loss. "
                 "This operation will DELETE ALL DATA in the database."
             )
-            
+
         # Additional safeguard - don't allow this in production-like environments
         if self.engine.url.database and 'prod' in str(self.engine.url.database).lower():
             raise RuntimeError(
                 "drop_all_tables is not allowed on databases with 'prod' in the name. "
                 "This appears to be a production database."
             )
-            
+
         logger.warning("DESTRUCTIVE OPERATION: Dropping all database tables")
         try:
             Base.metadata.drop_all(bind=self.engine)
@@ -164,6 +165,7 @@ class Database:
                     'poll_rate_minutes': config.poll_rate_minutes,
                     'notification_types': config.notification_types,
                     'is_active': config.is_active,
+                    'last_poll_at': config.last_poll_at,
                     'created_at': config.created_at,
                     'updated_at': config.updated_at
                 }
@@ -230,11 +232,20 @@ class Database:
                     'poll_rate_minutes': config.poll_rate_minutes,
                     'notification_types': config.notification_types,
                     'is_active': config.is_active,
+                    'last_poll_at': config.last_poll_at,
                     'created_at': config.created_at,
                     'updated_at': config.updated_at
                 }
                 for config in configs
             ]
+
+    def update_channel_last_poll_time(self, channel_id: int, poll_time: datetime) -> None:
+        """Update the last poll time for a channel"""
+        with self.get_session() as session:
+            config = session.get(ChannelConfig, channel_id)
+            if config:
+                config.last_poll_at = poll_time
+                session.commit()
 
     # Monitoring target methods
     def add_monitoring_target(self, channel_id: int, target_type: str, target_name: str, target_data: str = None, poll_rate_minutes: int = None, notification_types: str = None) -> None:
@@ -358,7 +369,7 @@ class Database:
         """Mark submissions as seen for a channel"""
         if not submission_ids:
             return
-            
+
         with self.get_session() as session:
             # Create all seen submission objects
             seen_submissions = []
@@ -368,10 +379,10 @@ class Database:
                     submission_id=submission_id
                 )
                 seen_submissions.append(seen)
-            
+
             # Add all to session
             session.add_all(seen_submissions)
-            
+
             try:
                 # Commit all at once
                 session.commit()

@@ -25,12 +25,22 @@ class Notifier:
                 count=len(submissions),
                 target_type=target_type
             ))
-            await self.post_submissions(ctx, submissions)
+            # Only show the first 5 submissions
+            await self.post_submissions(ctx, submissions[:5])
         else:
             await self.log_and_send(ctx, Messages.Notification.Initial.NONE.format(target_type=target_type))
 
-    async def post_submissions(self, ctx, submissions: List[Dict[str, Any]]):
+    async def post_submissions(self, ctx, submissions: List[Dict[str, Any]], config: Dict[str, Any] = None):
         """Post submissions to the channel"""
+        # Filter submissions based on notification type
+        if config and 'notification_types' in config:
+            notification_type = config['notification_types']
+            if notification_type == 'machines':
+                submissions = [s for s in submissions if s.get('submission_type') in ['new_lmx', 'remove_machine']]
+            elif notification_type == 'comments':
+                submissions = [s for s in submissions if s.get('submission_type') == 'new_condition']
+            # 'all' type doesn't need filtering
+
         # Skip sleep in test mode
         if not hasattr(ctx, 'sent_messages'):
             for submission in submissions:

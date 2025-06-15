@@ -193,6 +193,9 @@ class Messages:
             NO_TARGETS = "No monitoring targets configured for this channel. Use `!add` to add a target."
             """No format parameters."""
 
+            NO_TARGETS_TO_CHECK = "No targets to check for this channel. Use `!add` to add some targets first."
+            """No format parameters."""
+
     class Notification:
         """Notification-related messages."""
 

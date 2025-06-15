@@ -21,6 +21,7 @@ class ChannelConfig(Base):
     poll_rate_minutes = Column(Integer, default=60)
     notification_types = Column(String, default='machines')
     is_active = Column(Boolean, default=False)
+    last_poll_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
