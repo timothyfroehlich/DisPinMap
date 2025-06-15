@@ -110,18 +110,36 @@ class Database:
     def init_database(self) -> None:
         """Initialize database tables"""
         try:
-            # Drop all tables first to ensure clean state
-            Base.metadata.drop_all(bind=self.engine)
             # Create all tables
             Base.metadata.create_all(bind=self.engine)
         except Exception as e:
             logger.error(f"Error creating database tables: {e}")
             raise
 
-    def drop_all_tables(self) -> None:
-        """Drop all tables - use with caution, mainly for testing"""
+    def drop_all_tables(self, confirm_destructive: bool = False) -> None:
+        """Drop all tables - use with caution, mainly for testing
+        
+        Args:
+            confirm_destructive: Must be True to actually drop tables.
+                                This prevents accidental data loss.
+        """
+        if not confirm_destructive:
+            raise ValueError(
+                "drop_all_tables requires confirm_destructive=True to prevent accidental data loss. "
+                "This operation will DELETE ALL DATA in the database."
+            )
+            
+        # Additional safeguard - don't allow this in production-like environments
+        if self.engine.url.database and 'prod' in str(self.engine.url.database).lower():
+            raise RuntimeError(
+                "drop_all_tables is not allowed on databases with 'prod' in the name. "
+                "This appears to be a production database."
+            )
+            
+        logger.warning("DESTRUCTIVE OPERATION: Dropping all database tables")
         try:
             Base.metadata.drop_all(bind=self.engine)
+            logger.warning("All database tables have been dropped")
         except Exception as e:
             logger.error(f"Error dropping database tables: {e}")
             raise
@@ -137,21 +155,18 @@ class Database:
     # Channel configuration methods
     def get_channel_config(self, channel_id: int) -> Optional[Dict[str, Any]]:
         """Get configuration for a specific channel"""
-        try:
-            with self.get_session() as session:
-                config = session.get(ChannelConfig, channel_id)
-                if config:
-                    return {
-                        'channel_id': config.channel_id,
-                        'guild_id': config.guild_id,
-                        'poll_rate_minutes': config.poll_rate_minutes,
-                        'notification_types': config.notification_types,
-                        'is_active': config.is_active,
-                        'created_at': config.created_at,
-                        'updated_at': config.updated_at
-                    }
-                return None
-        except Exception:
+        with self.get_session() as session:
+            config = session.get(ChannelConfig, channel_id)
+            if config:
+                return {
+                    'channel_id': config.channel_id,
+                    'guild_id': config.guild_id,
+                    'poll_rate_minutes': config.poll_rate_minutes,
+                    'notification_types': config.notification_types,
+                    'is_active': config.is_active,
+                    'created_at': config.created_at,
+                    'updated_at': config.updated_at
+                }
             return None
 
     def update_channel_config(self, channel_id: int, guild_id: int, **kwargs) -> None:
@@ -164,8 +179,9 @@ class Database:
                 for key, value in kwargs.items():
                     if hasattr(config, key):
                         setattr(config, key, value)
+                session.commit()
             else:
-                # Create new config
+                # Create new config with retry logic to handle race conditions
                 config = ChannelConfig(
                     channel_id=channel_id,
                     guild_id=guild_id,
@@ -177,13 +193,18 @@ class Database:
                 try:
                     session.commit()
                 except IntegrityError:
+                    # Another thread created it, rollback and update instead
                     session.rollback()
-                    # If already exists, update instead
                     config = session.get(ChannelConfig, channel_id)
-                    for key, value in kwargs.items():
-                        if hasattr(config, key):
-                            setattr(config, key, value)
-            session.commit()
+                    if config:
+                        # Apply the updates to the existing config
+                        for key, value in kwargs.items():
+                            if hasattr(config, key):
+                                setattr(config, key, value)
+                        session.commit()
+                    else:
+                        # This should not happen, but raise an error if it does
+                        raise RuntimeError(f"Failed to create or find channel config for channel_id {channel_id}")
 
     def get_active_channels(self) -> List[Dict[str, Any]]:
         """Get all channels that are actively monitoring"""
@@ -335,18 +356,35 @@ class Database:
     # Seen submissions methods
     def mark_submissions_seen(self, channel_id: int, submission_ids: List[int]) -> None:
         """Mark submissions as seen for a channel"""
+        if not submission_ids:
+            return
+            
         with self.get_session() as session:
+            # Create all seen submission objects
+            seen_submissions = []
             for submission_id in submission_ids:
                 seen = SeenSubmission(
                     channel_id=channel_id,
                     submission_id=submission_id
                 )
-                session.add(seen)
-                try:
-                    session.commit()
-                except IntegrityError:
-                    session.rollback()
-                    # Ignore duplicate errors
+                seen_submissions.append(seen)
+            
+            # Add all to session
+            session.add_all(seen_submissions)
+            
+            try:
+                # Commit all at once
+                session.commit()
+            except IntegrityError:
+                # Rollback and handle duplicates individually
+                session.rollback()
+                for seen in seen_submissions:
+                    try:
+                        session.add(seen)
+                        session.commit()
+                    except IntegrityError:
+                        session.rollback()
+                        # Ignore duplicate - submission already marked as seen
 
     def filter_new_submissions(self, channel_id: int, submissions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Filter out submissions we've already seen"""
