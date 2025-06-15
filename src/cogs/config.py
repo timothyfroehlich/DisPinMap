@@ -90,7 +90,7 @@ class ConfigCog(commands.Cog, name="Configuration"):
                     target_id=target_id
                 ))
             except ValueError:
-                await self.notifier.log_and_send(ctx, Messages.Command.Remove.ERROR.format(error_message="Invalid target index. Please provide a number."))
+                await self.notifier.log_and_send(ctx, Messages.Command.Remove.INVALID_TARGET_INDEX)
         else:
             self.db.update_channel_config(
                 ctx.channel.id,
