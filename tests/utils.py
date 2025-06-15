@@ -14,12 +14,15 @@ class MockContext:
     def __init__(self, channel_id: int, guild_id: int):
         self.channel = MagicMock()
         self.channel.id = channel_id
+        self.channel.name = f"test-channel-{channel_id}"
         self.guild = MagicMock()
         self.guild.id = guild_id
+        self.author = MagicMock()
+        self.author.name = "test-user"
+        self.author.id = 123456789
         self.message = MagicMock()
         self.message.content = ""
         self.sent_messages: List[str] = []
-        self.notifier = AsyncMock()
 
     async def send(self, message: str):
         """Mock send method that records messages"""

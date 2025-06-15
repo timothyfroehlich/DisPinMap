@@ -22,12 +22,13 @@ except ImportError:
 
 
 class MachineMonitor(commands.Cog, name="MachineMonitor"):
-    def __init__(self, bot, database: Database, notifier: Notifier):
+    def __init__(self, bot, database: Database, notifier: Notifier, start_task: bool = True):
         self.bot = bot
         self.db = database
         self.notifier = notifier
         self.last_poll_times = {}
-        self.monitor_task_loop.start()
+        if start_task:
+            self.monitor_task_loop.start()
 
     def cog_unload(self):
         self.monitor_task_loop.cancel()

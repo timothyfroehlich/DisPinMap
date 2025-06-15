@@ -46,7 +46,9 @@ def db():
 @pytest.fixture
 def monitor(mock_bot, db):
     """Create a monitor instance with mocked dependencies"""
-    return MachineMonitor(mock_bot, db)
+    from src.notifier import Notifier
+    notifier = Notifier()
+    return MachineMonitor(mock_bot, db, notifier, start_task=False)
 
 
 @pytest.mark.asyncio

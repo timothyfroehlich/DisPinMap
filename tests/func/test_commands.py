@@ -56,7 +56,7 @@ class TestAddCommand:
                 'lat': 30.0,
                 'lon': 97.0
             }
-            await monitoring_cog.add(ctx, "location", "123")
+            await monitoring_cog.add.callback(monitoring_cog, ctx, "location", "123")
 
             # Verify API was called
             mock_get.assert_called_once_with(123)
@@ -84,7 +84,7 @@ class TestAddCommand:
                     'lon': 97.0
                 }
             }
-            await monitoring_cog.add(ctx, "location", "Test Location")
+            await monitoring_cog.add.callback(monitoring_cog, ctx, "location", "Test Location")
 
             # Verify API was called
             mock_search.assert_called_once_with("Test Location")
@@ -99,7 +99,7 @@ class TestAddCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!add coordinates 30.0 97.0 10"
 
-        await monitoring_cog.add(ctx, "coordinates", "30.0", "97.0", "10")
+        await monitoring_cog.add.callback(monitoring_cog, ctx, "coordinates", "30.0", "97.0", "10")
 
         # Verify user got success message
         await assert_discord_message(ctx, Messages.Command.Add.SUCCESS.format(
@@ -122,7 +122,7 @@ class TestAddCommand:
                 'lon': -97.7431,
                 'display_name': 'Austin, Texas, US'
             }
-            await monitoring_cog.add(ctx, "city", "Austin,TX")
+            await monitoring_cog.add.callback(monitoring_cog, ctx, "city", "Austin,TX")
 
             # Verify API was called
             mock_geocode.assert_called_once_with("Austin,TX")
@@ -140,7 +140,7 @@ class TestAddCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!add invalid_type test"
 
-        await monitoring_cog.add(ctx, "invalid_type", "test")
+        await monitoring_cog.add.callback(monitoring_cog, ctx, "invalid_type", "test")
 
         # Verify user got error message
         await assert_discord_message(ctx, Messages.Command.Add.INVALID_TYPE)
@@ -158,7 +158,7 @@ class TestRemoveCommand:
         db.add_monitoring_target(ctx.channel.id, 'location', '123')
 
         ctx.message.content = "!rm 1"
-        await monitoring_cog.remove(ctx, "1")
+        await monitoring_cog.remove.callback(monitoring_cog, ctx, 1)
 
         # Verify user got success message
         await assert_discord_message(ctx, "Removed location:")
@@ -171,7 +171,7 @@ class TestRemoveCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!rm 999"
 
-        await monitoring_cog.remove(ctx, "999")
+        await monitoring_cog.remove.callback(monitoring_cog, ctx, 999)
 
         # Verify user got error message
         await assert_discord_message(ctx, Messages.Command.Remove.NO_TARGETS)
@@ -184,7 +184,7 @@ class TestRemoveCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!rm 1"
 
-        await monitoring_cog.remove(ctx, "1")
+        await monitoring_cog.remove.callback(monitoring_cog, ctx, 1)
 
         # Verify user got error message
         await assert_discord_message(ctx, Messages.Command.Remove.NO_TARGETS)
@@ -201,10 +201,10 @@ class TestListCommand:
         db.add_monitoring_target(ctx.channel.id, 'latlong', '30.0,97.0,10')
 
         ctx.message.content = "!list"
-        await monitoring_cog.list_targets(ctx)
+        await monitoring_cog.list_targets.callback(monitoring_cog, ctx)
 
         # Verify user got list message
-        await assert_discord_message(ctx, "Current monitoring targets:")
+        await assert_discord_message(ctx, "**Monitored Targets:**")
 
 
 class TestExportCommand:
@@ -218,10 +218,10 @@ class TestExportCommand:
         db.add_monitoring_target(ctx.channel.id, 'latlong', '30.0,97.0,10')
 
         ctx.message.content = "!export"
-        await monitoring_cog.export(ctx)
+        await monitoring_cog.export.callback(monitoring_cog, ctx)
 
         # Verify user got export message
-        await assert_discord_message(ctx, "Export commands:")
+        await assert_discord_message(ctx, "**Export Commands:**")
 
     @pytest.mark.asyncio
     async def test_export_empty(self, monitoring_cog, db):
@@ -229,7 +229,7 @@ class TestExportCommand:
         ctx = MockContext(12345, 67890)
 
         ctx.message.content = "!export"
-        await monitoring_cog.export(ctx)
+        await monitoring_cog.export.callback(monitoring_cog, ctx)
 
         # Verify user got error message
         await assert_discord_message(ctx, Messages.Command.Export.NO_TARGETS)
@@ -245,7 +245,7 @@ class TestPollRateCommand:
         db.add_monitoring_target(ctx.channel.id, 'location', '123')
 
         ctx.message.content = "!poll_rate 5 1"
-        await config_cog.poll_rate(ctx, "5", "1")
+        await config_cog.poll_rate.callback(config_cog, ctx, 5, "1")
 
         # Verify user got success message
         await assert_discord_message(ctx, Messages.Command.PollRate.SUCCESS_TARGET.format(
@@ -259,7 +259,7 @@ class TestPollRateCommand:
         ctx = MockContext(12345, 67890)
 
         ctx.message.content = "!poll_rate 5"
-        await config_cog.poll_rate(ctx, "5")
+        await config_cog.poll_rate.callback(config_cog, ctx, 5)
 
         # Verify user got success message
         await assert_discord_message(ctx, Messages.Command.PollRate.SUCCESS_CHANNEL.format(minutes=5))
@@ -270,7 +270,7 @@ class TestPollRateCommand:
         ctx = MockContext(12345, 67890)
 
         ctx.message.content = "!poll_rate 0"
-        await config_cog.poll_rate(ctx, "0")
+        await config_cog.poll_rate.callback(config_cog, ctx, 0)
 
         # Verify user got error message
         await assert_discord_message(ctx, Messages.Command.PollRate.INVALID_RATE)
@@ -286,7 +286,7 @@ class TestNotificationsCommand:
         db.add_monitoring_target(ctx.channel.id, 'location', '123')
 
         ctx.message.content = "!notifications machines 1"
-        await config_cog.notifications(ctx, "machines", "1")
+        await config_cog.notifications.callback(config_cog, ctx, "machines", "1")
 
         # Verify user got success message
         await assert_discord_message(ctx, Messages.Command.Notifications.SUCCESS_TARGET.format(
@@ -300,7 +300,7 @@ class TestNotificationsCommand:
         ctx = MockContext(12345, 67890)
 
         ctx.message.content = "!notifications machines"
-        await config_cog.notifications(ctx, "machines")
+        await config_cog.notifications.callback(config_cog, ctx, "machines")
 
         # Verify user got success message
         await assert_discord_message(ctx, Messages.Command.Notifications.SUCCESS_CHANNEL.format(notification_type="machines"))
@@ -311,7 +311,7 @@ class TestNotificationsCommand:
         ctx = MockContext(12345, 67890)
 
         ctx.message.content = "!notifications invalid"
-        await config_cog.notifications(ctx, "invalid")
+        await config_cog.notifications.callback(config_cog, ctx, "invalid")
 
         # Verify user got error message
         await assert_discord_message(ctx, Messages.Command.Notifications.ERROR.format(valid_types="machines, comments, all"))

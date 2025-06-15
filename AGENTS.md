@@ -54,7 +54,6 @@ DisPinMap/
    - Write unit tests for new features
    - Maintain test coverage above 95%
    - Use pytest for testing
-   - Run tests in parallel with pytest-xdist
 
 3. **Documentation**
    - Document all public functions and classes
