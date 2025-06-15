@@ -35,7 +35,6 @@ COPY --from=builder /opt/venv /opt/venv
 # Copy application source code
 COPY src/ /app/src/
 COPY bot.py /app/
-COPY *.md /app/
 
 # Set working directory
 WORKDIR /app

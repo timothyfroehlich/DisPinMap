@@ -8,3 +8,5 @@ google-cloud-secret-manager
 cloud-sql-python-connector[pg8000]
 aiohttp
 pytest-xdist
+colorama
+google-cloud-sqlcomment
