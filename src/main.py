@@ -68,16 +68,27 @@ async def on_command_error(ctx, error):
 
 async def main():
     """Async entry point for the bot"""
-    # Add shared cogs first
-    bot.add_cog(Database())
-    bot.add_cog(Notifier())
+    # Create shared instances (not cogs)
+    database = Database()
+    
+    # Import notifier after other imports
+    try:
+        from .notifier import Notifier
+    except ImportError:
+        from notifier import Notifier
+    
+    notifier = Notifier()
+    
+    # Store shared instances on bot for cogs to access
+    bot.database = database
+    bot.notifier = notifier
 
     # Load command cogs
     for filename in os.listdir('./src/cogs'):
-        if filename.endswith('.py'):
+        if filename.endswith('.py') and not filename.startswith('__'):
             await bot.load_extension(f'src.cogs.{filename[:-3]}')
 
-    # Load monitor
+    # Load monitor cog
     await bot.load_extension('src.monitor')
 
     token = os.getenv('DISCORD_TOKEN')

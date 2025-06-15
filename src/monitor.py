@@ -106,6 +106,12 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         await self.bot.wait_until_ready()
 
 async def setup(bot):
-    database = Database()
-    notifier = Notifier()
+    """Setup function for Discord.py extension loading"""
+    # Get shared instances from bot
+    database = getattr(bot, 'database', None)
+    notifier = getattr(bot, 'notifier', None)
+    
+    if database is None or notifier is None:
+        raise RuntimeError("Database and Notifier must be initialized on bot before loading cogs")
+
     await bot.add_cog(MachineMonitor(bot, database, notifier))

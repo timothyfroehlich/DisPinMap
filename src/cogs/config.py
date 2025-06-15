@@ -109,15 +109,12 @@ class ConfigCog(commands.Cog, name="Configuration"):
             await self.notifier.log_and_send(ctx, Messages.Command.Notifications.SUCCESS_CHANNEL.format(notification_type=notification_type))
 
 async def setup(bot):
-    # Ensure dependencies are loaded
-    await bot.wait_until_ready()
-
-    database = bot.get_cog("Database")
-    if database is None:
-        database = Database()
-
-    notifier = bot.get_cog("Notifier")
-    if notifier is None:
-        notifier = Notifier()
+    """Setup function for Discord.py extension loading"""
+    # Get shared instances from bot
+    database = getattr(bot, 'database', None)
+    notifier = getattr(bot, 'notifier', None)
+    
+    if database is None or notifier is None:
+        raise RuntimeError("Database and Notifier must be initialized on bot before loading cogs")
 
     await bot.add_cog(ConfigCog(bot, database, notifier))
