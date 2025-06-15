@@ -1,5 +1,5 @@
 """
-Test edge cases for API module including rate limiting, error handling, and input validation
+Unit tests for API module including rate limiting, error handling, and input validation
 """
 
 import pytest
@@ -13,10 +13,23 @@ from src.api import (
     fetch_submissions_for_location,
     search_location_by_name
 )
+from tests.utils.api import (
+    create_rate_limit_response,
+    create_success_response,
+    create_error_response,
+    simulate_rate_limit
+)
+from tests.utils.generators import (
+    generate_location_data,
+    generate_submission_data
+)
+from tests.utils.assertions import (
+    assert_api_response,
+    assert_error_response
+)
 
 
 class TestRateLimiting:
-
     @pytest.mark.asyncio
     async def test_rate_limit_retry_success(self):
         """Test that rate limiting retries with exponential backoff and eventually succeeds"""
@@ -27,7 +40,7 @@ class TestRateLimiting:
         with patch('requests.get') as mock_get:
             # First call returns 429, second call succeeds
             mock_get.side_effect = [
-                self._create_rate_limit_response(),
+                create_rate_limit_response(),
                 mock_response
             ]
 
@@ -42,7 +55,7 @@ class TestRateLimiting:
     async def test_rate_limit_max_retries_exceeded(self):
         """Test that rate limiting fails after max retries"""
         with patch('requests.get') as mock_get:
-            mock_get.side_effect = [self._create_rate_limit_response()] * 4
+            mock_get.side_effect = [create_rate_limit_response()] * 4
 
             with patch('asyncio.sleep'):
                 with pytest.raises(Exception, match="Rate limit exceeded after 3 attempts"):
@@ -52,7 +65,7 @@ class TestRateLimiting:
     async def test_exponential_backoff(self):
         """Test that retry delays follow exponential backoff pattern"""
         with patch('requests.get') as mock_get:
-            mock_get.side_effect = [self._create_rate_limit_response()] * 4
+            mock_get.side_effect = [create_rate_limit_response()] * 4
 
             with patch('asyncio.sleep') as mock_sleep:
                 with pytest.raises(Exception):
@@ -74,43 +87,32 @@ class TestRateLimiting:
             with pytest.raises(requests.exceptions.HTTPError):
                 await rate_limited_request("http://test.com")
 
-    def _create_rate_limit_response(self):
-        """Helper to create a mock 429 response"""
-        mock_response = MagicMock()
-        mock_response.status_code = 429
-        return mock_response
-
 
 class TestGeocodingValidation:
-
     @pytest.mark.asyncio
     async def test_empty_city_name(self):
         """Test geocoding with empty city name"""
         result = await geocode_city_name("")
-        assert result['status'] == 'error'
-        assert 'non-empty string' in result['message']
+        assert_error_response(result, "non-empty string")
 
     @pytest.mark.asyncio
     async def test_none_city_name(self):
         """Test geocoding with None city name"""
         result = await geocode_city_name(None)
-        assert result['status'] == 'error'
-        assert 'non-empty string' in result['message']
+        assert_error_response(result, "non-empty string")
 
     @pytest.mark.asyncio
     async def test_non_string_city_name(self):
         """Test geocoding with non-string city name"""
         result = await geocode_city_name(123)
-        assert result['status'] == 'error'
-        assert 'non-empty string' in result['message']
+        assert_error_response(result, "non-empty string")
 
     @pytest.mark.asyncio
     async def test_city_name_too_long(self):
         """Test geocoding with overly long city name"""
         long_name = "a" * 201  # Over 200 character limit
         result = await geocode_city_name(long_name)
-        assert result['status'] == 'error'
-        assert 'too long' in result['message']
+        assert_error_response(result, "too long")
 
     @pytest.mark.asyncio
     async def test_city_name_invalid_characters(self):
@@ -119,8 +121,7 @@ class TestGeocodingValidation:
 
         for invalid_name in invalid_names:
             result = await geocode_city_name(invalid_name)
-            assert result['status'] == 'error'
-            assert 'invalid characters' in result['message']
+            assert_error_response(result, "invalid characters")
 
     @pytest.mark.asyncio
     async def test_geocoding_network_error(self):
@@ -129,12 +130,10 @@ class TestGeocodingValidation:
             mock_request.side_effect = requests.exceptions.RequestException("Network error")
 
             result = await geocode_city_name("Austin, TX")
-            assert result['status'] == 'error'
-            assert 'Geocoding API request failed' in result['message']
+            assert_error_response(result, "Geocoding API request failed")
 
 
 class TestAPIErrorHandling:
-
     @pytest.mark.asyncio
     async def test_coordinates_api_error(self):
         """Test fetch_submissions_for_coordinates handles API errors gracefully"""
@@ -156,10 +155,7 @@ class TestAPIErrorHandling:
     @pytest.mark.asyncio
     async def test_location_not_found_error(self):
         """Test location API with location not found"""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
-            'errors': ['Location not found']
-        }
+        mock_response = create_error_response(404, "Location not found")
 
         with patch('src.api.rate_limited_request', return_value=mock_response):
             result = await fetch_submissions_for_location(99999)
@@ -187,12 +183,10 @@ class TestAPIErrorHandling:
 
 
 class TestAPIResponseHandling:
-
     @pytest.mark.asyncio
     async def test_missing_expected_fields(self):
         """Test handling of API responses missing expected fields"""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {}  # Missing 'user_submissions' field
+        mock_response = create_success_response({})  # Missing 'user_submissions' field
 
         with patch('src.api.rate_limited_request', return_value=mock_response):
             result = await fetch_submissions_for_coordinates(30.0, -97.0, 10)
@@ -201,10 +195,8 @@ class TestAPIResponseHandling:
     @pytest.mark.asyncio
     async def test_coordinates_without_radius(self):
         """Test coordinates API without radius parameter"""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
-            'user_submissions': [{'id': 1, 'test': 'data'}]
-        }
+        test_data = {'user_submissions': [generate_submission_data(1)]}
+        mock_response = create_success_response(test_data)
 
         with patch('src.api.rate_limited_request', return_value=mock_response) as mock_request:
             result = await fetch_submissions_for_coordinates(30.0, -97.0)
@@ -212,15 +204,13 @@ class TestAPIResponseHandling:
             # Verify URL doesn't include max_distance parameter
             called_url = mock_request.call_args[0][0]
             assert 'max_distance' not in called_url
-            assert result == [{'id': 1, 'test': 'data'}]
+            assert result == test_data['user_submissions']
 
     @pytest.mark.asyncio
     async def test_coordinates_with_radius(self):
         """Test coordinates API with radius parameter"""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
-            'user_submissions': [{'id': 1, 'test': 'data'}]
-        }
+        test_data = {'user_submissions': [generate_submission_data(1)]}
+        mock_response = create_success_response(test_data)
 
         with patch('src.api.rate_limited_request', return_value=mock_response) as mock_request:
             result = await fetch_submissions_for_coordinates(30.0, -97.0, 15)
@@ -228,4 +218,4 @@ class TestAPIResponseHandling:
             # Verify URL includes max_distance parameter
             called_url = mock_request.call_args[0][0]
             assert 'max_distance=15' in called_url
-            assert result == [{'id': 1, 'test': 'data'}]
+            assert result == test_data['user_submissions']

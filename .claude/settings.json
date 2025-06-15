@@ -1,0 +1,7 @@
+{
+    "contextFiles": [
+        "AGENTS.md",
+        "README.md"
+    ],
+    "defaultContextFile": "AGENTS.md"
+}

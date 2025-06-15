@@ -97,6 +97,27 @@ resource "google_secret_manager_secret" "discord_token" {
   depends_on = [google_project_service.required_apis]
 }
 
+# Secret Manager secret for database password
+resource "google_secret_manager_secret" "db_password" {
+  secret_id = "${var.service_name}-db-password"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.gcp_region
+      }
+    }
+  }
+
+  depends_on = [google_project_service.required_apis]
+}
+
+# Secret Manager secret version for database password
+resource "google_secret_manager_secret_version" "db_password_version" {
+  secret      = google_secret_manager_secret.db_password.id
+  secret_data = random_password.db_password.result
+}
+
 # Service Account for Cloud Run
 resource "google_service_account" "cloud_run_sa" {
   account_id   = "${var.service_name}-sa"
@@ -153,8 +174,8 @@ resource "google_cloud_run_v2_service" "bot_service" {
       }
 
       env {
-        name  = "DB_PASS"
-        value = random_password.db_password.result
+        name  = "DB_PASSWORD_SECRET_NAME"
+        value = google_secret_manager_secret.db_password.secret_id
       }
 
       env {

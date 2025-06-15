@@ -3,91 +3,54 @@ Monitor module for Discord Pinball Map Bot
 Handles background polling and notification sending using the new submission-based approach
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Dict, Any
-from discord.ext import tasks
+from discord.ext import tasks, commands
 import logging
 
 logger = logging.getLogger(__name__)
 try:
     from .database import Database
     from .api import fetch_submissions_for_coordinates, fetch_submissions_for_location
+    from .notifier import Notifier
+    from .messages import Messages
 except ImportError:
     from database import Database
     from api import fetch_submissions_for_coordinates, fetch_submissions_for_location
+    from notifier import Notifier
+    from messages import Messages
 
 
-class MachineMonitor:
-    def __init__(self, bot, database: Database):
+class MachineMonitor(commands.Cog, name="MachineMonitor"):
+    def __init__(self, bot, database: Database, notifier: Notifier):
         self.bot = bot
         self.db = database
-        self.monitor_task = None
-    
-    def start_monitoring(self) -> None:
-        """Start the background monitoring task"""
-        if self.monitor_task is None or not self.monitor_task.is_running():
-            self.monitor_task = self._create_monitor_task()
-            self.monitor_task.start()
-    
-    def stop_monitoring(self) -> None:
-        """Stop the background monitoring task"""
-        if self.monitor_task and self.monitor_task.is_running():
-            self.monitor_task.cancel()
-    
-    def _create_monitor_task(self):
-        """Create the monitoring task"""
-        @tasks.loop(minutes=5)  # Check every 5 minutes, but respect individual channel poll rates
-        async def monitor_submissions():
-            """Background task to monitor new submissions"""
-            try:
-                active_channels = self.db.get_active_channels()
-                
-                for config in active_channels:
-                    # Check if it's time to poll this channel
-                    if await self._should_poll_channel(config):
-                        await self._poll_channel(config)
-                        
-            except Exception as e:
-                logger.error(f"Error in monitor_submissions task: {e}")
-        
-        @monitor_submissions.before_loop
-        async def before_monitor():
-            """Wait until bot is ready before starting monitoring"""
-            await self.bot.wait_until_ready()
-        
-        return monitor_submissions
-    
-    async def _should_poll_channel(self, config: Dict[str, Any]) -> bool:
-        """Check if it's time to poll a channel based on its poll rate"""
-        try:
-            # Simple approach: check if enough time has passed since last poll
-            # We'll store last poll time in a simple table or just use interval
-            poll_interval_minutes = config.get('poll_rate_minutes', 60)
-            
-            # For simplicity, we can store the last poll time in memory or database
-            # For now, let's use a basic time-based approach
-            # In a real implementation, you'd want to track this per channel
-            
-            # This is a simplified version - poll every interval
-            return True  # For now, always poll (the task loop handles timing)
-                
-        except Exception as e:
-            logger.error(f"Error checking poll time for channel {config['channel_id']}: {e}")
-            return False
-    
-    async def _poll_channel(self, config: Dict[str, Any]):
+        self.notifier = notifier
+        self.last_poll_times = {}
+        self.monitor_task_loop.start()
+
+    def cog_unload(self):
+        self.monitor_task_loop.cancel()
+
+    @tasks.loop(minutes=1)
+    async def monitor_task_loop(self):
+        """Main monitoring loop"""
+        active_channels = self.db.get_active_channels()
+        for channel_id in active_channels:
+            config = self.db.get_channel_config(channel_id)
+            if await self._should_poll_channel(config):
+                await self.run_checks_for_channel(channel_id, config)
+
+    async def run_checks_for_channel(self, channel_id: int, config: Dict[str, Any]):
         """Poll a single channel for new submissions across all its targets"""
         try:
-            channel_id = config['channel_id']
             targets = self.db.get_monitoring_targets(channel_id)
-            
+
             if not targets:
                 logger.debug(f"Channel {channel_id} has no monitoring targets")
                 return
-            
+
             all_submissions = []
-            
-            # Fetch from all targets
             for target in targets:
                 if target['target_type'] == 'latlong':
                     parts = target['target_name'].split(',')
@@ -97,99 +60,52 @@ class MachineMonitor:
                         all_submissions.extend(submissions)
                     elif len(parts) == 2:
                         lat, lon = float(parts[0]), float(parts[1])
-                        submissions = await fetch_submissions_for_coordinates(lat, lon)  # No radius (use API default)
+                        submissions = await fetch_submissions_for_coordinates(lat, lon)
                         all_submissions.extend(submissions)
-                        
-                elif target['target_type'] == 'location':
-                    if target['target_data']:
-                        location_id = int(target['target_data'])
-                        submissions = await fetch_submissions_for_location(location_id)
-                        all_submissions.extend(submissions)
-            
-            # Filter out submissions we've already seen
+                elif target['target_type'] == 'location' and target['target_data']:
+                    location_id = int(target['target_data'])
+                    submissions = await fetch_submissions_for_location(location_id)
+                    all_submissions.extend(submissions)
+
             new_submissions = self.db.filter_new_submissions(channel_id, all_submissions)
-            
-            # Send notifications for new submissions
+
             if new_submissions:
-                await self._send_notifications(channel_id, new_submissions, config.get('notification_types', 'machines'))
-                
-                # Mark submissions as seen
-                submission_ids = [s['id'] for s in new_submissions]
-                self.db.mark_submissions_seen(channel_id, submission_ids)
-                
+                channel = self.bot.get_channel(channel_id)
+                if channel:
+                    await self.notifier.post_submissions(channel, new_submissions)
+                    submission_ids = [s['id'] for s in new_submissions]
+                    self.db.mark_submissions_seen(channel_id, submission_ids)
+                else:
+                    logger.warning(f"Could not find channel {channel_id} to send notifications")
+
+            self.last_poll_times[channel_id] = datetime.now()
+
         except Exception as e:
-            logger.error(f"Error polling channel {config['channel_id']}: {e}")
-    
-    async def _send_notifications(self, channel_id: int, submissions: List[Dict[str, Any]], notification_types: str = 'machines'):
-        """Send submission notifications to a channel"""
-        if not submissions:
-            return
-            
+            logger.error(f"Error polling channel {channel_id}: {e}")
+
+    async def _should_poll_channel(self, config: Dict[str, Any]) -> bool:
+        """Check if it's time to poll a channel based on its poll rate"""
         try:
-            channel = self.bot.get_channel(channel_id)
-            if not channel:
-                logger.warning(f"Could not find channel {channel_id}")
-                return
-            
-            # Group submissions by type
-            additions = [s for s in submissions if s.get('submission_type') == 'new_lmx']
-            removals = [s for s in submissions if s.get('submission_type') == 'remove_machine']
-            conditions = [s for s in submissions if s.get('submission_type') == 'new_condition']
-            
-            # Filter notifications based on notification type preference
-            if notification_types == 'machines':
-                # Only send machine additions and removals
-                notifications_to_send = additions + removals
-            elif notification_types == 'comments':
-                # Only send condition updates
-                notifications_to_send = conditions
-            elif notification_types == 'all':
-                # Send everything
-                notifications_to_send = submissions
-            else:
-                # Default to machines only
-                notifications_to_send = additions + removals
-            
-            # Send addition notifications
-            if additions and notification_types in ['machines', 'all']:
-                if len(additions) == 1:
-                    submission = additions[0]
-                    message = f"🆕 **{submission.get('machine_name', 'Unknown Machine')}** added at **{submission.get('location_name', 'Unknown Location')}** by {submission.get('user_name', 'Anonymous')}"
-                    await channel.send(message)
-                else:
-                    message = f"🆕 **{len(additions)} New Pinball Machines Added!**\n"
-                    for submission in additions[:10]:  # Limit to prevent message length issues
-                        message += f"• **{submission.get('machine_name', 'Unknown')}** at {submission.get('location_name', 'Unknown')}\n"
-                    
-                    if len(additions) > 10:
-                        message += f"... and {len(additions) - 10} more machines"
-                        
-                    await channel.send(message)
-            
-            # Send removal notifications
-            if removals and notification_types in ['machines', 'all']:
-                if len(removals) == 1:
-                    submission = removals[0]
-                    message = f"🗑️ **{submission.get('machine_name', 'Unknown Machine')}** removed from **{submission.get('location_name', 'Unknown Location')}** by {submission.get('user_name', 'Anonymous')}"
-                    await channel.send(message)
-                else:
-                    message = f"🗑️ **{len(removals)} Pinball Machines Removed:**\n"
-                    for submission in removals[:10]:  # Limit to prevent message length issues
-                        message += f"• **{submission.get('machine_name', 'Unknown')}** from {submission.get('location_name', 'Unknown')}\n"
-                    
-                    if len(removals) > 10:
-                        message += f"... and {len(removals) - 10} more machines"
-                        
-                    await channel.send(message)
-            
-            # Send condition update notifications
-            if conditions and notification_types in ['comments', 'all']:
-                for submission in conditions[:5]:  # Limit condition updates
-                    message = f"🔧 **{submission.get('machine_name', 'Unknown Machine')}** at **{submission.get('location_name', 'Unknown Location')}**"
-                    if submission.get('comment'):
-                        message += f"\n💬 {submission['comment']}"
-                    message += f" - by {submission.get('user_name', 'Anonymous')}"
-                    await channel.send(message)
-            
+            channel_id = config['channel_id']
+            poll_interval_minutes = config.get('poll_rate_minutes', 60)
+            last_poll = self.last_poll_times.get(channel_id)
+
+            if last_poll is None:
+                return True
+
+            time_since_last_poll = datetime.now() - last_poll
+            minutes_since_last_poll = time_since_last_poll.total_seconds() / 60
+
+            return minutes_since_last_poll >= poll_interval_minutes
         except Exception as e:
-            logger.error(f"Error sending notifications to channel {channel_id}: {e}")
+            logger.error(f"Error checking poll time for channel {config.get('channel_id')}: {e}")
+            return False
+
+    @monitor_task_loop.before_loop
+    async def before_monitor(self):
+        await self.bot.wait_until_ready()
+
+async def setup(bot):
+    database = Database()
+    notifier = Notifier()
+    await bot.add_cog(MachineMonitor(bot, database, notifier))
