@@ -49,15 +49,16 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         Args:
             channel_id: Discord channel ID
             config: Channel configuration
-            is_manual_check: True if this is a manual check via !check command
+            is_manual_check: Whether this is a manual check (via !check command)
 
         Returns:
             bool: True if new submissions were found and posted, False otherwise
         """
-        logger.info(f"Polling channel {channel_id}...")
+        logger.info(f"{'Manual check' if is_manual_check else 'Polling'} channel {channel_id}...")
         try:
             # Update last poll time before checking to prevent race conditions on long polls
-            self.db.update_channel_last_poll_time(channel_id, datetime.now())
+            if not is_manual_check:
+                self.db.update_channel_last_poll_time(channel_id, datetime.now())
 
             targets = self.db.get_monitoring_targets(channel_id)
             if not targets:
@@ -74,52 +75,72 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                     parts = target['target_name'].split(',')
                     if len(parts) >= 3:
                         lat, lon, radius = float(parts[0]), float(parts[1]), int(parts[2])
-                        submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
+                        submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=not is_manual_check)
                         all_submissions.extend(submissions)
                     elif len(parts) == 2:
                         lat, lon = float(parts[0]), float(parts[1])
-                        submissions = await fetch_submissions_for_coordinates(lat, lon)
+                        submissions = await fetch_submissions_for_coordinates(lat, lon, use_min_date=not is_manual_check)
                         all_submissions.extend(submissions)
                 elif target['target_type'] == 'location' and target['target_data']:
                     location_id = int(target['target_data'])
-                    submissions = await fetch_submissions_for_location(location_id)
+                    submissions = await fetch_submissions_for_location(location_id, use_min_date=not is_manual_check)
                     all_submissions.extend(submissions)
 
-            new_submissions = self.db.filter_new_submissions(channel_id, all_submissions)
+            if is_manual_check:
+                # For manual checks, show last 5 submissions regardless of whether we've seen them
+                # Sort by created_at descending and take first 5
+                sorted_submissions = sorted(all_submissions, key=lambda x: x.get('created_at', ''), reverse=True)
+                submissions_to_show = sorted_submissions[:5]
 
-            if new_submissions:
-                channel = self.bot.get_channel(channel_id)
-                if channel:
-                    await self.notifier.post_submissions(channel, new_submissions, config)
-                    self.db.mark_submissions_seen(channel_id, [s['id'] for s in new_submissions])
-                    return True
-                else:
-                    logger.warning(f"Could not find channel {channel_id} to send notifications")
-                    return False
-            else:
-                # No new submissions found
-                if is_manual_check:
+                if submissions_to_show:
                     channel = self.bot.get_channel(channel_id)
                     if channel:
-                        # Calculate time since last automatic poll
+                        await self.notifier.log_and_send(channel, f"📋 **Last 5 submissions across all monitored targets:**")
+                        await self.notifier.post_submissions(channel, submissions_to_show, config)
+                        return True
+                    else:
+                        logger.warning(f"Could not find channel {channel_id} to send manual check results")
+                        return False
+                else:
+                    # No submissions found at all
+                    channel = self.bot.get_channel(channel_id)
+                    if channel:
+                        # Check when the channel was last polled to provide better feedback
                         last_poll = config.get('last_poll_at')
                         if last_poll:
                             time_since_poll = datetime.now() - last_poll
                             minutes_ago = int(time_since_poll.total_seconds() / 60)
-                            if minutes_ago < 1:
-                                time_str = "less than a minute ago"
-                            elif minutes_ago == 1:
-                                time_str = "1 minute ago"
+                            if minutes_ago < 60:
+                                await self.notifier.log_and_send(channel, f"📋 **Nothing new since {minutes_ago} minutes ago.**")
                             else:
-                                time_str = f"{minutes_ago} minutes ago"
+                                hours_ago = minutes_ago // 60
+                                await self.notifier.log_and_send(channel, f"📋 **Nothing new since {hours_ago} hours ago.**")
                         else:
-                            time_str = "an unknown time"
+                            await self.notifier.log_and_send(channel, "📋 **No submissions found for any monitored targets.**")
+                    return False
+            else:
+                # For automatic checks, filter out submissions we've already seen
+                new_submissions = self.db.filter_new_submissions(channel_id, all_submissions)
 
-                        await self.notifier.log_and_send(channel, f"Nothing new since {time_str}")
-                return False
+                if new_submissions:
+                    channel = self.bot.get_channel(channel_id)
+                    if channel:
+                        await self.notifier.post_submissions(channel, new_submissions, config)
+                        self.db.mark_submissions_seen(channel_id, [s['id'] for s in new_submissions])
+                        return True
+                    else:
+                        logger.warning(f"Could not find channel {channel_id} to send notifications")
+                        return False
+                else:
+                    # No new submissions found
+                    return False
 
         except Exception as e:
-            logger.error(f"Error polling channel {channel_id}: {e}")
+            logger.error(f"Error {'in manual check' if is_manual_check else 'polling'} for channel {channel_id}: {e}")
+            if is_manual_check:
+                channel = self.bot.get_channel(channel_id)
+                if channel:
+                    await self.notifier.log_and_send(channel, f"❌ **Error during manual check:** {str(e)}")
             return False
 
     async def _should_poll_channel(self, config: Dict[str, Any]) -> bool:

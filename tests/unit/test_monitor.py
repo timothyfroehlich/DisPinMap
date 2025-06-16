@@ -45,7 +45,7 @@ def mock_notifier(mock_bot):
 @pytest.fixture
 def monitor(mock_bot, db, mock_notifier):
     """Create a monitor instance with mocked dependencies"""
-    return MachineMonitor(mock_bot, db, mock_notifier, start_task=False)
+    return MachineMonitor(mock_bot, db, mock_notifier)
 
 
 @pytest.mark.asyncio
@@ -81,7 +81,7 @@ class TestMonitorTask:
 
         result = await monitor.run_checks_for_channel(channel_id, config)
 
-        mock_fetch.assert_called_once_with(12345)
+        mock_fetch.assert_called_once_with(12345, use_min_date=True)
         mock_notifier.post_submissions.assert_called_once()
         db.filter_new_submissions(channel_id, [submission])
         # assert that submission is now marked as seen
@@ -104,7 +104,7 @@ class TestMonitorTask:
 
         result = await monitor.run_checks_for_channel(channel_id, config)
 
-        mock_fetch.assert_called_once_with(30.1, -97.2, 10)
+        mock_fetch.assert_called_once_with(30.1, -97.2, 10, use_min_date=True)
         mock_notifier.post_submissions.assert_called_once()
         assert not db.filter_new_submissions(channel_id, [submission])
         # assert that new submissions were found

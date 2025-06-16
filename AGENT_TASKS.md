@@ -2,6 +2,18 @@
 
 ## Completed Tasks
 
+### CRITICAL BUG FIXES (URGENT)
+- ✅ **Fixed Monitor Partial Changes Bug**: Restored missing `is_manual_check` parameter to `run_checks_for_channel()` method
+  - **Issue**: `!check` command was passing `is_manual_check=True` but `monitor.py` didn't accept this parameter
+  - **Impact**: Manual checks were failing silently, automatic monitoring was using wrong API parameters
+  - **Root Cause**: Partially applied changes left the codebase in inconsistent state
+- ✅ **Fixed API Call Parameters**:
+  - **Automatic monitoring**: Now uses `use_min_date=True` (only recent submissions from yesterday+)
+  - **Manual checks**: Now uses `use_min_date=False` (all submissions, limited to last 5 displayed)
+  - **Impact**: This fixes why automatic monitoring missed new games and why !check showed all submissions
+- ✅ **Added Manual Check User Feedback**: Manual checks now provide clear feedback when no submissions found
+- ✅ **Fixed Manual Check Display Logic**: Manual checks now limit display to last 5 submissions with proper sorting
+
 ### GCP Deployment
 - ✅ Updated requirements.txt with GCP dependencies (google-cloud-secret-manager, google-cloud-sql-connector[pg8000], aiohttp).
 - ✅ Modified src/database.py for dual database support (SQLite and PostgreSQL).
