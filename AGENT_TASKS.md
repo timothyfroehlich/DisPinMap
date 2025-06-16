@@ -74,6 +74,13 @@
 - **Task 8**: Fix monitor test mocks (2 failing tests) - Mock channel setup issues in `test_poll_channel_with_targets` and `test_send_notifications_multiple_machines`
 - **Task 9**: Fix logging timestamp parsing (1 failing test) - ANSI color code handling in `test_colored_formatter`
 
+### Recently Completed
+- ✅ **Added Functional Tests for !check Command**: Created comprehensive test suite for the `!check` command in `tests/func/test_commands.py`
+  - **Coverage**: 5 test cases covering normal operation, error conditions, and integration scenarios
+  - **Tests**: Valid targets, missing monitor cog, no targets, exception handling, and integration with real monitor
+  - **Purpose**: Help diagnose issues when `!check` command fails, ensure proper interaction between monitoring cog and monitor cog
+  - **Result**: All tests passing, provides debugging capabilities for future `!check` command issues
+
 ### Future Improvements
 - **Performance Optimization**: Database query optimization, caching, background task scheduling.
 - **Enhanced Error Handling**: Retry logic for Discord API failures, graceful degradation for external API outages.
