@@ -12,6 +12,10 @@
 - ✅ Updated README.md with local and GCP deployment instructions.
 - ✅ Verified local functionality with SQLite and .env file.
 
+### Docker
+- ✅ Built Docker image successfully.
+- ✅ Pushed Docker image to Google Artifact Registry.
+
 ### High Priority Fixes
 - ✅ Fixed coordinate handling bug in check command.
 - ✅ Added input sanitization for geocoding API calls.
@@ -248,3 +252,23 @@ As part of the migration from "test" to "tests" directory, we are re-implementin
 - Added a command-line flag `--test-startup` to main.py.
 - When run with this flag, the bot will start, connect to Discord, then immediately shut down and exit.
 - Useful for CI and environment verification.
+
+## GCP Deployment
+
+**Status**: ✅ **COMPLETE**
+
+The bot is now successfully deployed and running on Google Cloud Run. We overcame several challenges, including a stuck Cloud SQL instance and a fundamental issue with running a non-HTTP service on Cloud Run.
+
+**The final, working solution involved:**
+1.  Creating a new set of infrastructure (`dispinmap-bot-v2`) to bypass the stuck resources.
+2.  Implementing a lightweight `aiohttp` web server within the bot to respond to Cloud Run's health checks.
+
+**Service URL:** `https://dispinmap-bot-v2-wos45oz7vq-uc.a.run.app`
+
+This URL is for the health check endpoint and is not meant for user interaction. The bot itself is now running and should be active in your Discord server.
+
+**⚠️ Important Cleanup Note:**
+
+The original Cloud SQL instance (`dispinmap-bot-db-instance`) is still stuck in your GCP project. You will need to manually delete this from the [GCP Console](https://console.cloud.google.com/sql/instances) at your convenience. Since Terraform is no longer managing it, it won't be affected by future `terraform apply` or `destroy` commands for the `v2` service.
+
+Thank you for your patience and for guiding me toward the correct solutions. It was a pleasure working with you to get this deployed!
