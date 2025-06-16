@@ -22,14 +22,17 @@ except ImportError:
 
 
 class MachineMonitor(commands.Cog, name="MachineMonitor"):
-    def __init__(self, bot, database: Database, notifier: Notifier, start_task: bool = True):
+    def __init__(self, bot, database: Database, notifier: Notifier):
         self.bot = bot
         self.db = database
         self.notifier = notifier
-        if start_task:
-            self.monitor_task_loop.start()
+
+    def cog_load(self):
+        """Starts the monitoring task when the cog is loaded."""
+        self.monitor_task_loop.start()
 
     def cog_unload(self):
+        """Cancels the monitoring task when the cog is unloaded."""
         self.monitor_task_loop.cancel()
 
     @tasks.loop(minutes=1)
@@ -42,12 +45,12 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
 
     async def run_checks_for_channel(self, channel_id: int, config: Dict[str, Any], is_manual_check: bool = False):
         """Poll a channel for new submissions based on its monitoring targets
-        
+
         Args:
             channel_id: Discord channel ID
             config: Channel configuration
             is_manual_check: True if this is a manual check via !check command
-            
+
         Returns:
             bool: True if new submissions were found and posted, False otherwise
         """
@@ -111,7 +114,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                                 time_str = f"{minutes_ago} minutes ago"
                         else:
                             time_str = "an unknown time"
-                        
+
                         await self.notifier.log_and_send(channel, f"Nothing new since {time_str}")
                 return False
 

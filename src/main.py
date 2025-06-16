@@ -12,7 +12,6 @@ import sys
 from dotenv import load_dotenv
 from pathlib import Path
 import asyncio
-from google.cloud import secretmanager
 from aiohttp import web
 import signal
 
@@ -48,10 +47,14 @@ http_runner = None
 def get_secret(secret_name, project_id):
     """Retrieve a secret from Google Cloud Secret Manager."""
     try:
+        from google.cloud import secretmanager
         client = secretmanager.SecretManagerServiceClient()
         name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
         response = client.access_secret_version(request={"name": name})
         return response.payload.data.decode("UTF-8")
+    except ImportError:
+        logger.warning("google-cloud-secret-manager is not installed. Cannot fetch secrets from GCP.")
+        return None
     except Exception as e:
         logger.error(f"Failed to access secret {secret_name}: {e}")
         return None
@@ -157,13 +160,6 @@ async def main():
                     logger.info(f"Loaded cog: {filename}")
                 except Exception as e:
                     logger.error(f'Failed to load extension {filename}: {e}', exc_info=True)
-
-        # Load monitor cog
-        try:
-            await bot.load_extension('src.monitor')
-            logger.info("Successfully loaded monitor cog")
-        except Exception as e:
-            logger.error(f"Failed to load monitor cog: {e}")
 
         # Get Discord token from environment variable or Secret Manager
         token = os.environ.get("DISCORD_TOKEN")
