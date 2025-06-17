@@ -159,15 +159,24 @@ class Database:
         with self.get_session() as session:
             config = session.get(ChannelConfig, channel_id)
             if config:
+                # Ensure timezone-aware datetime objects for consistent behavior
+                from datetime import timezone
+                
+                def ensure_timezone_aware(dt):
+                    """Convert naive datetime to timezone-aware (UTC) if needed"""
+                    if dt is not None and dt.tzinfo is None:
+                        return dt.replace(tzinfo=timezone.utc)
+                    return dt
+                
                 return {
                     'channel_id': config.channel_id,
                     'guild_id': config.guild_id,
                     'poll_rate_minutes': config.poll_rate_minutes,
                     'notification_types': config.notification_types,
                     'is_active': config.is_active,
-                    'last_poll_at': config.last_poll_at,
-                    'created_at': config.created_at,
-                    'updated_at': config.updated_at
+                    'last_poll_at': ensure_timezone_aware(config.last_poll_at),
+                    'created_at': ensure_timezone_aware(config.created_at),
+                    'updated_at': ensure_timezone_aware(config.updated_at)
                 }
             return None
 
@@ -225,6 +234,15 @@ class Database:
                 if targets_count:
                     configs.append(config)
 
+            # Ensure timezone-aware datetime objects for consistent behavior
+            from datetime import timezone
+            
+            def ensure_timezone_aware(dt):
+                """Convert naive datetime to timezone-aware (UTC) if needed"""
+                if dt is not None and dt.tzinfo is None:
+                    return dt.replace(tzinfo=timezone.utc)
+                return dt
+            
             return [
                 {
                     'channel_id': config.channel_id,
@@ -232,9 +250,9 @@ class Database:
                     'poll_rate_minutes': config.poll_rate_minutes,
                     'notification_types': config.notification_types,
                     'is_active': config.is_active,
-                    'last_poll_at': config.last_poll_at,
-                    'created_at': config.created_at,
-                    'updated_at': config.updated_at
+                    'last_poll_at': ensure_timezone_aware(config.last_poll_at),
+                    'created_at': ensure_timezone_aware(config.created_at),
+                    'updated_at': ensure_timezone_aware(config.updated_at)
                 }
                 for config in configs
             ]

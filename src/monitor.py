@@ -61,9 +61,12 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                 return await self._handle_no_targets(channel_id, is_manual_check)
 
             all_submissions = []
+            api_failures = False
             for target in targets:
-                submissions = await self._process_target(target, is_manual_check)
+                submissions, failed = await self._process_target(target, is_manual_check)
                 all_submissions.extend(submissions)
+                if failed:
+                    api_failures = True
 
             channel = self.bot.get_channel(channel_id)
             if not channel:
@@ -71,10 +74,16 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                 return False
 
             if is_manual_check:
-                return await self._handle_manual_check_results(channel, all_submissions, config)
+                result = await self._handle_manual_check_results(channel, all_submissions, config)
+                # Update timestamp on successful manual checks (no API failures)
+                if not api_failures:
+                    self.db.update_channel_last_poll_time(channel_id, datetime.now(timezone.utc))
+                return result
             else:
                 result = await self._handle_automatic_poll_results(channel, all_submissions, config)
-                self.db.update_channel_last_poll_time(channel_id, datetime.now(timezone.utc))
+                # Only update timestamp on successful automatic polls (no API failures)
+                if not api_failures:
+                    self.db.update_channel_last_poll_time(channel_id, datetime.now(timezone.utc))
                 return result
 
         except Exception as e:
@@ -85,8 +94,12 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                     await self.notifier.log_and_send(channel, f"❌ **Error during manual check:** {str(e)}")
             return False
 
-    async def _process_target(self, target: Dict[str, Any], is_manual_check: bool) -> List[Dict[str, Any]]:
-        """Fetch submissions for a single monitoring target and update its timestamp."""
+    async def _process_target(self, target: Dict[str, Any], is_manual_check: bool) -> tuple[List[Dict[str, Any]], bool]:
+        """Fetch submissions for a single monitoring target and update its timestamp.
+        
+        Returns:
+            tuple: (submissions, failed) where failed is True if API call failed
+        """
         try:
             submissions = []
             target_id = target['id']
@@ -96,11 +109,11 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                 source_data = target['target_name'] if target_type == 'latlong' else target['target_data']
                 if not source_data:
                     logger.warning(f"Skipping target with missing data: id={target_id}, type={target_type}")
-                    return []
+                    return [], False  # Not an API failure, just invalid config
                 parts = source_data.split(',')
                 if len(parts) < 2:
                     logger.warning(f"Skipping target with malformed data: id={target_id}, type={target_type}, data={source_data}")
-                    return []
+                    return [], False  # Not an API failure, just invalid config
                 lat, lon = float(parts[0]), float(parts[1])
                 radius = int(parts[2]) if len(parts) >= 3 else None
                 submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=not is_manual_check)
@@ -109,13 +122,18 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                 submissions = await fetch_submissions_for_location(location_id, use_min_date=not is_manual_check)
             else:
                 logger.warning(f"Skipping unhandled target: id={target_id}, type={target_type}")
-                return []
+                return [], False  # Not an API failure, just invalid config
 
             self.db.update_target_last_checked_time(target_id, datetime.now(timezone.utc))
-            return submissions
+            return submissions, False  # Success
         except Exception as e:
             logger.error(f"Failed to fetch for target {target['id']}: {e}")
-            return []
+            if is_manual_check:
+                # For manual checks, allow the error to propagate up
+                raise
+            else:
+                # For automatic polls, catch and mark as failed
+                return [], True  # Failed
 
     async def _handle_no_targets(self, channel_id: int, is_manual_check: bool) -> bool:
         """Handle the case where a channel has no monitoring targets."""

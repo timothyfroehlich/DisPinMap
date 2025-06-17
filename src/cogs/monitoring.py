@@ -232,6 +232,10 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     submissions = await fetch_submissions_for_location(location_id, use_min_date=False)
                     sorted_submissions = self._sort_submissions(submissions)
                     await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"location **{location_name}** (ID: {location_id})")
+                    
+                    # Update timestamp to reflect successful add target check
+                    from datetime import datetime, timezone
+                    self.db.update_channel_last_poll_time(ctx.channel.id, datetime.now(timezone.utc))
                 else:
                     await self.notifier.log_and_send(ctx, Messages.Command.Add.LOCATION_NOT_FOUND.format(
                         location_id=location_id
@@ -252,6 +256,10 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     submissions = await fetch_submissions_for_location(location_id, use_min_date=False)
                     sorted_submissions = self._sort_submissions(submissions)
                     await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"location **{location_name}** (ID: {location_id})")
+                    
+                    # Update timestamp to reflect successful add target check
+                    from datetime import datetime, timezone
+                    self.db.update_channel_last_poll_time(ctx.channel.id, datetime.now(timezone.utc))
                 elif status == 'suggestions':
                     await self.notifier.log_and_send(ctx, Messages.Command.Add.LOCATION_SUGGESTIONS.format(
                         search_term=location_input_stripped,
@@ -281,6 +289,10 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=False)
             sorted_submissions = self._sort_submissions(submissions)
             await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"coordinates **{lat}, {lon}**")
+            
+            # Update timestamp to reflect successful add target check
+            from datetime import datetime, timezone
+            self.db.update_channel_last_poll_time(ctx.channel.id, datetime.now(timezone.utc))
 
             radius_info = f" with a {radius} mile radius" if radius else ""
             await self.notifier.log_and_send(ctx, Messages.Command.Add.SUCCESS.format(
@@ -316,6 +328,10 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=False)
             sorted_submissions = self._sort_submissions(submissions)
             await self.notifier.post_initial_submissions(ctx, sorted_submissions, f"city **{display_name}**")
+            
+            # Update timestamp to reflect successful add target check
+            from datetime import datetime, timezone
+            self.db.update_channel_last_poll_time(ctx.channel.id, datetime.now(timezone.utc))
 
         elif status == 'multiple':
             await self.notifier.log_and_send(ctx, Messages.Command.Add.CITY_SUGGESTIONS.format(
