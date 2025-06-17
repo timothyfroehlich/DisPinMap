@@ -6,7 +6,7 @@ Tests polling behavior, notification sending, and rate limiting
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta, timezone
-from src.monitor import MachineMonitor
+from src.cogs.monitor import MachineMonitor  # Changed from src.monitor
 from src.database import Database
 import asyncio
 from tests.utils.database import (
@@ -67,7 +67,7 @@ class TestMonitorTask:
         config['last_poll_at'] = datetime.now(timezone.utc) - timedelta(minutes=61)
         assert await monitor._should_poll_channel(config) is True
 
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_run_checks_for_channel_location(self, mock_fetch, monitor, db, mock_notifier):
         """Test running checks for a channel with a location target"""
         channel_id = 123
@@ -89,7 +89,7 @@ class TestMonitorTask:
         # assert that new submissions were found
         assert result is True
 
-    @patch('src.monitor.fetch_submissions_for_coordinates', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_coordinates', new_callable=AsyncMock)
     async def test_run_checks_for_channel_coordinates(self, mock_fetch, monitor, db, mock_notifier):
         """Test running checks for a channel with a coordinate target"""
         channel_id = 123
@@ -110,7 +110,7 @@ class TestMonitorTask:
         # assert that new submissions were found
         assert result is True
 
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_run_checks_no_new_submissions(self, mock_fetch, monitor, db, mock_notifier):
         """Test running checks when no new submissions are found"""
         channel_id = 123
@@ -140,7 +140,7 @@ class TestMonitorTask:
         # assert that no new submissions were found
         assert result is False
 
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_no_new_submissions(self, mock_fetch, monitor, db, mock_notifier):
         """Test manual check when no new submissions are found"""
         channel_id = 123
@@ -164,8 +164,8 @@ class TestMonitorTask:
         # assert that no new submissions were found
         assert result is False
 
-    @patch('src.monitor.MachineMonitor._should_poll_channel', new_callable=AsyncMock)
-    @patch('src.monitor.MachineMonitor.run_checks_for_channel', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.MachineMonitor._should_poll_channel', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.MachineMonitor.run_checks_for_channel', new_callable=AsyncMock)
     async def test_monitor_task_loop(self, mock_run_checks, mock_should_poll, monitor, db):
         """Test the main monitor task loop"""
         channel_id = 123
@@ -189,7 +189,7 @@ class TestMonitorTask:
         mock_should_poll.assert_called_once_with(config)
         mock_run_checks.assert_not_called()
 
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_run_checks_updates_last_checked_at(self, mock_fetch, monitor, db):
         """Test that run_checks_for_channel updates the last_checked_at timestamp."""
         channel_id = 123

@@ -10,15 +10,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 try:
-    from .database import Database
-    from .api import fetch_submissions_for_coordinates, fetch_submissions_for_location
-    from .notifier import Notifier
-    from .messages import Messages
+    from ..database import Database
+    from ..api import fetch_submissions_for_coordinates, fetch_submissions_for_location
+    from ..notifier import Notifier
+    from ..messages import Messages
 except ImportError:
-    from database import Database
-    from api import fetch_submissions_for_coordinates, fetch_submissions_for_location
-    from notifier import Notifier
-    from messages import Messages
+    from src.database import Database
+    from src.api import fetch_submissions_for_coordinates, fetch_submissions_for_location
+    from src.notifier import Notifier
+    from src.messages import Messages
 
 
 class MachineMonitor(commands.Cog, name="MachineMonitor"):

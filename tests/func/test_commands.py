@@ -440,7 +440,7 @@ class TestCheckCommand:
     @pytest.mark.asyncio
     async def test_check_command_integration_with_real_monitor(self, monitoring_cog, db, mock_notifier):
         """Integration test for check command with real monitor cog"""
-        from src.monitor import MachineMonitor
+        from src.cogs.monitor import MachineMonitor
 
         ctx = MockContext(12345, 67890)
 
