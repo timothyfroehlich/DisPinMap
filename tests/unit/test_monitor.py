@@ -5,7 +5,7 @@ Tests polling behavior, notification sending, and rate limiting
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from src.monitor import MachineMonitor
 from src.database import Database
 import asyncio
@@ -59,11 +59,11 @@ class TestMonitorTask:
         assert await monitor._should_poll_channel(config) is True
 
         # Polled recently, should be false
-        config['last_poll_at'] = datetime.now()
+        config['last_poll_at'] = datetime.now(timezone.utc)
         assert await monitor._should_poll_channel(config) is False
 
         # Polled long ago, should be true
-        config['last_poll_at'] = datetime.now() - timedelta(minutes=61)
+        config['last_poll_at'] = datetime.now(timezone.utc) - timedelta(minutes=61)
         assert await monitor._should_poll_channel(config) is True
 
     @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
@@ -149,8 +149,7 @@ class TestMonitorTask:
         db.update_channel_config(channel_id, guild_id)
         config = db.get_channel_config(channel_id)
         # Set last poll time to 5 minutes ago
-        from datetime import datetime, timedelta
-        config['last_poll_at'] = datetime.now() - timedelta(minutes=5)
+        config['last_poll_at'] = datetime.now(timezone.utc) - timedelta(minutes=5)
 
         mock_fetch.return_value = []
 
@@ -206,5 +205,5 @@ class TestMonitorTask:
 
         updated_target = db.get_monitoring_targets(channel_id)[0]
         assert updated_target['last_checked_at'] is not None
-        time_diff = datetime.now() - updated_target['last_checked_at'].replace(tzinfo=None)
+        time_diff = datetime.now(timezone.utc) - updated_target['last_checked_at'].replace(tzinfo=timezone.utc)
         assert time_diff.total_seconds() < 5

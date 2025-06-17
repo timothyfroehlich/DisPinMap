@@ -3,7 +3,7 @@ Monitor module for Discord Pinball Map Bot
 Handles background polling and notification sending using the new submission-based approach
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 from discord.ext import tasks, commands
 import logging
@@ -58,7 +58,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         try:
             # Update last poll time before checking to prevent race conditions on long polls
             if not is_manual_check:
-                self.db.update_channel_last_poll_time(channel_id, datetime.now())
+                self.db.update_channel_last_poll_time(channel_id, datetime.now(timezone.utc))
 
             targets = self.db.get_monitoring_targets(channel_id)
             if not targets:
@@ -87,7 +87,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                     all_submissions.extend(submissions)
 
                 # Update the last checked time for the target
-                self.db.update_target_last_checked_time(target['id'], datetime.now())
+                self.db.update_target_last_checked_time(target['id'], datetime.now(timezone.utc))
 
             if is_manual_check:
                 # For manual checks, show last 5 submissions regardless of whether we've seen them
@@ -111,7 +111,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                         # Check when the channel was last polled to provide better feedback
                         last_poll = config.get('last_poll_at')
                         if last_poll:
-                            time_since_poll = datetime.now() - last_poll
+                            time_since_poll = datetime.now(timezone.utc) - last_poll
                             minutes_ago = int(time_since_poll.total_seconds() / 60)
                             if minutes_ago < 60:
                                 await self.notifier.log_and_send(channel, f"📋 **Nothing new since {minutes_ago} minutes ago.**")
@@ -155,7 +155,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             if last_poll is None:
                 return True
 
-            time_since_last_poll = datetime.now() - last_poll
+            time_since_last_poll = datetime.now(timezone.utc) - last_poll
             minutes_since_last_poll = time_since_last_poll.total_seconds() / 60
 
             return minutes_since_last_poll >= poll_interval_minutes
