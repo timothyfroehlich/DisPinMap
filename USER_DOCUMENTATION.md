@@ -11,7 +11,7 @@ To begin, add a monitoring target to your channel. The simplest way is to add a 
 !add location "Ground Kontrol Classic Arcade"
 ```
 
-The bot will find the location and start monitoring it for changes. By default, it will check for updates every 60 minutes and notify you about new machine additions or removals.
+The bot will find the location and start monitoring it for changes. After adding the target, the bot will immediately display the 5 most recent submissions for that location to confirm it's working. By default, it will check for new submissions every 60 minutes and notify you about new machine additions or removals.
 
 ---
 
@@ -31,7 +31,7 @@ Adds a new target to monitor. This command has three variations:
     *   **With Radius**: `!add city "Seattle, WA" 15`
 
 3.  **`!add coordinates <latitude> <longitude> [radius]`**: Monitor a specific geographic point with a radius in miles.
-    *   **Without Radius**: `!add coordinates 45.5231 -122.6765` (uses PinballMap's default radius, 100Mi default radius)
+    *   **Without Radius**: `!add coordinates 45.5231 -122.6765` (uses PinballMap's default radius of 100 miles)
     *   **With Radius**: `!add coordinates 47.6062 -122.3321 5`
 
 #### `!list` (or `!ls`, `!status`)
@@ -53,7 +53,7 @@ Displays a detailed table of all active monitoring targets in the current channe
 ```
 
 #### `!check`
-Manually triggers an immediate check for updates across all active targets in the channel. The bot will post any new submissions it finds.
+Manually triggers an immediate check for new submissions across all active targets in the channel. The bot will report all new submissions since the last check, and if there are fewer than 5 total, it will also show older submissions to reach a total of 5 (helping you see recent activity even during quiet periods).
 
 **Example:**
 ```
