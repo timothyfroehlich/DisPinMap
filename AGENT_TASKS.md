@@ -2,35 +2,6 @@
 
 ## Planned Tasks
 
-### Task 1: Combine `!list` and `!status` commands
-
-**Objective**: Merge the functionality of `!list` and `!status` into a single command (`!list` with a `!status` alias) that displays a formatted table of all monitored targets for a channel, including their poll rate, notification type, and last check time.
-
-**Detailed Steps**:
-
-1.  **Database Model Update**:
-    *   **File**: `src/models.py`
-    *   **Change**: Add a new nullable `last_checked_at` field of type `datetime` to the `MonitoringTarget` SQLAlchemy model.
-    *   **Action**: This will store the timestamp of the last time a check was run for each specific target.
-
-2. There will be no database migration. Just delete it (note that the gcp infra is down righ tnow)
-
-3.  **Update Monitor Logic**:
-    *   **File**: `src/monit
-    *   **Change**: In the `run_checks_for_channel` method, after a check is successfully performed for a `target`, update its `last_checked_at` field to the current time and commit the change to the database session.
-
-4.  **Update `!list` Command**:
-    *   **File**: `src/cogs/monitoring.py`
-    *   **Change**:
-        *   Modify the `list` command to query `MonitoringTarget`s and retrieve the new `last_checked_at` field along with existing data.
-        *   Reformat the output message to be a Markdown table inside a code block for proper alignment in Discord.
-        *   The table columns will be: `Index`, `Target`, `Poll (min)`, `Notifications`, `Last Checked`.
-        *   Add `status` as an alias for the `list` command in the `@commands.command` decorator.
-
-5.  **Test Changes**:
-    *   **`tests/unit/test_monitor.py`**: Add assertions to verify that `last_checked_at` is updated correctly after a check.
-    *   **`tests/func/test_commands.py`**: Update the tests for the `!list` command to parse the new table-formatted output and verify its contents, including the `Last Checked` column.
-
 ### Task 2: Enhance `!check` Command Logic
 
 **Objective**: Modify the `!check` command to ensure it always attempts to show up to 5 relevant submissions. It will first show all new submissions since the last check, and if that's less than 5, it will backfill the list with the most recent older submissions to reach a total of 5.
@@ -60,6 +31,12 @@
     *   **`tests/func/test_commands.py`**: Update the `!check` command functional tests to reflect the new output, verifying that up to 5 submissions are always shown and that the message is correct. This will involve seeding the test database with seen submissions and mocking API responses.
 
 ## Completed Tasks
+
+- ✅ **Combined `!list` and `!status` Commands**: Merged the functionality of `!list` and `!status` into a single, table-based command.
+  - **New Feature**: `!list` (aliased with `!status`) now shows a formatted table with `Index`, `Target`, `Poll (min)`, `Notifications`, and `Last Checked` columns.
+  - **Database**: Added `last_checked_at` field to the `MonitoringTarget` model to track check times.
+  - **Monitor**: Updated the monitoring logic to record the timestamp after each check.
+  - **Tests**: Added unit and functional tests to validate the new functionality and table format.
 
 ### Development Tools & Infrastructure
 - ✅ **GitHub MCP Server Integration**: Successfully connected Cursor to GitHub's remote MCP server
