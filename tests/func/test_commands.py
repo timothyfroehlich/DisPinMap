@@ -42,6 +42,18 @@ def config_cog(db, notifier):
     return ConfigCog(bot, db, notifier)
 
 
+@pytest.fixture
+def mock_bot():
+    """Create mock bot instance"""
+    return MagicMock()
+
+
+@pytest.fixture
+def mock_notifier():
+    """Create mock notifier instance"""
+    return AsyncMock()
+
+
 class TestAddCommand:
     @pytest.mark.asyncio
     async def test_add_location_by_id(self, monitoring_cog, db):
@@ -316,6 +328,118 @@ class TestNotificationsCommand:
 
         # Verify user got error message
         await assert_discord_message(ctx, Messages.Command.Notifications.ERROR.format(valid_types="machines, comments, all"))
+
+
+class TestCheckCommand:
+    @pytest.mark.asyncio
+    async def test_check_command_with_targets(self, monitoring_cog, db):
+        """Test check command with valid targets"""
+        ctx = MockContext(12345, 67890)
+
+        # Add a monitoring target
+        db.add_monitoring_target(ctx.channel.id, 'location', 'Test Location', '123')
+
+        # Create a mock monitor cog
+        mock_monitor_cog = AsyncMock()
+        mock_monitor_cog.run_checks_for_channel = AsyncMock(return_value=True)
+        monitoring_cog.bot.get_cog = MagicMock(return_value=mock_monitor_cog)
+
+        ctx.message.content = "!check"
+        await monitoring_cog.check.callback(monitoring_cog, ctx)
+
+        # Verify monitor cog was called with correct parameters
+        monitoring_cog.bot.get_cog.assert_called_with('MachineMonitor')
+        mock_monitor_cog.run_checks_for_channel.assert_called_once()
+
+        # Verify the call arguments
+        call_args = mock_monitor_cog.run_checks_for_channel.call_args
+        assert call_args[0][0] == ctx.channel.id  # channel_id
+        assert call_args[1]['is_manual_check'] == True  # is_manual_check parameter
+
+    @pytest.mark.asyncio
+    async def test_check_command_no_monitor_cog(self, monitoring_cog, db):
+        """Test check command when monitor cog is not found"""
+        ctx = MockContext(12345, 67890)
+
+        # Mock bot to return None for monitor cog
+        monitoring_cog.bot.get_cog = MagicMock(return_value=None)
+
+        ctx.message.content = "!check"
+        await monitoring_cog.check.callback(monitoring_cog, ctx)
+
+        # Verify error message was sent
+        await assert_discord_message(ctx, "Error: Could not find the monitor.")
+
+    @pytest.mark.asyncio
+    async def test_check_command_no_targets(self, monitoring_cog, db):
+        """Test check command when no targets are configured"""
+        ctx = MockContext(12345, 67890)
+
+        # Create a mock monitor cog
+        mock_monitor_cog = AsyncMock()
+        mock_monitor_cog.run_checks_for_channel = AsyncMock(return_value=False)
+        monitoring_cog.bot.get_cog = MagicMock(return_value=mock_monitor_cog)
+
+        # Don't add any targets to the database
+
+        ctx.message.content = "!check"
+        await monitoring_cog.check.callback(monitoring_cog, ctx)
+
+        # Verify monitor cog was called
+        mock_monitor_cog.run_checks_for_channel.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_check_command_with_exception(self, monitoring_cog, db):
+        """Test check command when monitor cog raises an exception"""
+        ctx = MockContext(12345, 67890)
+
+        # Add a monitoring target
+        db.add_monitoring_target(ctx.channel.id, 'location', 'Test Location', '123')
+
+        # Create a mock monitor cog that raises an exception
+        mock_monitor_cog = AsyncMock()
+        mock_monitor_cog.run_checks_for_channel = AsyncMock(side_effect=Exception("Test error"))
+        monitoring_cog.bot.get_cog = MagicMock(return_value=mock_monitor_cog)
+
+        ctx.message.content = "!check"
+        # The exception should bubble up from the monitor cog since it's not handled in the check command
+        with pytest.raises(Exception, match="Test error"):
+            await monitoring_cog.check.callback(monitoring_cog, ctx)
+
+        # Verify monitor cog was called despite the exception
+        mock_monitor_cog.run_checks_for_channel.assert_called_once()
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_check_command_integration_with_real_monitor(self, monitoring_cog, db, mock_notifier):
+        """Integration test for check command with real monitor cog"""
+        from src.monitor import MachineMonitor
+
+        ctx = MockContext(12345, 67890)
+
+        # Create a real monitor cog
+        mock_bot = AsyncMock()
+        mock_channel = AsyncMock()
+        mock_channel.id = ctx.channel.id
+        mock_bot.get_channel.return_value = mock_channel
+
+        monitor_cog = MachineMonitor(mock_bot, db, mock_notifier)
+
+        # Add the monitor cog to the bot
+        monitoring_cog.bot.get_cog = MagicMock(return_value=monitor_cog)
+
+        # Add a monitoring target for Austin (a city that should have recent activity)
+        db.add_monitoring_target(ctx.channel.id, 'city', 'Austin, TX', '30.2672,-97.7431,25')
+
+        ctx.message.content = "!check"
+        await monitoring_cog.check.callback(monitoring_cog, ctx)
+
+        # The actual behavior will depend on real API data, but we can verify:
+        # 1. The monitor cog was called
+        monitoring_cog.bot.get_cog.assert_called_with('MachineMonitor')
+
+        # 2. Some interaction with the notifier occurred (success or no results message)
+        assert mock_notifier.log_and_send.call_count > 0 or mock_notifier.post_submissions.call_count > 0
 
 
 class MockContext:
