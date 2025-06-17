@@ -100,6 +100,9 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                     logger.warning(f"Skipping target with missing data: id={target_id}, type={target_type}")
                     return []
                 parts = source_data.split(',')
+                if len(parts) < 2:
+                    logger.warning(f"Skipping target with malformed data: id={target_id}, type={target_type}, data={source_data}")
+                    return []
                 lat, lon = float(parts[0]), float(parts[1])
                 radius = int(parts[2]) if len(parts) >= 3 else None
                 submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=not is_manual_check)
