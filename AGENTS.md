@@ -101,6 +101,11 @@ DisPinMap/
    - Log errors with context
    - Implement graceful degradation
 
+5. **Date/Time Handling**
+   - All `DateTime` columns in SQLAlchemy models must be timezone-aware. Use `DateTime(timezone=True)`.
+   - When creating new `datetime` objects for database insertion or comparison, always create timezone-aware objects using `datetime.now(timezone.utc)`.
+   - When retrieving `datetime` objects from the database (especially with SQLite), they may be timezone-naive. Before performing timezone-sensitive operations like `.timestamp()`, ensure the object is aware by setting its timezone: `dt_object.replace(tzinfo=timezone.utc)`. This prevents bugs where the local system time is incorrectly used.
+
 ## Bot Commands
 The bot uses slash commands prefixed with `!`.
 
@@ -406,7 +411,7 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
 ### Infrastructure Details
 - **Cloud Run Service**: `dispinmap-bot`
 - **PostgreSQL Instance**: `dispinmap-bot-db-instance`
-- **Database**: `dispinmap-bot` 
+- **Database**: `dispinmap-bot`
 - **Database User**: `dispinmap-bot-user`
 - **Artifact Registry**: `dispinmap-bot-repo`
 - **Service Account**: `dispinmap-bot-sa`
