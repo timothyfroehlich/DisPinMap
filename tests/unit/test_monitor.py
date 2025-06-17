@@ -5,7 +5,7 @@ Tests polling behavior, notification sending, and rate limiting
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from src.monitor import MachineMonitor
 from src.database import Database
 import asyncio
@@ -23,6 +23,7 @@ def mock_bot():
     """Create a mock bot with a mock channel"""
     bot = AsyncMock()
     channel = AsyncMock()
+    channel.id = 123
     channel.send.return_value = None
     bot.get_channel = MagicMock(return_value=channel)
     bot.database = setup_test_database()
@@ -59,11 +60,11 @@ class TestMonitorTask:
         assert await monitor._should_poll_channel(config) is True
 
         # Polled recently, should be false
-        config['last_poll_at'] = datetime.now()
+        config['last_poll_at'] = datetime.now(timezone.utc)
         assert await monitor._should_poll_channel(config) is False
 
         # Polled long ago, should be true
-        config['last_poll_at'] = datetime.now() - timedelta(minutes=61)
+        config['last_poll_at'] = datetime.now(timezone.utc) - timedelta(minutes=61)
         assert await monitor._should_poll_channel(config) is True
 
     @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
@@ -83,7 +84,6 @@ class TestMonitorTask:
 
         mock_fetch.assert_called_once_with(12345, use_min_date=True)
         mock_notifier.post_submissions.assert_called_once()
-        db.filter_new_submissions(channel_id, [submission])
         # assert that submission is now marked as seen
         assert not db.filter_new_submissions(channel_id, [submission])
         # assert that new submissions were found
@@ -149,8 +149,7 @@ class TestMonitorTask:
         db.update_channel_config(channel_id, guild_id)
         config = db.get_channel_config(channel_id)
         # Set last poll time to 5 minutes ago
-        from datetime import datetime, timedelta
-        config['last_poll_at'] = datetime.now() - timedelta(minutes=5)
+        config['last_poll_at'] = datetime.now(timezone.utc) - timedelta(minutes=5)
 
         mock_fetch.return_value = []
 
@@ -189,3 +188,22 @@ class TestMonitorTask:
         await monitor.monitor_task_loop.coro(monitor)
         mock_should_poll.assert_called_once_with(config)
         mock_run_checks.assert_not_called()
+
+    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    async def test_run_checks_updates_last_checked_at(self, mock_fetch, monitor, db):
+        """Test that run_checks_for_channel updates the last_checked_at timestamp."""
+        channel_id = 123
+        guild_id = 456
+        db.add_monitoring_target(channel_id, 'location', 'Test Location', '12345')
+        db.update_channel_config(channel_id, guild_id, is_active=True)
+        config = db.get_channel_config(channel_id)
+        target = db.get_monitoring_targets(channel_id)[0]
+        assert target['last_checked_at'] is None
+
+        mock_fetch.return_value = []
+        await monitor.run_checks_for_channel(channel_id, config)
+
+        updated_target = db.get_monitoring_targets(channel_id)[0]
+        assert updated_target['last_checked_at'] is not None
+        time_diff = datetime.now(timezone.utc) - updated_target['last_checked_at'].replace(tzinfo=timezone.utc)
+        assert time_diff.total_seconds() < 5
