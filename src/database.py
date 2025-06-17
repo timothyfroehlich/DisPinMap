@@ -247,6 +247,13 @@ class Database:
                 config.last_poll_at = poll_time
                 session.commit()
 
+    def update_target_last_checked_time(self, target_id: int, checked_time: datetime) -> None:
+        """Update the last checked time for a specific monitoring target."""
+        with self.get_session() as session:
+            stmt = update(MonitoringTarget).where(MonitoringTarget.id == target_id).values(last_checked_at=checked_time)
+            session.execute(stmt)
+            session.commit()
+
     # Monitoring target methods
     def add_monitoring_target(self, channel_id: int, target_type: str, target_name: str, target_data: str = None, poll_rate_minutes: int = None, notification_types: str = None) -> None:
         """Add a monitoring target for a channel"""
@@ -330,6 +337,7 @@ class Database:
                     'target_data': target.target_data,
                     'poll_rate_minutes': target.poll_rate_minutes,
                     'notification_types': target.notification_types,
+                    'last_checked_at': target.last_checked_at,
                     'created_at': target.created_at
                 }
                 for target in targets

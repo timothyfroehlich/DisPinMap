@@ -41,6 +41,7 @@ class MonitoringTarget(Base):
     target_data = Column(String)  # location_id for location targets
     poll_rate_minutes = Column(Integer, default=60)  # Individual poll rate per target
     notification_types = Column(String, default='machines')  # Per-target notification type
+    last_checked_at = Column(DateTime(timezone=True), nullable=True)  # Last time this target was checked
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

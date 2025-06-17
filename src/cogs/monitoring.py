@@ -110,9 +110,9 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         except ValueError:
             await self.notifier.log_and_send(ctx, Messages.Command.Remove.INVALID_INDEX_NUMBER)
 
-    @commands.command(name='list', aliases=['ls'])
+    @commands.command(name='list', aliases=['ls', 'status'])
     async def list_targets(self, ctx):
-        """Show all monitored targets with index numbers."""
+        """Show all monitored targets in a formatted table."""
         targets = self.db.get_monitoring_targets(ctx.channel.id)
         channel_config = self.db.get_channel_config(ctx.channel.id)
 
@@ -120,73 +120,54 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             await self.notifier.log_and_send(ctx, Messages.Command.List.NO_TARGETS)
             return
 
-        targets_list = []
+        headers = ["Index", "Target", "Poll (min)", "Notifications", "Last Checked"]
+        rows = []
+
         for i, target in enumerate(targets, 1):
+            # Target Name
             if target['target_type'] == 'latlong':
                 coords = target['target_name'].split(',')
-                target_info = f"Coordinates: {coords[0]}, {coords[1]}"
+                target_name = f"Coords: {coords[0]}, {coords[1]}"
                 if len(coords) > 2:
-                    target_info += f" ({coords[2]} miles)"
+                    target_name += f" ({coords[2]}mi)"
             else:
-                target_info = f"{target['target_type'].title()}: {target['target_name']}"
-                if target['target_data']:
-                    target_info += f" (ID: {target['target_data']})"
+                target_name = f"{target['target_type'].title()}: {target['target_name']}"
 
-            if target['poll_rate_minutes'] != channel_config['poll_rate_minutes']:
-                target_info += f" [Poll: {target['poll_rate_minutes']}m]"
-            if target['notification_types'] != channel_config['notification_types']:
-                target_info += f" [Notify: {target['notification_types']}]"
+            # Poll Rate
+            poll_rate = target.get('poll_rate_minutes', channel_config['poll_rate_minutes'])
 
-            targets_list.append(f"{i}. {target_info}")
+            # Notifications
+            notifications = target.get('notification_types', channel_config['notification_types'])
 
-        await self.notifier.log_and_send(ctx, Messages.Command.List.HEADER.format(
-            targets="\n".join(targets_list),
-            poll_rate=channel_config['poll_rate_minutes'],
-            notification_types=channel_config['notification_types']
-        ))
+            # Last Checked
+            last_checked = "Never"
+            if target.get('last_checked_at'):
+                last_checked_dt = target['last_checked_at']
+                last_checked = f"<t:{int(last_checked_dt.timestamp())}:R>"
 
-    @commands.command(name='status')
-    async def status(self, ctx):
-        """Show bot status and monitoring information."""
-        try:
-            targets = self.db.get_monitoring_targets(ctx.channel.id)
-            channel_config = self.db.get_channel_config(ctx.channel.id)
 
-            if not targets:
-                await self.notifier.log_and_send(ctx, Messages.Command.Status.NO_TARGETS)
-                return
+            rows.append([
+                str(i),
+                target_name,
+                str(poll_rate),
+                notifications,
+                last_checked
+            ])
 
-            status_lines = [
-                f"**Bot Status**",
-                f"• Poll Rate: {channel_config['poll_rate_minutes']} minutes",
-                f"• Notification Types: {channel_config['notification_types']}",
-                f"• Active Targets: {len(targets)}",
-                "",
-                "**Active Monitoring Targets:**"
-            ]
+        # Calculate column widths
+        widths = [len(h) for h in headers]
+        for row in rows:
+            for i, cell in enumerate(row):
+                if len(cell) > widths[i]:
+                    widths[i] = len(cell)
 
-            for i, target in enumerate(targets, 1):
-                if target['target_type'] == 'latlong':
-                    coords = target['target_name'].split(',')
-                    target_info = f"Coordinates: {coords[0]}, {coords[1]}"
-                    if len(coords) > 2:
-                        target_info += f" ({coords[2]} miles)"
-                else:
-                    target_info = f"{target['target_type'].title()}: {target['target_name']}"
-                    if target['target_data']:
-                        target_info += f" (ID: {target['target_data']})"
+        # Build table
+        header_line = " | ".join(headers[i].ljust(widths[i]) for i in range(len(headers)))
+        separator_line = "-|-".join("-" * widths[i] for i in range(len(headers)))
+        table_rows = "\n".join(" | ".join(cell.ljust(widths[i]) for i, cell in enumerate(row)) for row in rows)
 
-                if target['poll_rate_minutes'] != channel_config['poll_rate_minutes']:
-                    target_info += f" [Poll: {target['poll_rate_minutes']}m]"
-                if target['notification_types'] != channel_config['notification_types']:
-                    target_info += f" [Notify: {target['notification_types']}]"
-
-                status_lines.append(f"{i}. {target_info}")
-
-            await self.notifier.log_and_send(ctx, "\n".join(status_lines))
-        except Exception as e:
-            await self.notifier.log_and_send(ctx, Messages.Command.Error.GENERAL.format(error=str(e)))
-            logger.error(f'Error in status command: {str(e)}')
+        message = f"```\n{header_line}\n{separator_line}\n{table_rows}\n```"
+        await self.notifier.log_and_send(ctx, message)
 
     @commands.command(name='export')
     async def export(self, ctx):

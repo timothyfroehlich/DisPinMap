@@ -13,16 +13,14 @@
     *   **Change**: Add a new nullable `last_checked_at` field of type `datetime` to the `MonitoringTarget` SQLAlchemy model.
     *   **Action**: This will store the timestamp of the last time a check was run for each specific target.
 
-2.  **Create Database Migration**:
-    *   **Directory**: `migrations/versions/`
-    *   **Change**: Generate a new Alembic migration script to add the `last_checked_at` column to the `monitoring_targets` table in the database.
+2. There will be no database migration. Just delete it (note that the gcp infra is down righ tnow)
 
 3.  **Update Monitor Logic**:
     *   **File**: `src/monit
     *   **Change**: In the `run_checks_for_channel` method, after a check is successfully performed for a `target`, update its `last_checked_at` field to the current time and commit the change to the database session.
 
 4.  **Update `!list` Command**:
-    *   **File**: `src/cogs/config.py`
+    *   **File**: `src/cogs/monitoring.py`
     *   **Change**:
         *   Modify the `list` command to query `MonitoringTarget`s and retrieve the new `last_checked_at` field along with existing data.
         *   Reformat the output message to be a Markdown table inside a code block for proper alignment in Discord.

@@ -189,3 +189,22 @@ class TestMonitorTask:
         await monitor.monitor_task_loop.coro(monitor)
         mock_should_poll.assert_called_once_with(config)
         mock_run_checks.assert_not_called()
+
+    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    async def test_run_checks_updates_last_checked_at(self, mock_fetch, monitor, db):
+        """Test that run_checks_for_channel updates the last_checked_at timestamp."""
+        channel_id = 123
+        guild_id = 456
+        db.add_monitoring_target(channel_id, 'location', 'Test Location', '12345')
+        db.update_channel_config(channel_id, guild_id, is_active=True)
+        config = db.get_channel_config(channel_id)
+        target = db.get_monitoring_targets(channel_id)[0]
+        assert target['last_checked_at'] is None
+
+        mock_fetch.return_value = []
+        await monitor.run_checks_for_channel(channel_id, config)
+
+        updated_target = db.get_monitoring_targets(channel_id)[0]
+        assert updated_target['last_checked_at'] is not None
+        time_diff = datetime.now() - updated_target['last_checked_at'].replace(tzinfo=None)
+        assert time_diff.total_seconds() < 5

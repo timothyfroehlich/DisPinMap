@@ -206,18 +206,45 @@ class TestRemoveCommand:
 class TestListCommand:
     @pytest.mark.asyncio
     async def test_list_targets(self, monitoring_cog, db):
-        """Test listing targets"""
+        """Test listing targets in the new table format."""
         ctx = MockContext(12345, 67890)
+        db.update_channel_config(ctx.channel.id, ctx.guild.id, poll_rate_minutes=60, notification_types='machines')
 
         # Add some targets
-        db.add_monitoring_target(ctx.channel.id, 'location', '123')
-        db.add_monitoring_target(ctx.channel.id, 'latlong', '30.0,97.0,10')
+        db.add_monitoring_target(ctx.channel.id, 'location', 'Test Location', '123')
+        db.add_monitoring_target(ctx.channel.id, 'latlong', '30.0,-97.0,10')
 
         ctx.message.content = "!list"
         await monitoring_cog.list_targets.callback(monitoring_cog, ctx)
 
-        # Verify user got list message
-        await assert_discord_message(ctx, "**Monitored Targets:**")
+        # Verify the response is a formatted code block table
+        response = ctx.sent_messages[0]
+        assert response.startswith("```")
+        assert response.endswith("```")
+
+        # Verify headers
+        assert "Index" in response
+        assert "Target" in response
+        assert "Poll (min)" in response
+        assert "Notifications" in response
+        assert "Last Checked" in response
+
+        # Verify content
+        assert "1" in response
+        assert "Location: Test Location" in response
+        assert "2" in response
+        assert "Coords: 30.0, -97.0" in response
+        assert "60" in response # Default poll rate
+        assert "machines" in response # Default notifications
+        assert "Never" in response # Should not have been checked
+
+    @pytest.mark.asyncio
+    async def test_list_empty(self, monitoring_cog, db):
+        """Test listing when no targets exist"""
+        ctx = MockContext(12345, 67890)
+        ctx.message.content = "!list"
+        await monitoring_cog.list_targets.callback(monitoring_cog, ctx)
+        await assert_discord_message(ctx, Messages.Command.List.NO_TARGETS)
 
 
 class TestExportCommand:

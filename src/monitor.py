@@ -86,6 +86,9 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                     submissions = await fetch_submissions_for_location(location_id, use_min_date=not is_manual_check)
                     all_submissions.extend(submissions)
 
+                # Update the last checked time for the target
+                self.db.update_target_last_checked_time(target['id'], datetime.now())
+
             if is_manual_check:
                 # For manual checks, show last 5 submissions regardless of whether we've seen them
                 # Sort by created_at descending and take first 5
