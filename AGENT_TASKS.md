@@ -1,6 +1,74 @@
 # Agent Tasks
 
+## Planned Tasks
+
+### Task 1: Combine `!list` and `!status` commands
+
+**Objective**: Merge the functionality of `!list` and `!status` into a single command (`!list` with a `!status` alias) that displays a formatted table of all monitored targets for a channel, including their poll rate, notification type, and last check time.
+
+**Detailed Steps**:
+
+1.  **Database Model Update**:
+    *   **File**: `src/models.py`
+    *   **Change**: Add a new nullable `last_checked_at` field of type `datetime` to the `MonitoringTarget` SQLAlchemy model.
+    *   **Action**: This will store the timestamp of the last time a check was run for each specific target.
+
+2.  **Create Database Migration**:
+    *   **Directory**: `migrations/versions/`
+    *   **Change**: Generate a new Alembic migration script to add the `last_checked_at` column to the `monitoring_targets` table in the database.
+
+3.  **Update Monitor Logic**:
+    *   **File**: `src/monit
+    *   **Change**: In the `run_checks_for_channel` method, after a check is successfully performed for a `target`, update its `last_checked_at` field to the current time and commit the change to the database session.
+
+4.  **Update `!list` Command**:
+    *   **File**: `src/cogs/config.py`
+    *   **Change**:
+        *   Modify the `list` command to query `MonitoringTarget`s and retrieve the new `last_checked_at` field along with existing data.
+        *   Reformat the output message to be a Markdown table inside a code block for proper alignment in Discord.
+        *   The table columns will be: `Index`, `Target`, `Poll (min)`, `Notifications`, `Last Checked`.
+        *   Add `status` as an alias for the `list` command in the `@commands.command` decorator.
+
+5.  **Test Changes**:
+    *   **`tests/unit/test_monitor.py`**: Add assertions to verify that `last_checked_at` is updated correctly after a check.
+    *   **`tests/func/test_commands.py`**: Update the tests for the `!list` command to parse the new table-formatted output and verify its contents, including the `Last Checked` column.
+
+### Task 2: Enhance `!check` Command Logic
+
+**Objective**: Modify the `!check` command to ensure it always attempts to show up to 5 relevant submissions. It will first show all new submissions since the last check, and if that's less than 5, it will backfill the list with the most recent older submissions to reach a total of 5.
+
+**Detailed Steps**:
+
+1.  **Modify Monitor Check Logic**:
+    *   **File**: `src/monitor.py`
+    *   **Change**: Update the `run_checks_for_channel` method. When `is_manual_check` is `True`:
+        *   Fetch all submissions from the API (`use_min_date=False`).
+        *   Partition the fetched submissions into two lists: `new_submissions` (not in `seen_submission_ids`) and `old_submissions` (already seen).
+        *   Filter both lists based on the target's configured `notification_types`.
+        *   If the count of `filtered_new_submissions` is less than 5, take the most recent `5 - len(filtered_new_submissions)` items from `filtered_old_submissions`.
+        *   Create a final `submissions_to_report` list containing all `filtered_new_submissions` followed by the backfilled older ones.
+        *   Pass this combined list to the `_send_notifications` method.
+
+2.  **Update Notifier Logic (Optional)**:
+    *   **File**: `src/notifier.py`
+    *   **Change**: Review the `send_notifications` method. The message for a manual check may need adjustment to be clearer. For instance, instead of "Found X new submission(s)", it could be "Found X new submission(s). Showing the 5 most recent:" to reflect the new behavior.
+
+3.  **Test Changes**:
+    *   **`tests/unit/test_monitor.py`**: Create new test cases to simulate various scenarios for the `!check` command:
+        *   More than 5 new submissions.
+        *   Less than 5 new submissions, requiring backfill.
+        *   No new submissions, requiring a full list of 5 old submissions.
+        *   Assert that the correct combined list of submissions is passed to the notifier.
+    *   **`tests/func/test_commands.py`**: Update the `!check` command functional tests to reflect the new output, verifying that up to 5 submissions are always shown and that the message is correct. This will involve seeding the test database with seen submissions and mocking API responses.
+
 ## Completed Tasks
+
+### Development Tools & Infrastructure
+- ✅ **GitHub MCP Server Integration**: Successfully connected Cursor to GitHub's remote MCP server
+  - **Setup**: Configured `.cursor/mcp.json` with remote GitHub MCP server URL
+  - **Authentication**: OAuth-based authentication for seamless GitHub integration
+  - **Benefits**: Direct access to GitHub API functionality within Cursor's chat interface
+  - **Available Tools**: Repository management, issue tracking, PR operations, file operations, search functionality
 
 ### CRITICAL BUG FIXES (URGENT)
 - ✅ **Fixed Monitor Partial Changes Bug**: Restored missing `is_manual_check` parameter to `run_checks_for_channel()` method
@@ -222,18 +290,6 @@ As part of the migration from "test" to "tests" directory, we are re-implementin
 - ✅ Updated existing tests to use new utilities
 - ✅ All tests now pass with new utilities (126/129 passing)
 
-#### Pending
-📝 **Test Files to Re-implement**:
-1. ✅ Geocoding API Tests
-   - Replace mocked geocoding with real API calls
-   - Test coordinate conversion accuracy
-   - Test error handling for invalid inputs
-   - All tests pass in both local and CI environments
-
-### Next Steps
-1. ✅ Start implementing Geocoding API tests
-2. Document test patterns and best practices
-3. Ensure all tests pass in both local and CI environments
 
 ## 2025-06-15: Comprehensive Test Fixes and Message Centralization
 

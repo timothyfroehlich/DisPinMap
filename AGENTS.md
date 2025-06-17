@@ -3,6 +3,8 @@
 ## Project Overview
 This is a Python Discord bot that continuously monitors the pinballmap.com API for changes in pinball machine locations and posts automated updates to configured Discord channels. The bot supports multiple channels with different notification types and customizable search parameters. It is designed for deployment on Google Cloud Platform (GCP) but can also be run locally.
 
+For a detailed guide on how to use the bot, see [USER_DOCUMENTATION.md](./USER_DOCUMENTATION.md).
+
 ## Agent Persona and Guiding Principles
 
 To ensure a productive and positive collaboration, AI assistants working on this project should adopt the following persona and principles:
@@ -141,6 +143,13 @@ The bot uses slash commands prefixed with `!`.
   - Logging timestamp parsing
   - PostgreSQL integration tests
 
+### Recently Completed
+- ✅ **GCP Logging Documentation** (2025-06-16)
+  - Comprehensive logging access methods for Cloud Run containers
+  - Real-time tailing, error filtering, and pattern matching
+  - GUI and CLI access methods documented
+  - Debugging best practices and common queries
+
 ### Future Tasks
 - 📝 Performance Optimization
   - Database query optimization
@@ -228,6 +237,154 @@ python3 bot.py
 3. Follow the coding standards and guidelines
 4. Add new dependencies to requirements.txt
 5. Document significant changes in this file
+
+## GCP Deployment Configuration
+
+### CRITICAL: Correct Project Information
+- **GCP Project ID**: `andy-expl` (NOT `pinballmap-bot`)
+- **Region**: `us-central1`
+- **Service Name**: `dispinmap-bot`
+- **Artifact Registry**: `dispinmap-bot-repo`
+
+This information is defined in:
+- `terraform/terraform.tfvars`: Contains the actual project values
+- `terraform/variables.tf`: Contains variable definitions
+
+### Deployment Process
+
+#### 1. Pre-deployment Setup
+```bash
+# Set correct GCP project
+gcloud config set project andy-expl
+
+# Authenticate Docker for Artifact Registry
+gcloud auth configure-docker us-central1-docker.pkg.dev
+```
+
+#### 2. Build and Push Docker Image
+```bash
+# Build the image
+docker build -t us-central1-docker.pkg.dev/andy-expl/dispinmap-bot-repo/dispinmap-bot:latest .
+
+# Push to Artifact Registry
+docker push us-central1-docker.pkg.dev/andy-expl/dispinmap-bot-repo/dispinmap-bot:latest
+```
+
+#### 3. Deploy to Cloud Run
+```bash
+# Deploy new version
+gcloud run deploy dispinmap-bot \
+    --image us-central1-docker.pkg.dev/andy-expl/dispinmap-bot-repo/dispinmap-bot:latest \
+    --region us-central1 \
+    --platform managed
+```
+
+#### 4. Verify Deployment
+```bash
+# Check Cloud Run service status
+gcloud run services list --region=us-central1
+
+# Check logs to ensure bot started properly
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=dispinmap-bot" \
+    --limit=20 --format="table(timestamp,textPayload)" --project andy-expl
+```
+
+#### 5. Common Issues
+- **Wrong Project**: Always use `andy-expl`, NOT `pinballmap-bot`
+- **Authentication**: Make sure Docker is authenticated with `gcloud auth configure-docker`
+- **Repository Names**: The service is `dispinmap-bot`, repository is `dispinmap-bot-repo`
+
+### Accessing Logs for Debugging
+
+#### Quick Log Access Methods
+
+**1. Console-Optimized Format (Best for quick checks)**
+```bash
+gcloud run services logs read dispinmap-bot --limit=10 --project andy-expl --region=us-central1
+```
+
+**2. Cloud Logging with Formatted Output (Best for detailed debugging)**
+```bash
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=dispinmap-bot" \
+    --project andy-expl --limit 10 --format="table(timestamp,severity,textPayload)"
+```
+
+**3. Real-Time Log Tailing (Best for active debugging)**
+```bash
+# First-time setup (if needed):
+sudo apt-get install google-cloud-cli-log-streaming
+
+# Then tail logs in real-time:
+gcloud beta run services logs tail dispinmap-bot --project andy-expl --region=us-central1
+```
+
+**4. Error-Only Logs (Critical for troubleshooting)**
+```bash
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=dispinmap-bot AND severity=ERROR" \
+    --project andy-expl --limit 10
+```
+
+**5. Search for Specific Error Patterns**
+```bash
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=dispinmap-bot AND textPayload:\"RuntimeError\"" \
+    --project andy-expl --limit 5 --format="table(timestamp,severity,textPayload)"
+```
+
+**6. Custom Formatted Logs (Compact view)**
+```bash
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=dispinmap-bot" \
+    --project andy-expl --limit 5 --format="value(timestamp,severity,textPayload)" --freshness=1d
+```
+
+#### Console Access (GUI)
+
+**Cloud Run Logs**
+- Navigate to: [Cloud Run Console](https://console.cloud.google.com/run?project=andy-expl)
+- Click on `dispinmap-bot` service
+- Go to **LOGS** tab
+
+**Logs Explorer (Advanced)**
+- Navigate to: [Logs Explorer](https://console.cloud.google.com/logs/query?project=andy-expl)
+- Use resource: **Cloud Run Revision**
+- Service name: `dispinmap-bot`
+
+#### Debugging Best Practices
+
+1. **Start with Recent Logs**: Use `--limit=10` first to see latest activity
+2. **Filter by Severity**: Use `severity=ERROR` for critical issues
+3. **Use Pattern Matching**: Search for specific error types with `textPayload:"ErrorType"`
+4. **Time-Based Queries**: Add `--freshness=1d` to limit to recent logs
+5. **Real-Time Monitoring**: Use `tail` command during active debugging (requires `google-cloud-cli-log-streaming` package)
+6. **Structured Queries**: Combine multiple filters for precise debugging
+
+#### Prerequisites for Full Functionality
+- **Log Streaming**: Install with `sudo apt-get install google-cloud-cli-log-streaming` for real-time tailing
+- **Project Access**: Ensure you're authenticated with `gcloud auth login` and have proper IAM permissions
+
+#### Common Log Sources
+- **Request Logs**: HTTP requests to the service (automatic)
+- **Container Logs**: Application stdout/stderr (our bot logs)
+- **System Logs**: Container startup/health check failures
+
+#### Useful Log Queries
+```bash
+# Show startup failures
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=dispinmap-bot AND textPayload:\"STARTUP TCP probe failed\"" --project andy-expl --limit 5
+
+# Show Discord connection issues
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=dispinmap-bot AND textPayload:\"discord\"" --project andy-expl --limit 10
+
+# Show database connection issues
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=dispinmap-bot AND textPayload:\"database\"" --project andy-expl --limit 10
+```
+
+### Infrastructure Details
+- **Cloud Run Service**: `dispinmap-bot`
+- **PostgreSQL Instance**: `dispinmap-bot-db-instance`
+- **Secrets**:
+  - `dispinmap-bot-discord-token`
+  - `dispinmap-bot-db-password`
+- **Service URL**: https://dispinmap-bot-wos45oz7vq-uc.a.run.app
 
 ---
 
