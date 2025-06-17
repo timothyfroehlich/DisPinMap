@@ -34,6 +34,28 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         sorted_submissions = sorted(submissions, key=sort_key, reverse=True)
         return sorted_submissions
 
+    def _format_relative_time(self, dt: datetime) -> str:
+        """Format a datetime as a human-readable relative time string."""
+        now = datetime.now(timezone.utc)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        
+        diff = now - dt
+        
+        if diff.total_seconds() < 60:
+            return "Just now"
+        elif diff.total_seconds() < 3600:  # Less than 1 hour
+            minutes = int(diff.total_seconds() / 60)
+            return f"{minutes}m ago"
+        elif diff.total_seconds() < 86400:  # Less than 1 day
+            hours = int(diff.total_seconds() / 3600)
+            return f"{hours}h ago"
+        elif diff.total_seconds() < 604800:  # Less than 1 week
+            days = int(diff.total_seconds() / 86400)
+            return f"{days}d ago"
+        else:
+            return dt.strftime("%b %d")  # e.g., "Dec 17"
+
     @commands.command(name='add')
     async def add(self, ctx, target_type: str, *args):
         """Add a new monitoring target. Usage: !add <location|coordinates|city> <args>"""
@@ -145,7 +167,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 last_checked_dt = target['last_checked_at']
                 if last_checked_dt.tzinfo is None:
                     last_checked_dt = last_checked_dt.replace(tzinfo=timezone.utc)
-                last_checked = f"<t:{int(last_checked_dt.timestamp())}:R>"
+                last_checked = self._format_relative_time(last_checked_dt)
 
 
             rows.append([
