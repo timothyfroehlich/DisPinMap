@@ -3,7 +3,7 @@ Cog for monitoring-related commands
 """
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from discord.ext import commands
 from src.database import Database
 from src.api import fetch_submissions_for_location, fetch_submissions_for_coordinates, search_location_by_name, fetch_location_details, geocode_city_name
@@ -143,6 +143,8 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             last_checked = "Never"
             if target.get('last_checked_at'):
                 last_checked_dt = target['last_checked_at']
+                if last_checked_dt.tzinfo is None:
+                    last_checked_dt = last_checked_dt.replace(tzinfo=timezone.utc)
                 last_checked = f"<t:{int(last_checked_dt.timestamp())}:R>"
 
 

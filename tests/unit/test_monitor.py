@@ -23,6 +23,7 @@ def mock_bot():
     """Create a mock bot with a mock channel"""
     bot = AsyncMock()
     channel = AsyncMock()
+    channel.id = 123
     channel.send.return_value = None
     bot.get_channel = MagicMock(return_value=channel)
     bot.database = setup_test_database()
@@ -83,7 +84,6 @@ class TestMonitorTask:
 
         mock_fetch.assert_called_once_with(12345, use_min_date=True)
         mock_notifier.post_submissions.assert_called_once()
-        db.filter_new_submissions(channel_id, [submission])
         # assert that submission is now marked as seen
         assert not db.filter_new_submissions(channel_id, [submission])
         # assert that new submissions were found

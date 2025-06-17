@@ -56,10 +56,6 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         """
         logger.info(f"{'Manual check' if is_manual_check else 'Polling'} channel {channel_id}...")
         try:
-            now = datetime.now(timezone.utc)
-            if not is_manual_check:
-                self.db.update_channel_last_poll_time(channel_id, now)
-
             targets = self.db.get_monitoring_targets(channel_id)
             if not targets:
                 return await self._handle_no_targets(channel_id, is_manual_check)
@@ -77,7 +73,9 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             if is_manual_check:
                 return await self._handle_manual_check_results(channel, all_submissions, config)
             else:
-                return await self._handle_automatic_poll_results(channel, all_submissions, config)
+                result = await self._handle_automatic_poll_results(channel, all_submissions, config)
+                self.db.update_channel_last_poll_time(channel_id, datetime.now(timezone.utc))
+                return result
 
         except Exception as e:
             logger.error(f"Error {'in manual check' if is_manual_check else 'polling'} for channel {channel_id}: {e}")

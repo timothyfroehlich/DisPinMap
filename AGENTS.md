@@ -15,6 +15,7 @@ To ensure a productive and positive collaboration, AI assistants working on this
 *   **Value User Guidance:** The user has valuable context. When they offer a suggestion (e.g., "check the logs first," "look in the git history"), treat it as expert advice. Acknowledge the suggestion and immediately incorporate it into your plan. This is a collaborative effort.
 *   **Think, Then Act. But Always Act:** It's important to analyze and think, but avoid getting stuck in analysis paralysis. Form a plan and execute it. It's better to try a well-reasoned solution that fails than to do nothing. Every attempt provides more information.
 *   **Maintain a Positive and Encouraging Tone:** Frame challenges as obstacles to be overcome together. A "can-do" attitude, even in the face of repeated failures, makes the process much more pleasant and effective.
+*   **Use Comprehensive Verification:** After major changes (especially infrastructure), run thorough verification checks to ensure complete success. Don't assume success based on partial indicators.
 
 ## Product Decisions
 
@@ -181,6 +182,30 @@ The bot uses slash commands prefixed with `!`.
    - Check type hints
    - Update this file if needed
    - Document significant changes
+
+## Infrastructure Management Best Practices
+
+### Resource Naming Conventions
+- **Always use consistent naming**: All resources should follow the pattern `dispinmap-bot-<component>`
+- **Avoid versioned naming**: Never use `v2`, `v3`, etc. in resource names unless absolutely necessary
+- **Verify naming across all resources**: Check GCP console, terraform state, and configuration files
+
+### Infrastructure Cleanup Process
+1. **Audit existing resources**: Use `gcloud` CLI to list all resources with problematic naming
+2. **Document current state**: Record what exists before making changes
+3. **Plan systematic cleanup**: Remove old resources before creating new ones
+4. **Verify complete cleanup**: Run comprehensive checks to ensure no remnants remain
+
+### Container Deployment Requirements
+- **Discord token must be configured**: Bot will fail to start without a valid Discord token in Secret Manager
+- **Build and push images first**: Cloud Run cannot deploy non-existent container images
+- **Test service health**: Always verify the deployed service responds correctly (HTTP 200)
+- **Check logs for errors**: Monitor Cloud Run logs during and after deployment
+
+### Terraform State Management
+- **Import existing resources**: When resources exist outside terraform, import them rather than recreating
+- **Handle timing issues**: SQL instances and other resources may take time to become ready
+- **Use targeted applies**: Use `-target` for specific resource deployment when needed
 
 ## Commit Management
 - **Always commit before major migrations**: Create a clean rollback point
@@ -381,11 +406,49 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
 ### Infrastructure Details
 - **Cloud Run Service**: `dispinmap-bot`
 - **PostgreSQL Instance**: `dispinmap-bot-db-instance`
+- **Database**: `dispinmap-bot` 
+- **Database User**: `dispinmap-bot-user`
+- **Artifact Registry**: `dispinmap-bot-repo`
+- **Service Account**: `dispinmap-bot-sa`
 - **Secrets**:
-  - `dispinmap-bot-discord-token`
-  - `dispinmap-bot-db-password`
+  - `dispinmap-bot-discord-token` (configured)
+  - `dispinmap-bot-db-password` (auto-generated)
 - **Service URL**: https://dispinmap-bot-wos45oz7vq-uc.a.run.app
+- **Status**: ✅ **FULLY OPERATIONAL** (as of 2025-06-17)
+
+### Common Infrastructure Issues and Solutions
+
+#### V2 Naming Problems
+**Issue**: Resources created with `-v2` suffixes causing confusion and deployment conflicts.
+
+**Solution Process**:
+1. Audit all GCP resources: `gcloud run services list`, `gcloud sql instances list`, etc.
+2. Systematically delete v2 resources: `gcloud <service> delete <resource-v2>`
+3. Verify terraform configuration uses correct naming
+4. Import existing properly-named resources into terraform state
+5. Run comprehensive verification checks
+
+#### Container Startup Failures
+**Issue**: Cloud Run service fails with "container failed to start and listen on port 8080"
+
+**Common Causes & Solutions**:
+1. **Missing Discord Token**: Check secret has value with `gcloud secrets versions describe`
+2. **Wrong Image**: Verify image exists with `gcloud container images list-tags`
+3. **Database Not Ready**: Ensure SQL instance state is `RUNNABLE`
+4. **Environment Variables**: Check terraform configuration matches expected env vars
+
+#### Terraform Import Workflows
+**When to Import**: Resource exists in GCP but not in terraform state
+
+**Process**:
+```bash
+# Example: Import existing SQL instance
+terraform import google_sql_database_instance.postgres_instance instance-name
+
+# Verify import worked
+terraform plan  # Should show no changes for imported resource
+```
 
 ---
 
-Last Updated: 2025-06-15
+Last Updated: 2025-06-17
