@@ -9,3 +9,9 @@ google-cloud-secret-manager
 cloud-sql-python-connector[pg8000]
 aiohttp
 colorama
+# Linting and formatting tools
+flake8
+black
+isort
+mypy
+pre-commit

@@ -6,7 +6,7 @@ used throughout the application. Messages are organized in a hierarchical struct
 matching their usage context.
 """
 
-from typing import Any, Dict, List, Optional
+# from typing import Any, Dict, List, Optional
 
 
 class Messages:
@@ -17,6 +17,7 @@ class Messages:
 
         class Add:
             """Messages for the add command."""
+
             SUCCESS = "✅ Added {target_type}: **{name}** - Monitoring started!"
             """Format parameters:
             - target_type: str - Type of target (location, coordinates, city)
@@ -51,8 +52,12 @@ class Messages:
 
             MISSING_LOCATION = "❌ Please provide a location name or ID. Usage: `!add location <name_or_id>`"
             MISSING_COORDS = "❌ Please provide latitude and longitude. Usage: `!add coordinates <lat> <lon> [radius]`"
-            INVALID_COORDS_FORMAT = "❌ Invalid coordinates. Please provide valid numbers."
-            MISSING_CITY = "❌ Please provide a city name. Usage: `!add city <name> [radius]`"
+            INVALID_COORDS_FORMAT = (
+                "❌ Invalid coordinates. Please provide valid numbers."
+            )
+            MISSING_CITY = (
+                "❌ Please provide a city name. Usage: `!add city <name> [radius]`"
+            )
 
             LOCATION_NOT_FOUND = "❌ Location ID {location_id} not found. Please check the ID on PinballMap.com."
             """Format parameters:
@@ -69,7 +74,9 @@ class Messages:
             - search_term: str - The search term that yielded no results
             """
 
-            INVALID_INDEX = "❌ Invalid index. Please use a number between 1 and {max_index}"
+            INVALID_INDEX = (
+                "❌ Invalid index. Please use a number between 1 and {max_index}"
+            )
             """Format parameters:
             - max_index: int - Maximum valid index
             """
@@ -82,6 +89,7 @@ class Messages:
 
         class Remove:
             """Messages for the remove command."""
+
             SUCCESS = "✅ Removed {target_type}: **{name}**"
             """Format parameters:
             - target_type: str - Type of target (location, coordinates, city)
@@ -96,7 +104,9 @@ class Messages:
             NO_TARGETS = "❌ No targets to remove. Use `!list` to see current targets."
             """No format parameters."""
 
-            INVALID_INDEX = "❌ Invalid index. Please use a number between 1 and {max_index}"
+            INVALID_INDEX = (
+                "❌ Invalid index. Please use a number between 1 and {max_index}"
+            )
             """Format parameters:
             - max_index: int - Maximum valid index
             """
@@ -107,8 +117,9 @@ class Messages:
             INVALID_TARGET_INDEX = "❌ Invalid target index. Please provide a number."
             """No format parameters."""
 
-        class List:
+        class TargetList:
             """Messages for the list command."""
+
             NO_TARGETS = "No targets being monitored. Use `!add` to add some."
             """No format parameters."""
 
@@ -121,6 +132,7 @@ class Messages:
 
         class Export:
             """Messages for the export command."""
+
             NO_TARGETS = "No targets to export. Use `!add` to add some first."
             """No format parameters."""
 
@@ -131,13 +143,18 @@ class Messages:
 
         class PollRate:
             """Messages for the poll rate command."""
-            SUCCESS_TARGET = "✅ Set poll rate to {minutes} minutes for target {target_id}"
+
+            SUCCESS_TARGET = (
+                "✅ Set poll rate to {minutes} minutes for target {target_id}"
+            )
             """Format parameters:
             - minutes: int - Poll rate in minutes
             - target_id: int - Target index
             """
 
-            SUCCESS_CHANNEL = "✅ Set default poll rate to {minutes} minutes for all targets"
+            SUCCESS_CHANNEL = (
+                "✅ Set default poll rate to {minutes} minutes for all targets"
+            )
             """Format parameters:
             - minutes: int - Poll rate in minutes
             """
@@ -150,13 +167,18 @@ class Messages:
 
         class Notifications:
             """Messages for the notifications command."""
-            SUCCESS_TARGET = "✅ Set notifications to {notification_type} for target {target_id}"
+
+            SUCCESS_TARGET = (
+                "✅ Set notifications to {notification_type} for target {target_id}"
+            )
             """Format parameters:
             - notification_type: str - Type of notifications (machines, comments, all)
             - target_id: int - Target index
             """
 
-            SUCCESS_CHANNEL = "✅ Set default notifications to {notification_type} for all targets"
+            SUCCESS_CHANNEL = (
+                "✅ Set default notifications to {notification_type} for all targets"
+            )
             """Format parameters:
             - notification_type: str - Type of notifications (machines, comments, all)
             """
@@ -168,6 +190,7 @@ class Messages:
 
         class Error:
             """Error messages."""
+
             COMMAND = "❌ An unexpected error occurred while running `!{command}`. Please check the logs or contact the admin."
             """Format parameters:
             - command: str - Name of the command that failed
@@ -180,6 +203,7 @@ class Messages:
 
         class Status:
             """Status command messages."""
+
             NO_TARGETS = "No monitoring targets configured for this channel. Use `!add` to add a target."
             """No format parameters."""
 
@@ -191,6 +215,7 @@ class Messages:
 
         class Machine:
             """Machine-related notifications."""
+
             ADDED = "🎮 **{machine_name}** added at **{location_name}** by {user_name}"
             """Format parameters:
             - machine_name: str - Name of the machine
@@ -198,21 +223,27 @@ class Messages:
             - user_name: str - Name of the user who added it
             """
 
-            REMOVED = "🗑️ **{machine_name}** removed from **{location_name}** by {user_name}"
+            REMOVED = (
+                "🗑️ **{machine_name}** removed from **{location_name}** by {user_name}"
+            )
             """Format parameters:
             - machine_name: str - Name of the machine
             - location_name: str - Name of the location
             - user_name: str - Name of the user who removed it
             """
 
-            MULTIPLE_ADDED = "🎮 **{count} New Pinball Machines Added!**\n{machines}{remaining_text}"
+            MULTIPLE_ADDED = (
+                "🎮 **{count} New Pinball Machines Added!**\n{machines}{remaining_text}"
+            )
             """Format parameters:
             - count: int - Number of machines added
             - machines: str - List of machines added
             - remaining: int - Number of additional machines not shown
             """
 
-            MULTIPLE_REMOVED = "🗑️ **{count} Pinball Machines Removed:**\n{machines}{remaining_text}"
+            MULTIPLE_REMOVED = (
+                "🗑️ **{count} Pinball Machines Removed:**\n{machines}{remaining_text}"
+            )
             """Format parameters:
             - count: int - Number of machines removed
             - machines: str - List of machines removed
@@ -226,6 +257,7 @@ class Messages:
 
         class Condition:
             """Condition-related notifications."""
+
             UPDATED = "🔧 **{machine_name}** at **{location_name}**{comment_text} - by {user_name}"
             """Format parameters:
             - machine_name: str - Name of the machine
@@ -236,6 +268,7 @@ class Messages:
 
         class Initial:
             """Initial notification messages."""
+
             FOUND = "Found {count} recent submissions for {target_type}:"
             """Format parameters:
             - count: int - Number of submissions found
@@ -252,6 +285,7 @@ class Messages:
 
         class Error:
             """Error messages."""
+
             UNEXPECTED = "❌ An unexpected error occurred while running the command"
             """Format parameters:
             - error: str - Error message

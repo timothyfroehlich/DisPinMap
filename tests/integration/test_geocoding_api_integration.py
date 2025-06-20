@@ -2,10 +2,16 @@
 Integration tests for geocoding API functionality using Open-Meteo API
 """
 
-import pytest
 import asyncio
+
+import pytest
+
 from src.api import geocode_city_name
-from tests.utils.assertions import assert_api_response, assert_error_response, assert_coordinates
+from tests.utils.assertions import (
+    assert_api_response,
+    assert_coordinates,
+    assert_error_response,
+)
 
 # Known city coordinates for accuracy testing
 KNOWN_CITIES = {
@@ -13,8 +19,9 @@ KNOWN_CITIES = {
     "New York, NY": (40.7128, -74.0060),
     "London, GB": (51.5074, -0.1278),
     "Tokyo, JP": (35.6762, 139.6503),
-    "Sydney, AU": (-33.8688, 151.2093)
+    "Sydney, AU": (-33.8688, 151.2093),
 }
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -28,7 +35,7 @@ class TestGeocodingAPI:
             "New York, NY",
             "London, GB",
             "Tokyo, JP",
-            "Sydney, AU"
+            "Sydney, AU",
         ]
 
         for city in test_cases:
@@ -53,7 +60,7 @@ class TestGeocodingAPI:
             ("Berlin, DE", "Berlin"),
             ("Moscow, RU", "Moscow"),
             ("São Paulo, BR", "São Paulo"),
-            ("北京, CN", "Beijing")
+            ("北京, CN", "Beijing"),
         ]
 
         for city_input, expected_city in test_cases:
@@ -64,16 +71,14 @@ class TestGeocodingAPI:
             else:
                 # Accept 'no results found' or 'multiple locations found' as valid for edge cases
                 assert result["status"] == "error"
-                assert ("No results found" in result["message"] or 
-                       "Multiple locations found" in result["message"])
+                assert (
+                    "No results found" in result["message"]
+                    or "Multiple locations found" in result["message"]
+                )
 
     async def test_cities_with_multiple_matches(self):
         """Test cities with multiple matches requiring disambiguation"""
-        test_cases = [
-            "Springfield",
-            "Paris",
-            "San Jose"
-        ]
+        test_cases = ["Springfield", "Paris", "San Jose"]
 
         for city in test_cases:
             result = await geocode_city_name(city)
@@ -87,10 +92,7 @@ class TestGeocodingAPI:
 
     async def test_cities_with_no_matches(self):
         """Test cities that don't exist"""
-        test_cases = [
-            "Fake City, XX",
-            "123456789, YY"
-        ]
+        test_cases = ["Fake City, XX", "123456789, YY"]
 
         for city in test_cases:
             result = await geocode_city_name(city)
@@ -102,7 +104,7 @@ class TestGeocodingAPI:
             ("Saint-Émilion, FR", "Saint-Émilion"),
             ("São Paulo, BR", "São Paulo"),
             ("München, DE", "München"),
-            ("Côte d'Azur, FR", "Côte d'Azur")
+            ("Côte d'Azur, FR", "Côte d'Azur"),
         ]
 
         for city, expected_city in test_cases:
@@ -113,9 +115,11 @@ class TestGeocodingAPI:
             else:
                 # Accept various error types (ambiguity, invalid characters, not found)
                 assert result["status"] == "error"
-                assert ("Multiple locations found" in result["message"] or
-                       "invalid characters" in result["message"] or
-                       "No results found" in result["message"])
+                assert (
+                    "Multiple locations found" in result["message"]
+                    or "invalid characters" in result["message"]
+                    or "No results found" in result["message"]
+                )
 
     async def test_state_specifications(self):
         """Test various state specification formats"""
@@ -123,7 +127,7 @@ class TestGeocodingAPI:
             ("Austin, TX", "Texas"),
             ("New York, NY", "New York"),
             ("Los Angeles, CA", "California"),
-            ("Chicago, IL", "Illinois")
+            ("Chicago, IL", "Illinois"),
         ]
 
         for city_input, expected_state in test_cases:
@@ -150,7 +154,7 @@ class TestGeocodingAPI:
             ("a" * 201, "City name too long"),
             ("City<script>", "City name contains invalid characters"),
             ("City\nNewline", "City name contains invalid characters"),
-            ("City\"quote", "City name contains invalid characters")
+            ('City"quote', "City name contains invalid characters"),
         ]
 
         for city, expected_error in test_cases:
