@@ -8,7 +8,7 @@ import tempfile
 import time
 from datetime import datetime
 import pytest
-from src.logging import ColoredFormatter
+from src.log_config import ColoredFormatter # Changed from src.logging
 from tests.utils.assertions import (
     assert_timestamp_format
 )
@@ -49,7 +49,7 @@ def test_logger(file_handler):
 class TestLoggingFormat:
     def test_colored_formatter(self):
         """Test that ColoredFormatter formats log messages correctly"""
-        formatter = ColoredFormatter('%(asctime)s - %(levelname)s: %(message)s')
+        formatter = ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s')
         record = logging.LogRecord(
             name="test",
             level=logging.INFO,

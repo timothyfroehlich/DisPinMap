@@ -24,12 +24,13 @@ ASSERTIONS:
 - Submission filtering works correctly (new vs seen)
 - Error handling follows automatic poll patterns (no Discord messages)
 - Notifier methods are called with expected patterns
+
 """
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta, timezone
-from src.monitor import MachineMonitor
+from src.cogs.monitor import MachineMonitor
 from tests.utils.database import setup_test_database, cleanup_test_database
 from tests.utils.generators import generate_submission_data
 
@@ -77,7 +78,7 @@ class TestAutomaticPollBehavior:
     5. Submission filtering works correctly
     """
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_automatic_poll_uses_min_date_true_for_location(self, mock_fetch, monitor, db, mock_bot):
         """
         Test that automatic polls use use_min_date=True for location targets.
@@ -116,7 +117,7 @@ class TestAutomaticPollBehavior:
         updated_config = db.get_channel_config(channel_id)
         assert updated_config['last_poll_at'] is not None
     
-    @patch('src.monitor.fetch_submissions_for_coordinates', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_coordinates', new_callable=AsyncMock)
     async def test_automatic_poll_uses_min_date_true_for_coordinates(self, mock_fetch, monitor, db, mock_bot):
         """
         Test that automatic polls use use_min_date=True for coordinate targets.
@@ -155,7 +156,7 @@ class TestAutomaticPollBehavior:
         updated_config = db.get_channel_config(channel_id)
         assert updated_config['last_poll_at'] is not None
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_automatic_poll_filters_seen_submissions(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test that automatic polls only process new (unseen) submissions.
@@ -205,7 +206,7 @@ class TestAutomaticPollBehavior:
         # Verify result indicates success
         assert result is True
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_automatic_poll_updates_timestamp_on_success(self, mock_fetch, monitor, db, mock_bot):
         """
         Test that last_poll_at is updated only after successful automatic polls.
@@ -253,7 +254,7 @@ class TestAutomaticPollBehavior:
         # Verify successful result
         assert result is True
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_automatic_poll_no_timestamp_update_on_api_failure(self, mock_fetch, monitor, db, mock_bot):
         """
         Test that last_poll_at is NOT updated when API calls fail during automatic polls.
@@ -294,7 +295,7 @@ class TestAutomaticPollBehavior:
         # Verify failed result
         assert result is False
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_automatic_poll_suppresses_discord_error_messages(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test that automatic polls don't send error messages to Discord channels.
@@ -372,7 +373,7 @@ class TestAutomaticPollBehavior:
         should_poll = await monitor._should_poll_channel(config)
         assert should_poll is True
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_automatic_poll_handles_no_new_submissions(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test automatic poll behavior when no new submissions are found.

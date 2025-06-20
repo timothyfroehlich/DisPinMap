@@ -31,7 +31,7 @@ ASSERTIONS:
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta, timezone
-from src.monitor import MachineMonitor
+from src.cogs.monitor import MachineMonitor
 from src.cogs.monitoring import MonitoringCog
 from tests.utils.database import setup_test_database, cleanup_test_database
 from tests.utils.generators import generate_submission_data
@@ -89,7 +89,7 @@ class TestManualCheckBehavior:
     7. Integration between command and monitor cog
     """
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_uses_min_date_false_for_location(self, mock_fetch, monitor, db, mock_bot):
         """
         Test that manual checks use use_min_date=False for location targets.
@@ -126,7 +126,7 @@ class TestManualCheckBehavior:
         # Verify result
         assert result is True
     
-    @patch('src.monitor.fetch_submissions_for_coordinates', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_coordinates', new_callable=AsyncMock)
     async def test_manual_check_uses_min_date_false_for_coordinates(self, mock_fetch, monitor, db, mock_bot):
         """
         Test that manual checks use use_min_date=False for coordinate targets.
@@ -163,7 +163,7 @@ class TestManualCheckBehavior:
         # Verify result
         assert result is True
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_hybrid_model_new_plus_old(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test hybrid model: new submissions + older ones to reach 5 total.
@@ -207,7 +207,7 @@ class TestManualCheckBehavior:
         # Verify result
         assert result is True
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_shows_all_when_less_than_five_available(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test manual check when fewer than 5 submissions total are available.
@@ -248,7 +248,7 @@ class TestManualCheckBehavior:
         # Verify result
         assert result is True
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_no_time_limits(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test that manual checks have no time limits (can go back indefinitely).
@@ -294,7 +294,7 @@ class TestManualCheckBehavior:
         # Verify result
         assert result is True
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_provides_feedback_no_new_submissions(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test feedback messages when manual check finds no new submissions.
@@ -337,7 +337,7 @@ class TestManualCheckBehavior:
         # Verify result indicates no new submissions
         assert result is False
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_handles_no_previous_poll(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test manual check when no previous poll timestamp exists.
@@ -377,7 +377,7 @@ class TestManualCheckBehavior:
         # Verify result indicates no submissions
         assert result is False
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_updates_poll_timestamp(self, mock_fetch, monitor, db, mock_bot):
         """
         Test that manual checks update last_poll_at timestamp on success.
@@ -421,7 +421,7 @@ class TestManualCheckBehavior:
         # Verify result
         assert result is True
     
-    @patch('src.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
+    @patch('src.cogs.monitor.fetch_submissions_for_location', new_callable=AsyncMock)
     async def test_manual_check_sends_explicit_error_messages(self, mock_fetch, monitor, db, mock_bot, mock_notifier):
         """
         Test that manual check errors are sent to Discord.
