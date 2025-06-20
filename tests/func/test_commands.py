@@ -3,15 +3,17 @@ Functional tests for command handlers
 Tests the full command flow from user input to bot response
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-from src.cogs.monitoring import MonitoringCog
+
 from src.cogs.config import ConfigCog
+from src.cogs.monitoring import MonitoringCog
 from src.database import Database
+from src.messages import Messages
 from src.notifier import Notifier
 from tests.utils import MockContext, assert_discord_message, verify_database_target
-from tests.utils.database import setup_test_database, cleanup_test_database
-from src.messages import Messages
+from tests.utils.database import cleanup_test_database, setup_test_database
 
 
 @pytest.fixture
@@ -61,23 +63,28 @@ class TestAddCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!add location 123"
 
-        with patch('src.cogs.monitoring.fetch_location_details', new_callable=AsyncMock) as mock_get:
+        with patch(
+            "src.cogs.monitoring.fetch_location_details", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.return_value = {
-                'id': 123,
-                'name': 'Test Location',
-                'lat': 30.0,
-                'lon': 97.0
+                "id": 123,
+                "name": "Test Location",
+                "lat": 30.0,
+                "lon": 97.0,
             }
             await monitoring_cog.add.callback(monitoring_cog, ctx, "location", "123")
 
             # Verify API was called
             mock_get.assert_called_once_with(123)
             # Verify user got success message
-            await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
-                target_type="location **Test Location** (ID: 123)"
-            ))
+            await assert_discord_message(
+                ctx,
+                Messages.Notification.Initial.NONE.format(
+                    target_type="location **Test Location** (ID: 123)"
+                ),
+            )
             # Verify database was updated
-            verify_database_target(db, ctx.channel.id, 1, 'location')
+            verify_database_target(db, ctx.channel.id, 1, "location")
 
     @pytest.mark.asyncio
     async def test_add_location_by_name(self, monitoring_cog, db):
@@ -85,26 +92,28 @@ class TestAddCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!add location Test Location"
 
-        with patch('src.cogs.monitoring.search_location_by_name', new_callable=AsyncMock) as mock_search:
+        with patch(
+            "src.cogs.monitoring.search_location_by_name", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = {
-                'status': 'exact',
-                'data': {
-                    'id': 123,
-                    'name': 'Test Location',
-                    'lat': 30.0,
-                    'lon': 97.0
-                }
+                "status": "exact",
+                "data": {"id": 123, "name": "Test Location", "lat": 30.0, "lon": 97.0},
             }
-            await monitoring_cog.add.callback(monitoring_cog, ctx, "location", "Test Location")
+            await monitoring_cog.add.callback(
+                monitoring_cog, ctx, "location", "Test Location"
+            )
 
             # Verify API was called
             mock_search.assert_called_once_with("Test Location")
             # Verify user got success message
-            await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
-                target_type="location **Test Location** (ID: 123)"
-            ))
+            await assert_discord_message(
+                ctx,
+                Messages.Notification.Initial.NONE.format(
+                    target_type="location **Test Location** (ID: 123)"
+                ),
+            )
             # Verify database was updated
-            verify_database_target(db, ctx.channel.id, 1, 'location')
+            verify_database_target(db, ctx.channel.id, 1, "location")
 
     @pytest.mark.asyncio
     async def test_add_coordinates(self, monitoring_cog, db):
@@ -112,14 +121,19 @@ class TestAddCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!add coordinates 30.0 97.0 10"
 
-        await monitoring_cog.add.callback(monitoring_cog, ctx, "coordinates", "30.0", "97.0", "10")
+        await monitoring_cog.add.callback(
+            monitoring_cog, ctx, "coordinates", "30.0", "97.0", "10"
+        )
 
         # Verify user got success message
-        await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
-            target_type="coordinates **30.0, 97.0**"
-        ))
+        await assert_discord_message(
+            ctx,
+            Messages.Notification.Initial.NONE.format(
+                target_type="coordinates **30.0, 97.0**"
+            ),
+        )
         # Verify database was updated
-        verify_database_target(db, ctx.channel.id, 1, 'latlong')
+        verify_database_target(db, ctx.channel.id, 1, "latlong")
 
     @pytest.mark.asyncio
     async def test_add_city(self, monitoring_cog, db):
@@ -127,13 +141,20 @@ class TestAddCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!add city Austin,TX"
 
-        with patch('src.cogs.monitoring.geocode_city_name', new_callable=AsyncMock) as mock_geocode, \
-             patch('src.cogs.monitoring.fetch_submissions_for_coordinates', new_callable=AsyncMock) as mock_fetch:
+        with (
+            patch(
+                "src.cogs.monitoring.geocode_city_name", new_callable=AsyncMock
+            ) as mock_geocode,
+            patch(
+                "src.cogs.monitoring.fetch_submissions_for_coordinates",
+                new_callable=AsyncMock,
+            ) as mock_fetch,
+        ):
             mock_geocode.return_value = {
-                'status': 'success',
-                'lat': 30.2672,
-                'lon': -97.7431,
-                'display_name': 'Austin, Texas, US'
+                "status": "success",
+                "lat": 30.2672,
+                "lon": -97.7431,
+                "display_name": "Austin, Texas, US",
             }
             mock_fetch.return_value = []
             await monitoring_cog.add.callback(monitoring_cog, ctx, "city", "Austin,TX")
@@ -141,11 +162,14 @@ class TestAddCommand:
             # Verify API was called
             mock_geocode.assert_called_once_with("Austin,TX")
             # Verify user got initial message (success message was removed as redundant)
-            await assert_discord_message(ctx, Messages.Notification.Initial.NONE.format(
-                target_type="city **Austin, Texas, US**"
-            ))
+            await assert_discord_message(
+                ctx,
+                Messages.Notification.Initial.NONE.format(
+                    target_type="city **Austin, Texas, US**"
+                ),
+            )
             # Verify database was updated
-            verify_database_target(db, ctx.channel.id, 1, 'city')
+            verify_database_target(db, ctx.channel.id, 1, "city")
 
     @pytest.mark.asyncio
     async def test_add_invalid_type(self, monitoring_cog, db):
@@ -168,7 +192,7 @@ class TestRemoveCommand:
         ctx = MockContext(12345, 67890)
 
         # Add a target first
-        db.add_monitoring_target(ctx.channel.id, 'location', '123')
+        db.add_monitoring_target(ctx.channel.id, "location", "123")
 
         ctx.message.content = "!rm 1"
         await monitoring_cog.remove.callback(monitoring_cog, ctx, 1)
@@ -208,11 +232,16 @@ class TestListCommand:
     async def test_list_targets(self, monitoring_cog, db):
         """Test listing targets in the new table format."""
         ctx = MockContext(12345, 67890)
-        db.update_channel_config(ctx.channel.id, ctx.guild.id, poll_rate_minutes=60, notification_types='machines')
+        db.update_channel_config(
+            ctx.channel.id,
+            ctx.guild.id,
+            poll_rate_minutes=60,
+            notification_types="machines",
+        )
 
         # Add some targets
-        db.add_monitoring_target(ctx.channel.id, 'location', 'Test Location', '123')
-        db.add_monitoring_target(ctx.channel.id, 'latlong', '30.0,-97.0,10')
+        db.add_monitoring_target(ctx.channel.id, "location", "Test Location", "123")
+        db.add_monitoring_target(ctx.channel.id, "latlong", "30.0,-97.0,10")
 
         ctx.message.content = "!list"
         await monitoring_cog.list_targets.callback(monitoring_cog, ctx)
@@ -234,9 +263,9 @@ class TestListCommand:
         assert "Location: Test Location" in response
         assert "2" in response
         assert "Coords: 30.0, -97.0" in response
-        assert "60" in response # Default poll rate
-        assert "machines" in response # Default notifications
-        assert "Never" in response # Should not have been checked
+        assert "60" in response  # Default poll rate
+        assert "machines" in response  # Default notifications
+        assert "Never" in response  # Should not have been checked
 
     @pytest.mark.asyncio
     async def test_list_empty(self, monitoring_cog, db):
@@ -254,8 +283,8 @@ class TestExportCommand:
         ctx = MockContext(12345, 67890)
 
         # Add some targets
-        db.add_monitoring_target(ctx.channel.id, 'location', '123')
-        db.add_monitoring_target(ctx.channel.id, 'latlong', '30.0,97.0,10')
+        db.add_monitoring_target(ctx.channel.id, "location", "123")
+        db.add_monitoring_target(ctx.channel.id, "latlong", "30.0,97.0,10")
 
         ctx.message.content = "!export"
         await monitoring_cog.export.callback(monitoring_cog, ctx)
@@ -282,16 +311,15 @@ class TestPollRateCommand:
         ctx = MockContext(12345, 67890)
 
         # Add a target first
-        db.add_monitoring_target(ctx.channel.id, 'location', '123')
+        db.add_monitoring_target(ctx.channel.id, "location", "123")
 
         ctx.message.content = "!poll_rate 5 1"
         await config_cog.poll_rate.callback(config_cog, ctx, 5, "1")
 
         # Verify user got success message
-        await assert_discord_message(ctx, Messages.Command.PollRate.SUCCESS_TARGET.format(
-            minutes=5,
-            target_id=1
-        ))
+        await assert_discord_message(
+            ctx, Messages.Command.PollRate.SUCCESS_TARGET.format(minutes=5, target_id=1)
+        )
 
     @pytest.mark.asyncio
     async def test_set_poll_rate_channel(self, config_cog, db):
@@ -302,7 +330,9 @@ class TestPollRateCommand:
         await config_cog.poll_rate.callback(config_cog, ctx, 5)
 
         # Verify user got success message
-        await assert_discord_message(ctx, Messages.Command.PollRate.SUCCESS_CHANNEL.format(minutes=5))
+        await assert_discord_message(
+            ctx, Messages.Command.PollRate.SUCCESS_CHANNEL.format(minutes=5)
+        )
 
     @pytest.mark.asyncio
     async def test_set_poll_rate_invalid(self, config_cog, db):
@@ -323,16 +353,18 @@ class TestNotificationsCommand:
         ctx = MockContext(12345, 67890)
 
         # Add a target first
-        db.add_monitoring_target(ctx.channel.id, 'location', '123')
+        db.add_monitoring_target(ctx.channel.id, "location", "123")
 
         ctx.message.content = "!notifications machines 1"
         await config_cog.notifications.callback(config_cog, ctx, "machines", "1")
 
         # Verify user got success message
-        await assert_discord_message(ctx, Messages.Command.Notifications.SUCCESS_TARGET.format(
-            notification_type="machines",
-            target_id=1
-        ))
+        await assert_discord_message(
+            ctx,
+            Messages.Command.Notifications.SUCCESS_TARGET.format(
+                notification_type="machines", target_id=1
+            ),
+        )
 
     @pytest.mark.asyncio
     async def test_set_notifications_channel(self, config_cog, db):
@@ -343,7 +375,12 @@ class TestNotificationsCommand:
         await config_cog.notifications.callback(config_cog, ctx, "machines")
 
         # Verify user got success message
-        await assert_discord_message(ctx, Messages.Command.Notifications.SUCCESS_CHANNEL.format(notification_type="machines"))
+        await assert_discord_message(
+            ctx,
+            Messages.Command.Notifications.SUCCESS_CHANNEL.format(
+                notification_type="machines"
+            ),
+        )
 
     @pytest.mark.asyncio
     async def test_set_notifications_invalid(self, config_cog, db):
@@ -354,7 +391,12 @@ class TestNotificationsCommand:
         await config_cog.notifications.callback(config_cog, ctx, "invalid")
 
         # Verify user got error message
-        await assert_discord_message(ctx, Messages.Command.Notifications.ERROR.format(valid_types="machines, comments, all"))
+        await assert_discord_message(
+            ctx,
+            Messages.Command.Notifications.ERROR.format(
+                valid_types="machines, comments, all"
+            ),
+        )
 
 
 class TestCheckCommand:
@@ -364,7 +406,7 @@ class TestCheckCommand:
         ctx = MockContext(12345, 67890)
 
         # Add a monitoring target
-        db.add_monitoring_target(ctx.channel.id, 'location', 'Test Location', '123')
+        db.add_monitoring_target(ctx.channel.id, "location", "Test Location", "123")
 
         # Create a mock monitor cog
         mock_monitor_cog = AsyncMock()
@@ -375,13 +417,13 @@ class TestCheckCommand:
         await monitoring_cog.check.callback(monitoring_cog, ctx)
 
         # Verify monitor cog was called with correct parameters
-        monitoring_cog.bot.get_cog.assert_called_with('MachineMonitor')
+        monitoring_cog.bot.get_cog.assert_called_with("MachineMonitor")
         mock_monitor_cog.run_checks_for_channel.assert_called_once()
 
         # Verify the call arguments
         call_args = mock_monitor_cog.run_checks_for_channel.call_args
         assert call_args[0][0] == ctx.channel.id  # channel_id
-        assert call_args[1]['is_manual_check'] == True  # is_manual_check parameter
+        assert call_args[1]["is_manual_check"] == True  # is_manual_check parameter
 
     @pytest.mark.asyncio
     async def test_check_command_no_monitor_cog(self, monitoring_cog, db):
@@ -421,11 +463,13 @@ class TestCheckCommand:
         ctx = MockContext(12345, 67890)
 
         # Add a monitoring target
-        db.add_monitoring_target(ctx.channel.id, 'location', 'Test Location', '123')
+        db.add_monitoring_target(ctx.channel.id, "location", "Test Location", "123")
 
         # Create a mock monitor cog that raises an exception
         mock_monitor_cog = AsyncMock()
-        mock_monitor_cog.run_checks_for_channel = AsyncMock(side_effect=Exception("Test error"))
+        mock_monitor_cog.run_checks_for_channel = AsyncMock(
+            side_effect=Exception("Test error")
+        )
         monitoring_cog.bot.get_cog = MagicMock(return_value=mock_monitor_cog)
 
         ctx.message.content = "!check"
@@ -438,7 +482,9 @@ class TestCheckCommand:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_check_command_integration_with_real_monitor(self, monitoring_cog, db, mock_notifier):
+    async def test_check_command_integration_with_real_monitor(
+        self, monitoring_cog, db, mock_notifier
+    ):
         """Integration test for check command with real monitor cog"""
         from src.cogs.monitor import MachineMonitor
 
@@ -456,24 +502,29 @@ class TestCheckCommand:
         monitoring_cog.bot.get_cog = MagicMock(return_value=monitor_cog)
 
         # Add a monitoring target for Austin (a city that should have recent activity)
-        db.add_monitoring_target(ctx.channel.id, 'city', 'Austin, TX', '30.2672,-97.7431,25')
+        db.add_monitoring_target(
+            ctx.channel.id, "city", "Austin, TX", "30.2672,-97.7431,25"
+        )
 
         ctx.message.content = "!check"
         await monitoring_cog.check.callback(monitoring_cog, ctx)
 
         # The actual behavior will depend on real API data, but we can verify:
         # 1. The monitor cog was called
-        monitoring_cog.bot.get_cog.assert_called_with('MachineMonitor')
+        monitoring_cog.bot.get_cog.assert_called_with("MachineMonitor")
 
         # 2. Some interaction with the notifier occurred (success or no results message)
-        assert mock_notifier.log_and_send.call_count > 0 or mock_notifier.post_submissions.call_count > 0
+        assert (
+            mock_notifier.log_and_send.call_count > 0
+            or mock_notifier.post_submissions.call_count > 0
+        )
 
 
 class MockContext:
     def __init__(self, channel_id, guild_id):
-        self.channel = type('Channel', (), {'id': channel_id})()
-        self.guild = type('Guild', (), {'id': guild_id})()
-        self.message = type('Message', (), {'content': ''})()
+        self.channel = type("Channel", (), {"id": channel_id})()
+        self.guild = type("Guild", (), {"id": guild_id})()
+        self.message = type("Message", (), {"content": ""})()
         self.sent_messages = []
         self.send = AsyncMock(side_effect=self._record_send)
 

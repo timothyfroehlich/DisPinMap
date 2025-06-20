@@ -3,22 +3,26 @@ Monitor module for Discord Pinball Map Bot
 Handles background polling and notification sending using the new submission-based approach
 """
 
-from datetime import datetime, timezone
-from typing import List, Dict, Any
-from discord.ext import tasks, commands
 import logging
+from datetime import datetime, timezone
+from typing import Any, Dict, List
+
+from discord.ext import commands, tasks
 
 logger = logging.getLogger(__name__)
 try:
-    from ..database import Database
     from ..api import fetch_submissions_for_coordinates, fetch_submissions_for_location
-    from ..notifier import Notifier
+    from ..database import Database
     from ..messages import Messages
+    from ..notifier import Notifier
 except ImportError:
+    from src.api import (
+        fetch_submissions_for_coordinates,
+        fetch_submissions_for_location,
+    )
     from src.database import Database
-    from src.api import fetch_submissions_for_coordinates, fetch_submissions_for_location
-    from src.notifier import Notifier
     from src.messages import Messages
+    from src.notifier import Notifier
 
 
 class MachineMonitor(commands.Cog, name="MachineMonitor"):
@@ -41,9 +45,11 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         active_channel_configs = self.db.get_active_channels()
         for config in active_channel_configs:
             if await self._should_poll_channel(config):
-                await self.run_checks_for_channel(config['channel_id'], config)
+                await self.run_checks_for_channel(config["channel_id"], config)
 
-    async def run_checks_for_channel(self, channel_id: int, config: Dict[str, Any], is_manual_check: bool = False):
+    async def run_checks_for_channel(
+        self, channel_id: int, config: Dict[str, Any], is_manual_check: bool = False
+    ):
         """Poll a channel for new submissions based on its monitoring targets
 
         Args:
@@ -54,7 +60,9 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         Returns:
             bool: True if new submissions were found and posted, False otherwise
         """
-        logger.info(f"{'Manual check' if is_manual_check else 'Polling'} channel {channel_id}...")
+        logger.info(
+            f"{'Manual check' if is_manual_check else 'Polling'} channel {channel_id}..."
+        )
         try:
             targets = self.db.get_monitoring_targets(channel_id)
             if not targets:
@@ -63,7 +71,9 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             all_submissions = []
             api_failures = False
             for target in targets:
-                submissions, failed = await self._process_target(target, is_manual_check)
+                submissions, failed = await self._process_target(
+                    target, is_manual_check
+                )
                 all_submissions.extend(submissions)
                 if failed:
                     api_failures = True
@@ -74,57 +84,87 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                 return False
 
             if is_manual_check:
-                result = await self._handle_manual_check_results(channel, all_submissions, config)
+                result = await self._handle_manual_check_results(
+                    channel, all_submissions, config
+                )
                 # Update timestamp on successful manual checks (no API failures)
                 if not api_failures:
-                    self.db.update_channel_last_poll_time(channel_id, datetime.now(timezone.utc))
+                    self.db.update_channel_last_poll_time(
+                        channel_id, datetime.now(timezone.utc)
+                    )
                 return result
             else:
-                result = await self._handle_automatic_poll_results(channel, all_submissions, config)
+                result = await self._handle_automatic_poll_results(
+                    channel, all_submissions, config
+                )
                 # Only update timestamp on successful automatic polls (no API failures)
                 if not api_failures:
-                    self.db.update_channel_last_poll_time(channel_id, datetime.now(timezone.utc))
+                    self.db.update_channel_last_poll_time(
+                        channel_id, datetime.now(timezone.utc)
+                    )
                 return result
 
         except Exception as e:
-            logger.error(f"Error {'in manual check' if is_manual_check else 'polling'} for channel {channel_id}: {e}")
+            logger.error(
+                f"Error {'in manual check' if is_manual_check else 'polling'} for channel {channel_id}: {e}"
+            )
             if is_manual_check:
                 channel = self.bot.get_channel(channel_id)
                 if channel:
-                    await self.notifier.log_and_send(channel, f"❌ **Error during manual check:** {str(e)}")
+                    await self.notifier.log_and_send(
+                        channel, f"❌ **Error during manual check:** {str(e)}"
+                    )
             return False
 
-    async def _process_target(self, target: Dict[str, Any], is_manual_check: bool) -> tuple[List[Dict[str, Any]], bool]:
+    async def _process_target(
+        self, target: Dict[str, Any], is_manual_check: bool
+    ) -> tuple[List[Dict[str, Any]], bool]:
         """Fetch submissions for a single monitoring target and update its timestamp.
-        
+
         Returns:
             tuple: (submissions, failed) where failed is True if API call failed
         """
         try:
             submissions = []
-            target_id = target['id']
-            target_type = target['target_type']
+            target_id = target["id"]
+            target_type = target["target_type"]
 
-            if target_type in ('latlong', 'city'):
-                source_data = target['target_name'] if target_type == 'latlong' else target['target_data']
+            if target_type in ("latlong", "city"):
+                source_data = (
+                    target["target_name"]
+                    if target_type == "latlong"
+                    else target["target_data"]
+                )
                 if not source_data:
-                    logger.warning(f"Skipping target with missing data: id={target_id}, type={target_type}")
+                    logger.warning(
+                        f"Skipping target with missing data: id={target_id}, type={target_type}"
+                    )
                     return [], False  # Not an API failure, just invalid config
-                parts = source_data.split(',')
+                parts = source_data.split(",")
                 if len(parts) < 2:
-                    logger.warning(f"Skipping target with malformed data: id={target_id}, type={target_type}, data={source_data}")
+                    logger.warning(
+                        f"Skipping target with malformed data: id={target_id}, type={target_type}, data={source_data}"
+                    )
                     return [], False  # Not an API failure, just invalid config
                 lat, lon = float(parts[0]), float(parts[1])
                 radius = int(parts[2]) if len(parts) >= 3 else None
-                submissions = await fetch_submissions_for_coordinates(lat, lon, radius, use_min_date=not is_manual_check)
-            elif target_type == 'location' and target['target_data']:
-                location_id = int(target['target_data'])
-                submissions = await fetch_submissions_for_location(location_id, use_min_date=not is_manual_check)
+                submissions = await fetch_submissions_for_coordinates(
+                    lat, lon, radius, use_min_date=not is_manual_check
+                )
+            elif target_type == "location" and target["target_data"]:
+                location_id = int(target["target_data"])
+                submissions = await fetch_submissions_for_location(
+                    location_id, use_min_date=not is_manual_check
+                )
             else:
-                logger.warning(f"Skipping unhandled target: id={target_id}, type={target_type}")
+                logger.warning(
+                    f"Skipping unhandled target: id={target_id}, type={target_type}"
+                )
                 return [], False  # Not an API failure, just invalid config
 
-            self.db.update_target_last_checked_time(target_id, datetime.now(timezone.utc))
+            self.db.update_target_last_checked_time(
+                target_id, datetime.now(timezone.utc)
+            )
             return submissions, False  # Success
         except Exception as e:
             logger.error(f"Failed to fetch for target {target['id']}: {e}")
@@ -141,47 +181,65 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         if is_manual_check:
             channel = self.bot.get_channel(channel_id)
             if channel:
-                await self.notifier.log_and_send(channel, Messages.Command.Status.NO_TARGETS_TO_CHECK)
+                await self.notifier.log_and_send(
+                    channel, Messages.Command.Status.NO_TARGETS_TO_CHECK
+                )
         return False
 
-    async def _handle_manual_check_results(self, channel, submissions: List[Dict[str, Any]], config: Dict[str, Any]) -> bool:
+    async def _handle_manual_check_results(
+        self, channel, submissions: List[Dict[str, Any]], config: Dict[str, Any]
+    ) -> bool:
         """Process and send results for a manual check."""
-        sorted_submissions = sorted(submissions, key=lambda x: x.get('created_at', ''), reverse=True)
+        sorted_submissions = sorted(
+            submissions, key=lambda x: x.get("created_at", ""), reverse=True
+        )
         submissions_to_show = sorted_submissions[:5]
 
         if submissions_to_show:
-            await self.notifier.log_and_send(channel, "📋 **Last 5 submissions across all monitored targets:**")
+            await self.notifier.log_and_send(
+                channel, "📋 **Last 5 submissions across all monitored targets:**"
+            )
             await self.notifier.post_submissions(channel, submissions_to_show, config)
             return True
         else:
-            last_poll = config.get('last_poll_at')
+            last_poll = config.get("last_poll_at")
             if last_poll:
                 time_since_poll = datetime.now(timezone.utc) - last_poll
                 minutes_ago = int(time_since_poll.total_seconds() / 60)
                 if minutes_ago < 60:
-                    await self.notifier.log_and_send(channel, f"📋 **Nothing new since {minutes_ago} minutes ago.**")
+                    await self.notifier.log_and_send(
+                        channel, f"📋 **Nothing new since {minutes_ago} minutes ago.**"
+                    )
                 else:
                     hours_ago = minutes_ago // 60
-                    await self.notifier.log_and_send(channel, f"📋 **Nothing new since {hours_ago} hours ago.**")
+                    await self.notifier.log_and_send(
+                        channel, f"📋 **Nothing new since {hours_ago} hours ago.**"
+                    )
             else:
-                await self.notifier.log_and_send(channel, "📋 **No submissions found for any monitored targets.**")
+                await self.notifier.log_and_send(
+                    channel, "📋 **No submissions found for any monitored targets.**"
+                )
             return False
 
-    async def _handle_automatic_poll_results(self, channel, submissions: List[Dict[str, Any]], config: Dict[str, Any]) -> bool:
+    async def _handle_automatic_poll_results(
+        self, channel, submissions: List[Dict[str, Any]], config: Dict[str, Any]
+    ) -> bool:
         """Filter and send notifications for an automatic poll."""
         new_submissions = self.db.filter_new_submissions(channel.id, submissions)
 
         if new_submissions:
             await self.notifier.post_submissions(channel, new_submissions, config)
-            self.db.mark_submissions_seen(channel.id, [s['id'] for s in new_submissions])
+            self.db.mark_submissions_seen(
+                channel.id, [s["id"] for s in new_submissions]
+            )
             return True
         return False
 
     async def _should_poll_channel(self, config: Dict[str, Any]) -> bool:
         """Check if it's time to poll a channel based on its poll rate"""
         try:
-            poll_interval_minutes = config.get('poll_rate_minutes', 60)
-            last_poll = config.get('last_poll_at')
+            poll_interval_minutes = config.get("poll_rate_minutes", 60)
+            last_poll = config.get("last_poll_at")
 
             if last_poll is None:
                 return True
@@ -191,20 +249,25 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
 
             return minutes_since_last_poll >= poll_interval_minutes
         except Exception as e:
-            logger.error(f"Error checking poll time for channel {config.get('channel_id')}: {e}")
+            logger.error(
+                f"Error checking poll time for channel {config.get('channel_id')}: {e}"
+            )
             return False
 
     @monitor_task_loop.before_loop
     async def before_monitor_task_loop(self):
         await self.bot.wait_until_ready()
 
+
 async def setup(bot):
     """Setup function for Discord.py extension loading"""
     # Get shared instances from bot
-    database = getattr(bot, 'database', None)
-    notifier = getattr(bot, 'notifier', None)
+    database = getattr(bot, "database", None)
+    notifier = getattr(bot, "notifier", None)
 
     if database is None or notifier is None:
-        raise RuntimeError("Database and Notifier must be initialized on bot before loading cogs")
+        raise RuntimeError(
+            "Database and Notifier must be initialized on bot before loading cogs"
+        )
 
     await bot.add_cog(MachineMonitor(bot, database, notifier))

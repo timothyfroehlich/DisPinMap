@@ -3,10 +3,12 @@ Logging configuration and formatters for the DisPinMap application.
 """
 
 import logging
+
 from colorama import Fore, Style, init
 
 # Initialize colorama
 init()
+
 
 class ColoredFormatter(logging.Formatter):
     """Custom formatter that adds colors to log messages based on level."""
@@ -16,7 +18,7 @@ class ColoredFormatter(logging.Formatter):
         logging.INFO: Fore.GREEN,
         logging.WARNING: Fore.YELLOW,
         logging.ERROR: Fore.RED,
-        logging.CRITICAL: Fore.RED + Style.BRIGHT
+        logging.CRITICAL: Fore.RED + Style.BRIGHT,
     }
 
     def format(self, record):
@@ -25,7 +27,7 @@ class ColoredFormatter(logging.Formatter):
         formatted = super().format(record)
 
         # Split the message into timestamp and content
-        parts = formatted.split(' - ', 1)
+        parts = formatted.split(" - ", 1)
         if len(parts) == 2:
             timestamp, content = parts
             # Only color the content part

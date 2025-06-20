@@ -6,8 +6,9 @@ used in testing, such as locations, submissions, and coordinates.
 """
 
 import random
-from typing import Dict, Any, List, Tuple, Optional
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
+
 
 def generate_coordinates() -> Tuple[float, float]:
     """Generate random coordinates within reasonable bounds."""
@@ -15,12 +16,13 @@ def generate_coordinates() -> Tuple[float, float]:
     lon = random.uniform(-180, 180)
     return round(lat, 6), round(lon, 6)
 
+
 def generate_location_data(
     location_id: Optional[int] = None,
     name: Optional[str] = None,
     lat: Optional[float] = None,
     lon: Optional[float] = None,
-    machine_count: Optional[int] = None
+    machine_count: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Generate test data for a location."""
     if location_id is None:
@@ -39,8 +41,9 @@ def generate_location_data(
         "lon": lon,
         "machine_count": machine_count,
         "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat()
+        "updated_at": datetime.utcnow().isoformat(),
     }
+
 
 def generate_submission_data(
     location_id: int,
@@ -48,7 +51,7 @@ def generate_submission_data(
     machine_name: Optional[str] = None,
     submission_type: str = "new_machine",
     created_at: Optional[datetime] = None,
-    comment: Optional[str] = None
+    comment: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Generate test data for a submission."""
     if machine_id is None:
@@ -64,16 +67,15 @@ def generate_submission_data(
         "machine_id": machine_id,
         "machine_name": machine_name,
         "submission_type": submission_type,
-        "created_at": created_at.isoformat()
+        "created_at": created_at.isoformat(),
     }
     if comment is not None:
         data["comment"] = comment
     return data
 
+
 def generate_city_data(
-    name: Optional[str] = None,
-    lat: Optional[float] = None,
-    lon: Optional[float] = None
+    name: Optional[str] = None, lat: Optional[float] = None, lon: Optional[float] = None
 ) -> Dict[str, Any]:
     """Generate test data for a city."""
     if name is None:
@@ -81,32 +83,24 @@ def generate_city_data(
     if lat is None or lon is None:
         lat, lon = generate_coordinates()
 
-    return {
-        "name": name,
-        "lat": lat,
-        "lon": lon
-    }
+    return {"name": name, "lat": lat, "lon": lon}
+
 
 def generate_error_data(
-    error_type: str = "validation_error",
-    message: Optional[str] = None
+    error_type: str = "validation_error", message: Optional[str] = None
 ) -> Dict[str, Any]:
     """Generate test data for an error response."""
     if message is None:
         message = f"Test error message for {error_type}"
 
-    return {
-        "error": {
-            "type": error_type,
-            "message": message
-        }
-    }
+    return {"error": {"type": error_type, "message": message}}
+
 
 def generate_submission_sequence(
     location_id: int,
     count: int,
     start_time: Optional[datetime] = None,
-    interval_minutes: int = 5
+    interval_minutes: int = 5,
 ) -> List[Dict[str, Any]]:
     """
     Generate a sequence of submissions with timestamps.
@@ -126,9 +120,8 @@ def generate_submission_sequence(
     submissions = []
     for i in range(count):
         created_at = start_time + timedelta(minutes=i * interval_minutes)
-        submissions.append(generate_submission_data(
-            location_id=location_id,
-            created_at=created_at
-        ))
+        submissions.append(
+            generate_submission_data(location_id=location_id, created_at=created_at)
+        )
 
     return submissions

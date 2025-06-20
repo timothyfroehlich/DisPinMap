@@ -7,11 +7,11 @@ import os
 import tempfile
 import time
 from datetime import datetime
+
 import pytest
-from src.log_config import ColoredFormatter # Changed from src.logging
-from tests.utils.assertions import (
-    assert_timestamp_format
-)
+
+from src.log_config import ColoredFormatter  # Changed from src.logging
+from tests.utils.assertions import assert_timestamp_format
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def temp_log_dir():
 @pytest.fixture
 def log_file(temp_log_dir):
     """Create a log file in the temporary directory"""
-    log_path = os.path.join(temp_log_dir, 'test.log')
+    log_path = os.path.join(temp_log_dir, "test.log")
     return log_path
 
 
@@ -32,14 +32,14 @@ def log_file(temp_log_dir):
 def file_handler(log_file):
     """Create a file handler for testing"""
     handler = logging.FileHandler(log_file)
-    handler.setFormatter(ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+    handler.setFormatter(ColoredFormatter("%(asctime)s - %(levelname)s - %(message)s"))
     return handler
 
 
 @pytest.fixture
 def test_logger(file_handler):
     """Create a test logger with file handler"""
-    logger = logging.getLogger('test_logger')
+    logger = logging.getLogger("test_logger")
     logger.setLevel(logging.DEBUG)
     logger.addHandler(file_handler)
     yield logger
@@ -49,7 +49,7 @@ def test_logger(file_handler):
 class TestLoggingFormat:
     def test_colored_formatter(self):
         """Test that ColoredFormatter formats log messages correctly"""
-        formatter = ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s')
+        formatter = ColoredFormatter("%(asctime)s - %(levelname)s - %(message)s")
         record = logging.LogRecord(
             name="test",
             level=logging.INFO,
@@ -57,30 +57,30 @@ class TestLoggingFormat:
             lineno=10,
             msg="Test message",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         formatted = formatter.format(record)
 
         # Split the formatted message into timestamp and content
-        timestamp, content = formatted.split(' - ', 1)
+        timestamp, content = formatted.split(" - ", 1)
 
         # Verify timestamp format
         assert_timestamp_format(timestamp)
 
         # Verify content
-        assert 'INFO' in content
-        assert 'Test message' in content
-        assert 'test.py' not in content
+        assert "INFO" in content
+        assert "Test message" in content
+        assert "test.py" not in content
 
     def test_log_levels(self):
         """Test that different log levels are formatted correctly"""
-        formatter = ColoredFormatter('%(levelname)s: %(message)s')
+        formatter = ColoredFormatter("%(levelname)s: %(message)s")
         levels = [
             (logging.DEBUG, "Debug message"),
             (logging.INFO, "Info message"),
             (logging.WARNING, "Warning message"),
             (logging.ERROR, "Error message"),
-            (logging.CRITICAL, "Critical message")
+            (logging.CRITICAL, "Critical message"),
         ]
 
         for level, message in levels:
@@ -91,7 +91,7 @@ class TestLoggingFormat:
                 lineno=10,
                 msg=message,
                 args=(),
-                exc_info=None
+                exc_info=None,
             )
             formatted = formatter.format(record)
             assert logging.getLevelName(level) in formatted
@@ -105,7 +105,7 @@ class TestLogOutput:
         test_logger.info(test_message)
 
         assert os.path.exists(log_file)
-        with open(log_file, 'r') as f:
+        with open(log_file, "r") as f:
             content = f.read()
             assert test_message in content
 
@@ -118,7 +118,7 @@ class TestLogOutput:
         test_logger.warning("Warning message")
         test_logger.error("Error message")
 
-        with open(log_file, 'r') as f:
+        with open(log_file, "r") as f:
             content = f.read()
             assert "Debug message" not in content
             assert "Info message" not in content
@@ -130,7 +130,7 @@ class TestLogOutput:
         test_message = "Test message with context"
         test_logger.info(test_message)
 
-        with open(log_file, 'r') as f:
+        with open(log_file, "r") as f:
             content = f.read()
             assert test_message in content
             assert "INFO" in content
@@ -142,21 +142,23 @@ class TestLogRotation:
         """Test file size-based log rotation"""
         from logging.handlers import RotatingFileHandler
 
-        log_file = os.path.join(temp_log_dir, 'rotation_test.log')
+        log_file = os.path.join(temp_log_dir, "rotation_test.log")
         handler = RotatingFileHandler(
-            log_file,
-            maxBytes=100,  # Small size to trigger rotation
-            backupCount=2
+            log_file, maxBytes=100, backupCount=2  # Small size to trigger rotation
         )
-        handler.setFormatter(ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+        handler.setFormatter(
+            ColoredFormatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
 
-        logger = logging.getLogger('rotation_test')
+        logger = logging.getLogger("rotation_test")
         logger.setLevel(logging.INFO)
         logger.addHandler(handler)
 
         # Write enough logs to trigger rotation
         for i in range(10):
-            logger.info(f"Test message {i} " * 10)  # Make message large enough to trigger rotation
+            logger.info(
+                f"Test message {i} " * 10
+            )  # Make message large enough to trigger rotation
 
         # Check that rotation files were created
         assert os.path.exists(log_file)
@@ -170,16 +172,18 @@ class TestLogRotation:
         """Test time-based log rotation"""
         from logging.handlers import TimedRotatingFileHandler
 
-        log_file = os.path.join(temp_log_dir, 'time_rotation_test.log')
+        log_file = os.path.join(temp_log_dir, "time_rotation_test.log")
         handler = TimedRotatingFileHandler(
             log_file,
-            when='S',  # Rotate every second for testing
+            when="S",  # Rotate every second for testing
             interval=1,
-            backupCount=2
+            backupCount=2,
         )
-        handler.setFormatter(ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+        handler.setFormatter(
+            ColoredFormatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
 
-        logger = logging.getLogger('time_rotation_test')
+        logger = logging.getLogger("time_rotation_test")
         logger.setLevel(logging.INFO)
         logger.addHandler(handler)
 
@@ -190,7 +194,16 @@ class TestLogRotation:
 
         # Check that rotation files were created
         assert os.path.exists(log_file)
-        assert len([f for f in os.listdir(temp_log_dir) if f.startswith('time_rotation_test.log.')]) > 0
+        assert (
+            len(
+                [
+                    f
+                    for f in os.listdir(temp_log_dir)
+                    if f.startswith("time_rotation_test.log.")
+                ]
+            )
+            > 0
+        )
 
         # Cleanup
         logger.removeHandler(handler)
@@ -199,15 +212,15 @@ class TestLogRotation:
         """Test cleanup of old log files"""
         from logging.handlers import RotatingFileHandler
 
-        log_file = os.path.join(temp_log_dir, 'cleanup_test.log')
+        log_file = os.path.join(temp_log_dir, "cleanup_test.log")
         handler = RotatingFileHandler(
-            log_file,
-            maxBytes=100,
-            backupCount=2  # Keep only 2 backup files
+            log_file, maxBytes=100, backupCount=2  # Keep only 2 backup files
         )
-        handler.setFormatter(ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+        handler.setFormatter(
+            ColoredFormatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
 
-        logger = logging.getLogger('cleanup_test')
+        logger = logging.getLogger("cleanup_test")
         logger.setLevel(logging.INFO)
         logger.addHandler(handler)
 
@@ -216,7 +229,9 @@ class TestLogRotation:
             logger.info(f"Test message {i} " * 10)
 
         # Check that only the specified number of backup files exist
-        backup_files = [f for f in os.listdir(temp_log_dir) if f.startswith('cleanup_test.log.')]
+        backup_files = [
+            f for f in os.listdir(temp_log_dir) if f.startswith("cleanup_test.log.")
+        ]
         assert len(backup_files) <= 2
 
         # Cleanup
