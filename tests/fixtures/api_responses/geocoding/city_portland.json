@@ -1,0 +1,13 @@
+{
+  "captured_at": "2025-06-20T15:40:01.660866",
+  "name": "city_portland",
+  "metadata": {
+    "city_input": "Portland"
+  },
+  "data": {
+    "status": "success",
+    "lat": 45.52345,
+    "lon": -122.67621,
+    "display_name": "Portland, Oregon, US"
+  }
+}
