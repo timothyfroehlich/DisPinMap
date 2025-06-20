@@ -258,3 +258,4 @@ test_etc/
 test_var/
 test_run/
 test_tmp/
+# .serena/
