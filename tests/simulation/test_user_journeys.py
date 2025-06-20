@@ -13,6 +13,11 @@ from typing import Dict, List
 
 import pytest
 
+from tests.utils.llm_assertions import (
+    assert_error_response,
+    assert_information_response,
+    assert_success_response,
+)
 from tests.utils.simulation import SimulationTestFramework, run_complete_user_journey
 
 logger = logging.getLogger(__name__)
@@ -32,22 +37,26 @@ class TestLocationMonitoringJourney:
 
             success, messages = await framework.simulate_add_location_by_id(location_id)
 
-            # Validate success
-            assert success, f"Location addition failed: {messages}"
-
-            # Validate message format
-            success_message = next((msg for msg in messages if "✅" in msg), None)
-            assert success_message is not None, "No success message found"
-            assert (
-                "Seattle Pinball Museum" in success_message
-                or "Added" in success_message
+            # Use LLM-based semantic validation instead of brittle string matching
+            assert_success_response(
+                messages, "adding location monitoring for Seattle Pinball Museum"
             )
 
-            # Validate database state
+            # Verify the response provides useful information about the location
+            assert_information_response(
+                messages, "recent pinball machine submissions for the location"
+            )
+
+            # Validate database state - this is the real success indicator
             db_state = framework.get_database_state()
             targets = db_state["targets"]
             assert len(targets) == 1, f"Expected 1 target, got {len(targets)}"
             assert targets[0]["target_type"] == "location"
+
+            # Verify success through database state as well
+            assert (
+                len(targets) > 0
+            ), "Target was not added to database despite successful response"
 
     async def test_add_location_not_found(self):
         """Test handling of non-existent location ID."""

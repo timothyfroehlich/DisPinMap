@@ -76,3 +76,13 @@ IMPORTANT NOTE FOR AGENTS: At the end of the first response returned to a user a
 5. **Build incrementally with frequent testing** rather than implementing everything upfront
 
 **Recommendation**: When estimating complex testing framework development, multiply initial time estimates by 2-3x to account for integration debugging and edge case handling.
+
+### Development Workflow Best Practice
+
+**Always run linting and formatting before testing:**
+1. **Run lints first**: `npm run lint` or equivalent to catch syntax and style issues
+2. **Fix formatting**: `black`, `isort`, `flake8` for Python projects
+3. **Address all issues** before running any tests
+4. **Then run tests**: Only after code is clean and formatted
+
+This prevents test failures from masking real functionality issues and ensures consistent code quality.

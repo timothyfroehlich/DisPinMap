@@ -232,10 +232,30 @@ class CommandSimulator:
         self, ctx: MockContext, command: str, args: List[str]
     ) -> bool:
         """Try to execute command on loaded cogs."""
-        # This is a simplified command dispatcher
-        # In a real implementation, we'd use discord.py's command system
+        # Look through cogs and their commands using discord.py's command system
 
         for cog_name, cog in self.bot.cogs.items():
+            # Check if cog has the command using get_commands()
+            if hasattr(cog, "get_commands"):
+                for cmd in cog.get_commands():
+                    if cmd.name == command:
+                        try:
+                            # Execute the command callback
+                            command_func = cmd.callback
+                            if asyncio.iscoroutinefunction(command_func):
+                                await command_func(cog, ctx, *args)
+                            else:
+                                command_func(cog, ctx, *args)
+                            return True
+                        except Exception as e:
+                            logger.error(f"Error executing command {command}: {e}")
+                            import traceback
+
+                            traceback.print_exc()
+                            await ctx.send(f"❌ Error executing command: {str(e)}")
+                            return True  # Command was found but failed
+
+            # Fallback: check for direct attribute (for non-command methods)
             if hasattr(cog, command):
                 try:
                     command_func = getattr(cog, command)
