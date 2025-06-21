@@ -253,11 +253,18 @@ class SimulationTestFramework:
 
         logger.info("Simulating: User runs manual check")
 
+        # Record initial channel message count
+        initial_count = len(self.test_channel.get_sent_messages())
+
         ctx = await self.discord_sim.simulate_user_interaction(
             "check", [], self.test_channel, self.test_user
         )
 
-        messages = [msg.content for msg in ctx.get_sent_messages()]
+        # Get messages sent during the check command execution
+        # The check command sends messages directly to the channel, not through ctx
+        all_channel_messages = self.test_channel.get_sent_messages()
+        new_messages = all_channel_messages[initial_count:]
+        messages = [msg.content for msg in new_messages]
 
         self.simulation_results["manual_check"] = {"messages": messages}
 
