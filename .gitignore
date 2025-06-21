@@ -260,3 +260,9 @@ test_var/
 test_run/
 test_tmp/
 .serena/
+
+# Simulation testing framework temporary files
+simulation_results_*.json
+simulation_output/
+temp/
+tmp/
