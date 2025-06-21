@@ -6,11 +6,11 @@ and verifying database state. It supports both SQLite and PostgreSQL databases.
 """
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
 from src.database import Database

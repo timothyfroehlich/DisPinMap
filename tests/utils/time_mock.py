@@ -12,7 +12,7 @@ the simulation framework.
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Optional
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 

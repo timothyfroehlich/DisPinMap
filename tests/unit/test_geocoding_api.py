@@ -2,25 +2,13 @@
 Unit tests for geocoding API functionality
 """
 
-import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from src.api import geocode_city_name, parse_city_input
-from tests.utils.api import (
-    create_async_error_response,
-    create_async_success_response,
-    create_error_response,
-    create_rate_limit_response,
-    create_success_response,
-)
-from tests.utils.assertions import (
-    assert_api_response,
-    assert_coordinates,
-    assert_error_response,
-)
-from tests.utils.generators import generate_city_data
+from tests.utils.api import create_async_error_response, create_async_success_response
+from tests.utils.assertions import assert_error_response
 
 
 class TestParseCityInput:

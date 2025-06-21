@@ -5,7 +5,6 @@ This module provides custom assertion helpers for verifying API responses,
 database state, and message formatting.
 """
 
-import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock
