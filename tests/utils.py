@@ -7,6 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from src.database import Database
+
 
 class MockContext:
     """Mock Discord context for testing commands."""
