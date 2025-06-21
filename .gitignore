@@ -190,6 +190,7 @@ pinball_bot.db
 .cursor/
 cloud_sql_proxy
 CLAUDE.md
+.claude/
 
 # Test generated files
 test_*.log
