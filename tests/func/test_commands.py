@@ -9,7 +9,6 @@ import pytest
 
 from src.cogs.config import ConfigCog
 from src.cogs.monitoring import MonitoringCog
-from src.database import Database
 from src.messages import Messages
 from src.notifier import Notifier
 from tests.utils import MockContext, assert_discord_message, verify_database_target
@@ -423,7 +422,7 @@ class TestCheckCommand:
         # Verify the call arguments
         call_args = mock_monitor_cog.run_checks_for_channel.call_args
         assert call_args[0][0] == ctx.channel.id  # channel_id
-        assert call_args[1]["is_manual_check"] == True  # is_manual_check parameter
+        assert call_args[1]["is_manual_check"] is True  # is_manual_check parameter
 
     @pytest.mark.asyncio
     async def test_check_command_no_monitor_cog(self, monitoring_cog, db):
@@ -518,15 +517,3 @@ class TestCheckCommand:
             mock_notifier.log_and_send.call_count > 0
             or mock_notifier.post_submissions.call_count > 0
         )
-
-
-class MockContext:
-    def __init__(self, channel_id, guild_id):
-        self.channel = type("Channel", (), {"id": channel_id})()
-        self.guild = type("Guild", (), {"id": guild_id})()
-        self.message = type("Message", (), {"content": ""})()
-        self.sent_messages = []
-        self.send = AsyncMock(side_effect=self._record_send)
-
-    async def _record_send(self, message: str):
-        self.sent_messages.append(message)

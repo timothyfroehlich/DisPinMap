@@ -2,8 +2,7 @@
 Unit tests for API module including rate limiting, error handling, and input validation
 """
 
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
@@ -19,10 +18,9 @@ from tests.utils.api import (
     create_error_response,
     create_rate_limit_response,
     create_success_response,
-    simulate_rate_limit,
 )
-from tests.utils.assertions import assert_api_response, assert_error_response
-from tests.utils.generators import generate_location_data, generate_submission_data
+from tests.utils.assertions import assert_error_response
+from tests.utils.generators import generate_submission_data
 
 
 class TestRateLimiting:

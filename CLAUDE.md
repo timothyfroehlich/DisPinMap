@@ -86,3 +86,68 @@ IMPORTANT NOTE FOR AGENTS: At the end of the first response returned to a user a
 4. **Then run tests**: Only after code is clean and formatted
 
 This prevents test failures from masking real functionality issues and ensures consistent code quality.
+
+## Claude Code Commit Attribution
+
+When Claude Code makes commits, use proper attribution to distinguish AI-generated changes:
+
+```bash
+git commit --author="Claude Code <claude-code@anthropic.com>" -m "commit message"
+```
+
+**Standard commit format:**
+- Use descriptive commit messages explaining the changes and reasoning
+- Always include the Claude Code signature block:
+  ```
+  🤖 Generated with [Claude Code](https://claude.ai/code)
+
+  Co-Authored-By: Claude <claude-code@anthropic.com>
+  ```
+- Keep user's git configuration unchanged - never modify `git config` settings
+- Use `--author` flag instead of changing global git configuration
+
+This ensures clear attribution while preserving the user's personal git settings.
+
+## GCP Cost Optimization & Database Architecture
+
+### Dual-Mode Database Design
+
+The bot supports both SQLite and PostgreSQL modes for flexible deployment:
+
+**SQLite Mode (Cost-Optimized, Default):**
+- Local SQLite files with Cloud Storage backup capability
+- Eliminates Cloud SQL costs (~$7-15/month savings)
+- Suitable for Discord bot workloads with moderate data needs
+- Activated by: `DB_TYPE=sqlite` (default)
+
+**PostgreSQL Mode (Enterprise, Preserved):**
+- Google Cloud SQL with full enterprise features
+- Higher cost but better for high-concurrency/large datasets
+- All infrastructure code preserved but commented out in Terraform
+- Activated by: `DB_TYPE=postgres` + uncomment Terraform resources
+
+### Scale-to-Zero Considerations
+
+**Discord Bot Scale-to-Zero Compatibility:**
+- ✅ **HTTP Health Checks**: Cloud Run can wake bot via `/health` endpoint
+- ✅ **Command Handling**: Stateless request-response works with cold starts
+- ✅ **Database Persistence**: SQLite files survive container restarts
+- ⚠️ **WebSocket Reconnection**: 1-3 second delay on first command after idle
+- ⚠️ **Background Tasks**: Periodic monitoring paused during scale-to-zero
+
+**Recommended Configuration:**
+```terraform
+scaling {
+  min_instance_count = 0  # Scale to zero when idle
+  max_instance_count = 1  # Single instance sufficient
+}
+
+resources {
+  limits = {
+    memory = "256Mi"  # Reduced from 512Mi
+    cpu    = "500m"   # Reduced from 1000m
+  }
+}
+```
+
+**Expected Cost Reduction:** 70-85% savings (from ~$12-15/month to ~$1.50-4/month)

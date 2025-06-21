@@ -9,10 +9,8 @@ import pytest
 
 from src.cogs.config import ConfigCog
 from src.cogs.monitoring import MonitoringCog
-from src.database import Database
-from src.messages import Messages
 from src.notifier import Notifier
-from tests.utils import MockContext, assert_discord_message, verify_database_target
+from tests.utils import MockContext, verify_database_target
 from tests.utils.database import cleanup_test_database, setup_test_database
 
 
