@@ -1,0 +1,241 @@
+{
+  "capture_session": {
+    "timestamp": "2025-06-20T15:40:01.660866",
+    "captured_categories": [
+      "pinballmap_locations",
+      "pinballmap_search",
+      "pinballmap_submissions",
+      "geocoding"
+    ],
+    "total_responses": 26
+  },
+  "categories": {
+    "pinballmap_locations": {
+      "count": 3,
+      "responses": [
+        {
+          "name": "location_1_details",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "location_id": 1,
+            "expected_name": "Shorty's"
+          }
+        },
+        {
+          "name": "location_2_details",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "location_id": 2,
+            "expected_name": "Add-a-Ball Amusements"
+          }
+        },
+        {
+          "name": "location_999999_details",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "location_id": 999999,
+            "expected_name": "NonexistentLocation"
+          }
+        }
+      ]
+    },
+    "pinballmap_search": {
+      "count": 4,
+      "responses": [
+        {
+          "name": "search_seattle",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "search_term": "Seattle"
+          }
+        },
+        {
+          "name": "search_dave_and_busters",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "search_term": "Dave and Busters"
+          }
+        },
+        {
+          "name": "search_nonexistent_location_name",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "search_term": "Nonexistent Location Name"
+          }
+        },
+        {
+          "name": "search_pin",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "search_term": "Pin"
+          }
+        }
+      ]
+    },
+    "pinballmap_submissions": {
+      "count": 10,
+      "responses": [
+        {
+          "name": "location_1_recent",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "location_id": 1,
+            "use_min_date": true
+          }
+        },
+        {
+          "name": "location_1_all",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "location_id": 1,
+            "use_min_date": false
+          }
+        },
+        {
+          "name": "location_2_recent",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "location_id": 2,
+            "use_min_date": true
+          }
+        },
+        {
+          "name": "location_2_all",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "location_id": 2,
+            "use_min_date": false
+          }
+        },
+        {
+          "name": "coords_seattle_center_recent",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "lat": 47.6062,
+            "lon": -122.3321,
+            "radius": null,
+            "use_min_date": true
+          }
+        },
+        {
+          "name": "coords_seattle_center_all",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "lat": 47.6062,
+            "lon": -122.3321,
+            "radius": null,
+            "use_min_date": false
+          }
+        },
+        {
+          "name": "coords_seattle_5mi_recent",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "lat": 47.6062,
+            "lon": -122.3321,
+            "radius": 5,
+            "use_min_date": true
+          }
+        },
+        {
+          "name": "coords_seattle_5mi_all",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "lat": 47.6062,
+            "lon": -122.3321,
+            "radius": 5,
+            "use_min_date": false
+          }
+        },
+        {
+          "name": "coords_times_square_10mi_recent",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "lat": 40.7589,
+            "lon": -73.9851,
+            "radius": 10,
+            "use_min_date": true
+          }
+        },
+        {
+          "name": "coords_times_square_10mi_all",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "lat": 40.7589,
+            "lon": -73.9851,
+            "radius": 10,
+            "use_min_date": false
+          }
+        }
+      ]
+    },
+    "geocoding": {
+      "count": 9,
+      "responses": [
+        {
+          "name": "city_seattle_wa",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "Seattle, WA"
+          }
+        },
+        {
+          "name": "city_new_york_ny",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "New York, NY"
+          }
+        },
+        {
+          "name": "city_los_angeles_ca",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "Los Angeles, CA"
+          }
+        },
+        {
+          "name": "city_portland_or",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "Portland, OR"
+          }
+        },
+        {
+          "name": "city_chicago_il",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "Chicago, IL"
+          }
+        },
+        {
+          "name": "city_seattle",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "Seattle"
+          }
+        },
+        {
+          "name": "city_portland",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "Portland"
+          }
+        },
+        {
+          "name": "city_nonexistent_city_xx",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "Nonexistent City, XX"
+          }
+        },
+        {
+          "name": "city_invalidcityname123",
+          "captured_at": "2025-06-20T15:40:01.660866",
+          "metadata": {
+            "city_input": "InvalidCityName123"
+          }
+        }
+      ]
+    }
+  }
+}

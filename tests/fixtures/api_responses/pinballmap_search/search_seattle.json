@@ -1,0 +1,1388 @@
+{
+  "captured_at": "2025-06-20T15:40:01.660866",
+  "name": "search_seattle",
+  "metadata": {
+    "search_term": "Seattle"
+  },
+  "data": {
+    "status": "suggestions",
+    "data": [
+      {
+        "id": 1309,
+        "name": "Seattle Pinball Museum",
+        "street": "508 Maynard Ave S",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": "98104",
+        "phone": "206-623-0759",
+        "lat": "47.598049",
+        "lon": "-122.3246844",
+        "website": "https://www.seattlepinballmuseum.com/",
+        "created_at": "2010-12-31T16:30:00.000-08:00",
+        "updated_at": "2025-06-10T15:22:52.780-07:00",
+        "zone_id": null,
+        "region_id": 3,
+        "location_type_id": 6,
+        "description": "Hours of Operation:\r\nThursday - Monday 12-6PM\r\nTuesday - Wednesday: Closed",
+        "operator_id": 254,
+        "date_last_updated": "2025-06-10",
+        "last_updated_by_user_id": 35384,
+        "is_stern_army": null,
+        "country": "US",
+        "ic_active": true,
+        "machine_count": 46,
+        "last_updated_by_username": "mikeynjerry",
+        "num_machines": 46,
+        "location_machine_xrefs": [
+          {
+            "id": 145866,
+            "created_at": "2024-01-04T11:58:26.592-08:00",
+            "updated_at": "2024-01-04T11:58:26.948-08:00",
+            "location_id": 1309,
+            "machine_id": 3227,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3227,
+              "name": "Stranger Things (Premium)",
+              "updated_at": "2023-04-18T20:05:55.334-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6643",
+              "year": 2019,
+              "manufacturer": "Stern",
+              "machine_group_id": 80,
+              "ipdb_id": 6643,
+              "opdb_id": "Gzy89-M0oPy-A1zrL",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/stranger-things-2019"
+            }
+          },
+          {
+            "id": 129816,
+            "created_at": "2023-05-03T07:44:58.157-07:00",
+            "updated_at": "2023-05-03T07:44:58.157-07:00",
+            "location_id": 1309,
+            "machine_id": 3507,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3507,
+              "name": "Medieval Madness (Remake LE)",
+              "updated_at": "2023-09-14T11:44:15.909-07:00",
+              "ipdb_link": "",
+              "year": 2015,
+              "manufacturer": "Chicago Gaming",
+              "machine_group_id": 18,
+              "ipdb_id": null,
+              "opdb_id": "G5pe4-M61y6",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/medieval-madness-1997"
+            }
+          },
+          {
+            "id": 129817,
+            "created_at": "2023-05-03T07:50:10.484-07:00",
+            "updated_at": "2023-05-03T07:50:10.484-07:00",
+            "location_id": 1309,
+            "machine_id": 1051,
+            "ic_enabled": null,
+            "machine": {
+              "id": 1051,
+              "name": "Texan",
+              "updated_at": "2023-01-17T10:44:29.487-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2525",
+              "year": 1960,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 2525,
+              "opdb_id": "GR9nJ-M1rb3",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/texan-1960"
+            }
+          },
+          {
+            "id": 129818,
+            "created_at": "2023-05-03T07:55:50.931-07:00",
+            "updated_at": "2025-01-11T23:33:14.230-08:00",
+            "location_id": 1309,
+            "machine_id": 2725,
+            "ic_enabled": null,
+            "machine": {
+              "id": 2725,
+              "name": "Capersville",
+              "updated_at": "2023-01-17T10:44:23.888-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=431",
+              "year": 1966,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 431,
+              "opdb_id": "GrXex-MQk7l",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/capersville-1966"
+            }
+          },
+          {
+            "id": 171884,
+            "created_at": "2025-01-02T11:58:04.860-08:00",
+            "updated_at": "2025-01-02T11:58:04.966-08:00",
+            "location_id": 1309,
+            "machine_id": 4507,
+            "ic_enabled": true,
+            "machine": {
+              "id": 4507,
+              "name": "The Uncanny X-Men (Premium)",
+              "updated_at": "2024-10-28T12:00:08.283-07:00",
+              "ipdb_link": null,
+              "year": 2024,
+              "manufacturer": "Stern",
+              "machine_group_id": 116,
+              "ipdb_id": null,
+              "opdb_id": "G7ZEz-MyN3K-AO4qp",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/the-uncanny-x-men-2024"
+            }
+          },
+          {
+            "id": 178231,
+            "created_at": "2025-03-27T12:04:53.380-07:00",
+            "updated_at": "2025-03-27T12:54:24.079-07:00",
+            "location_id": 1309,
+            "machine_id": 4517,
+            "ic_enabled": true,
+            "machine": {
+              "id": 4517,
+              "name": "Dungeons & Dragons: The Tyrant's Eye (Premium)",
+              "updated_at": "2025-02-16T08:11:03.720-08:00",
+              "ipdb_link": null,
+              "year": 2025,
+              "manufacturer": "Stern",
+              "machine_group_id": 121,
+              "ipdb_id": null,
+              "opdb_id": "GK1Ej-MePok-A9VWD",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/dungeons--dragons-the-tyrants-eye-2025"
+            }
+          },
+          {
+            "id": 132448,
+            "created_at": "2023-06-09T17:00:51.942-07:00",
+            "updated_at": "2023-06-09T17:00:51.942-07:00",
+            "location_id": 1309,
+            "machine_id": 3422,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3422,
+              "name": "Cactus Canyon (Remake Special)",
+              "updated_at": "2023-09-14T11:44:16.574-07:00",
+              "ipdb_link": null,
+              "year": 2021,
+              "manufacturer": "Chicago Gaming",
+              "machine_group_id": 90,
+              "ipdb_id": null,
+              "opdb_id": "G4835-M2YPK-AR5ln",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/cactus-canyon-1998"
+            }
+          },
+          {
+            "id": 165014,
+            "created_at": "2024-09-20T13:13:00.192-07:00",
+            "updated_at": "2024-09-20T13:13:00.499-07:00",
+            "location_id": 1309,
+            "machine_id": 4500,
+            "ic_enabled": true,
+            "machine": {
+              "id": 4500,
+              "name": "Godzilla (70th Anniversary)",
+              "updated_at": "2024-09-06T21:03:06.401-07:00",
+              "ipdb_link": null,
+              "year": 2024,
+              "manufacturer": "Stern",
+              "machine_group_id": 88,
+              "ipdb_id": null,
+              "opdb_id": "GweeP-Ml9pZ-AOvNL",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/godzilla-2021"
+            }
+          },
+          {
+            "id": 171954,
+            "created_at": "2025-01-03T12:33:36.110-08:00",
+            "updated_at": "2025-01-19T21:30:34.809-08:00",
+            "location_id": 1309,
+            "machine_id": 1059,
+            "ic_enabled": null,
+            "machine": {
+              "id": 1059,
+              "name": "Black Hole",
+              "updated_at": "2023-01-17T10:44:27.582-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=307",
+              "year": 1981,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 307,
+              "opdb_id": "G41yq-MQP65",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/black-hole-1981"
+            }
+          },
+          {
+            "id": 158740,
+            "created_at": "2024-06-21T17:39:59.484-07:00",
+            "updated_at": "2024-06-21T17:39:59.484-07:00",
+            "location_id": 1309,
+            "machine_id": 3784,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3784,
+              "name": "Jim Henson\u2019s Labyrinth",
+              "updated_at": "2023-10-28T10:02:35.085-07:00",
+              "ipdb_link": null,
+              "year": 2023,
+              "manufacturer": "Barrels of Fun",
+              "machine_group_id": null,
+              "ipdb_id": null,
+              "opdb_id": "GvBn8-Mz291",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/jim-hensons-labyrinth-2023"
+            }
+          },
+          {
+            "id": 183905,
+            "created_at": "2025-06-08T15:52:48.895-07:00",
+            "updated_at": "2025-06-10T15:22:52.792-07:00",
+            "location_id": 1309,
+            "machine_id": 4539,
+            "ic_enabled": null,
+            "machine": {
+              "id": 4539,
+              "name": "Harry Potter (CE)",
+              "updated_at": "2025-06-19T09:09:10.768-07:00",
+              "ipdb_link": null,
+              "year": 2025,
+              "manufacturer": "Jersey Jack",
+              "machine_group_id": 126,
+              "ipdb_id": null,
+              "opdb_id": "GWyBj-MdEbK-AOPdq",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/harry-potter-2025"
+            }
+          },
+          {
+            "id": 183945,
+            "created_at": "2025-06-09T11:43:24.209-07:00",
+            "updated_at": "2025-06-09T11:43:24.209-07:00",
+            "location_id": 1309,
+            "machine_id": 4532,
+            "ic_enabled": null,
+            "machine": {
+              "id": 4532,
+              "name": "Dune",
+              "updated_at": "2025-04-28T11:40:59.385-07:00",
+              "ipdb_link": null,
+              "year": 2025,
+              "manufacturer": "Barrels of Fun",
+              "machine_group_id": null,
+              "ipdb_id": null,
+              "opdb_id": "Gd266-ME0l7",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/dune-2025"
+            }
+          },
+          {
+            "id": 183946,
+            "created_at": "2025-06-09T11:44:03.725-07:00",
+            "updated_at": "2025-06-09T11:44:04.107-07:00",
+            "location_id": 1309,
+            "machine_id": 4534,
+            "ic_enabled": true,
+            "machine": {
+              "id": 4534,
+              "name": "King Kong: Myth of Terror Island (Premium)",
+              "updated_at": "2025-05-17T15:50:56.963-07:00",
+              "ipdb_link": null,
+              "year": 2025,
+              "manufacturer": "Stern",
+              "machine_group_id": 125,
+              "ipdb_id": null,
+              "opdb_id": "GEL0V-MyN8E-A1Dkr",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/king-kong-myth-of-terror-island-2025"
+            }
+          },
+          {
+            "id": 10309,
+            "created_at": "2013-01-18T19:32:50.547-08:00",
+            "updated_at": "2025-06-08T18:39:22.019-07:00",
+            "location_id": 1309,
+            "machine_id": 823,
+            "ic_enabled": null,
+            "machine": {
+              "id": 823,
+              "name": "Aztec",
+              "updated_at": "2023-01-17T10:44:25.165-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=119",
+              "year": 1976,
+              "manufacturer": "Williams",
+              "machine_group_id": null,
+              "ipdb_id": 119,
+              "opdb_id": "GRpLk-MQdOY",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/aztec-1976"
+            }
+          },
+          {
+            "id": 136218,
+            "created_at": "2023-08-07T13:43:56.327-07:00",
+            "updated_at": "2025-03-02T16:08:31.236-08:00",
+            "location_id": 1309,
+            "machine_id": 3179,
+            "ic_enabled": false,
+            "machine": {
+              "id": 3179,
+              "name": "Elvira's House of Horrors (Premium)",
+              "updated_at": "2023-09-21T08:47:50.130-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6596",
+              "year": 2019,
+              "manufacturer": "Stern",
+              "machine_group_id": 79,
+              "ipdb_id": 6596,
+              "opdb_id": "GZVOd-MwNxZ-AOLoy",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/elviras-house-of-horrors-2019"
+            }
+          },
+          {
+            "id": 152139,
+            "created_at": "2024-03-28T13:43:26.140-07:00",
+            "updated_at": "2024-03-28T13:43:26.489-07:00",
+            "location_id": 1309,
+            "machine_id": 3800,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3800,
+              "name": "JAWS (Premium)",
+              "updated_at": "2024-02-08T12:19:53.922-08:00",
+              "ipdb_link": null,
+              "year": 2024,
+              "manufacturer": "Stern",
+              "machine_group_id": 106,
+              "ipdb_id": null,
+              "opdb_id": "GLWll-M1r8O-ARnV7",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/jaws-2024"
+            }
+          },
+          {
+            "id": 4856,
+            "created_at": "2011-01-08T16:00:00.000-08:00",
+            "updated_at": "2011-01-08T16:00:00.000-08:00",
+            "location_id": 1309,
+            "machine_id": 960,
+            "ic_enabled": null,
+            "machine": {
+              "id": 960,
+              "name": "Swing Along",
+              "updated_at": "2023-01-17T10:44:29.651-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2484",
+              "year": 1963,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 2484,
+              "opdb_id": "G5D9e-M4owj",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/swing-along-1963"
+            }
+          },
+          {
+            "id": 22490,
+            "created_at": "2015-03-13T15:26:59.139-07:00",
+            "updated_at": "2025-01-19T21:13:59.604-08:00",
+            "location_id": 1309,
+            "machine_id": 792,
+            "ic_enabled": null,
+            "machine": {
+              "id": 792,
+              "name": "Expressway",
+              "updated_at": "2023-01-17T10:44:24.615-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=800",
+              "year": 1970,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 800,
+              "opdb_id": "G4xK8-MQ5jK",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/expressway-1971"
+            }
+          },
+          {
+            "id": 10313,
+            "created_at": "2013-01-18T19:35:39.144-08:00",
+            "updated_at": "2025-06-08T18:40:23.098-07:00",
+            "location_id": 1309,
+            "machine_id": 1047,
+            "ic_enabled": null,
+            "machine": {
+              "id": 1047,
+              "name": "Tri Zone",
+              "updated_at": "2023-01-17T10:44:26.523-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2641",
+              "year": 1979,
+              "manufacturer": "Williams",
+              "machine_group_id": null,
+              "ipdb_id": 2641,
+              "opdb_id": "GrxNK-MLEzY",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/tri-zone-1979"
+            }
+          },
+          {
+            "id": 10294,
+            "created_at": "2013-01-18T19:06:01.075-08:00",
+            "updated_at": "2025-01-11T23:34:54.177-08:00",
+            "location_id": 1309,
+            "machine_id": 1454,
+            "ic_enabled": null,
+            "machine": {
+              "id": 1454,
+              "name": "King Tut",
+              "updated_at": "2023-01-17T10:44:23.552-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=1378",
+              "year": 1969,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 1378,
+              "opdb_id": "Gr3qw-MQjYp",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/king-tut--king-rex-1969"
+            }
+          },
+          {
+            "id": 24303,
+            "created_at": "2015-07-03T20:53:58.477-07:00",
+            "updated_at": "2025-01-11T23:36:12.723-08:00",
+            "location_id": 1309,
+            "machine_id": 831,
+            "ic_enabled": null,
+            "machine": {
+              "id": 831,
+              "name": "Stardust",
+              "updated_at": "2023-01-17T10:44:23.099-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2359",
+              "year": 1971,
+              "manufacturer": "Williams",
+              "machine_group_id": null,
+              "ipdb_id": 2359,
+              "opdb_id": "G4qO8-MJ6x3",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/stardust-1971"
+            }
+          },
+          {
+            "id": 152354,
+            "created_at": "2024-03-30T18:13:34.753-07:00",
+            "updated_at": "2024-03-30T18:13:34.753-07:00",
+            "location_id": 1309,
+            "machine_id": 3680,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3680,
+              "name": "Pulp Fiction (SE)",
+              "updated_at": "2023-03-13T13:37:50.546-07:00",
+              "ipdb_link": null,
+              "year": 2023,
+              "manufacturer": "Chicago Gaming",
+              "machine_group_id": 102,
+              "ipdb_id": null,
+              "opdb_id": "GoEkx-MdEzN-ARJQz",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/pulp-fiction-2023"
+            }
+          },
+          {
+            "id": 50827,
+            "created_at": "2018-03-31T04:58:00.814-07:00",
+            "updated_at": "2018-03-31T04:58:00.814-07:00",
+            "location_id": 1309,
+            "machine_id": 856,
+            "ic_enabled": null,
+            "machine": {
+              "id": 856,
+              "name": "Captain Fantastic and The Brown Dirt Cowboy",
+              "updated_at": "2023-01-17T10:44:29.597-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=438",
+              "year": 1975,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 438,
+              "opdb_id": "GRveZ-MNE38",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/captain-fantastic-and-the-brown-dirt-cowboy-1975"
+            }
+          },
+          {
+            "id": 34066,
+            "created_at": "2016-09-01T09:04:22.118-07:00",
+            "updated_at": "2025-01-11T23:40:45.961-08:00",
+            "location_id": 1309,
+            "machine_id": 804,
+            "ic_enabled": null,
+            "machine": {
+              "id": 804,
+              "name": "Wizard!",
+              "updated_at": "2023-01-17T10:44:22.593-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2803",
+              "year": 1975,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 2803,
+              "opdb_id": "G4l8K-MJwXy",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/wizard-1975"
+            }
+          },
+          {
+            "id": 76873,
+            "created_at": "2019-11-20T07:16:40.803-08:00",
+            "updated_at": "2022-06-20T12:06:11.612-07:00",
+            "location_id": 1309,
+            "machine_id": 3139,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3139,
+              "name": "Willy Wonka & The Chocolate Factory (LE)",
+              "updated_at": "2023-01-17T10:44:31.186-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6648",
+              "year": 2019,
+              "manufacturer": "Jersey Jack",
+              "machine_group_id": 77,
+              "ipdb_id": 6648,
+              "opdb_id": "GYWBZ-MW9B0",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/willy-wonka--the-chocolate-factory-2019"
+            }
+          },
+          {
+            "id": 63247,
+            "created_at": "2019-02-02T16:48:13.864-08:00",
+            "updated_at": "2025-01-11T23:57:19.037-08:00",
+            "location_id": 1309,
+            "machine_id": 702,
+            "ic_enabled": null,
+            "machine": {
+              "id": 702,
+              "name": "Earthshaker",
+              "updated_at": "2023-01-17T10:44:29.349-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=753",
+              "year": 1989,
+              "manufacturer": "Williams",
+              "machine_group_id": null,
+              "ipdb_id": 753,
+              "opdb_id": "GRw0r-Mp42p",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/earthshaker-1989"
+            }
+          },
+          {
+            "id": 63244,
+            "created_at": "2019-02-02T16:46:17.381-08:00",
+            "updated_at": "2024-12-12T12:42:02.366-08:00",
+            "location_id": 1309,
+            "machine_id": 1055,
+            "ic_enabled": null,
+            "machine": {
+              "id": 1055,
+              "name": "Black Knight",
+              "updated_at": "2023-01-17T10:44:30.452-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=310",
+              "year": 1980,
+              "manufacturer": "Williams",
+              "machine_group_id": 20,
+              "ipdb_id": 310,
+              "opdb_id": "GrO7w-M9R03",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/black-knight-1980"
+            }
+          },
+          {
+            "id": 151090,
+            "created_at": "2024-03-15T13:07:02.931-07:00",
+            "updated_at": "2024-03-15T13:07:02.931-07:00",
+            "location_id": 1309,
+            "machine_id": 929,
+            "ic_enabled": null,
+            "machine": {
+              "id": 929,
+              "name": "Monaco",
+              "updated_at": "2023-01-17T10:44:27.497-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=1614",
+              "year": 1977,
+              "manufacturer": "Segasa",
+              "machine_group_id": null,
+              "ipdb_id": 1614,
+              "opdb_id": "GRVzL-MJ2rb",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/monaco--cannes-1976"
+            }
+          },
+          {
+            "id": 68640,
+            "created_at": "2019-06-04T11:21:41.021-07:00",
+            "updated_at": "2019-06-04T11:21:41.021-07:00",
+            "location_id": 1309,
+            "machine_id": 774,
+            "ic_enabled": null,
+            "machine": {
+              "id": 774,
+              "name": "Godzilla",
+              "updated_at": "2023-01-17T10:44:28.919-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=4443",
+              "year": 1998,
+              "manufacturer": "Sega",
+              "machine_group_id": null,
+              "ipdb_id": 4443,
+              "opdb_id": "G5po2-MeP6B",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/godzilla-1998"
+            }
+          },
+          {
+            "id": 96137,
+            "created_at": "2021-07-11T23:06:55.868-07:00",
+            "updated_at": "2025-06-08T18:39:44.964-07:00",
+            "location_id": 1309,
+            "machine_id": 980,
+            "ic_enabled": null,
+            "machine": {
+              "id": 980,
+              "name": "Close Encounters of the Third Kind",
+              "updated_at": "2023-01-17T10:44:23.904-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=536",
+              "year": 1978,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 536,
+              "opdb_id": "G4qvL-MJwVr",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/close-encounters-of-the-third-kind-1978"
+            }
+          },
+          {
+            "id": 96140,
+            "created_at": "2021-07-11T23:08:13.015-07:00",
+            "updated_at": "2021-07-11T23:08:13.015-07:00",
+            "location_id": 1309,
+            "machine_id": 830,
+            "ic_enabled": null,
+            "machine": {
+              "id": 830,
+              "name": "Fun Land",
+              "updated_at": "2023-01-17T10:44:29.115-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=973",
+              "year": 1968,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 973,
+              "opdb_id": "GRwqx-MNE6X",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/fun-land--fun-park-1968"
+            }
+          },
+          {
+            "id": 96148,
+            "created_at": "2021-07-11T23:13:09.200-07:00",
+            "updated_at": "2025-06-08T18:38:24.506-07:00",
+            "location_id": 1309,
+            "machine_id": 840,
+            "ic_enabled": null,
+            "machine": {
+              "id": 840,
+              "name": "Attila The Hun",
+              "updated_at": "2023-01-17T10:44:24.536-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=109",
+              "year": 1984,
+              "manufacturer": "Game Plan",
+              "machine_group_id": null,
+              "ipdb_id": 109,
+              "opdb_id": "GrZxD-MLO4Y",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/attila-the-hun-1984"
+            }
+          },
+          {
+            "id": 96144,
+            "created_at": "2021-07-11T23:09:53.766-07:00",
+            "updated_at": "2025-01-11T23:39:13.365-08:00",
+            "location_id": 1309,
+            "machine_id": 2319,
+            "ic_enabled": null,
+            "machine": {
+              "id": 2319,
+              "name": "Out of Sight",
+              "updated_at": "2023-01-17T10:44:28.659-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=1727",
+              "year": 1974,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 1727,
+              "opdb_id": "G5zQO-MdE8R",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/out-of-sight--far-out-1974"
+            }
+          },
+          {
+            "id": 96149,
+            "created_at": "2021-07-11T23:13:26.823-07:00",
+            "updated_at": "2025-01-11T23:52:21.071-08:00",
+            "location_id": 1309,
+            "machine_id": 647,
+            "ic_enabled": null,
+            "machine": {
+              "id": 647,
+              "name": "Creature from the Black Lagoon",
+              "updated_at": "2023-01-17T10:44:24.792-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=588",
+              "year": 1992,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 588,
+              "opdb_id": "GrNWn-MQdqZ",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/creature-from-the-black-lagoon-1992"
+            }
+          },
+          {
+            "id": 96151,
+            "created_at": "2021-07-11T23:13:53.504-07:00",
+            "updated_at": "2022-06-20T12:05:30.549-07:00",
+            "location_id": 1309,
+            "machine_id": 662,
+            "ic_enabled": null,
+            "machine": {
+              "id": 662,
+              "name": "Lord of the Rings",
+              "updated_at": "2023-01-17T10:44:24.963-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=4858",
+              "year": 2003,
+              "manufacturer": "Stern",
+              "machine_group_id": 13,
+              "ipdb_id": 4858,
+              "opdb_id": "GrqZX-MD15w",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/lord-of-the-rings-2003"
+            }
+          },
+          {
+            "id": 100427,
+            "created_at": "2021-10-09T13:52:14.454-07:00",
+            "updated_at": "2021-10-09T13:52:14.454-07:00",
+            "location_id": 1309,
+            "machine_id": 2006,
+            "ic_enabled": null,
+            "machine": {
+              "id": 2006,
+              "name": "Buckaroo",
+              "updated_at": "2023-01-17T10:44:25.273-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=393",
+              "year": 1965,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 393,
+              "opdb_id": "GRzow-MQYqx",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/buckaroo--cow-poke-1965"
+            }
+          },
+          {
+            "id": 63251,
+            "created_at": "2019-02-02T16:50:21.399-08:00",
+            "updated_at": "2025-01-11T23:53:38.595-08:00",
+            "location_id": 1309,
+            "machine_id": 686,
+            "ic_enabled": null,
+            "machine": {
+              "id": 686,
+              "name": "Terminator 2: Judgment Day",
+              "updated_at": "2023-01-17T10:44:25.993-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2524",
+              "year": 1991,
+              "manufacturer": "Williams",
+              "machine_group_id": null,
+              "ipdb_id": 2524,
+              "opdb_id": "GR9Bx-MQkd5",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/terminator-2-judgment-day-1991"
+            }
+          },
+          {
+            "id": 110652,
+            "created_at": "2022-05-20T06:25:30.815-07:00",
+            "updated_at": "2023-06-17T23:22:18.764-07:00",
+            "location_id": 1309,
+            "machine_id": 687,
+            "ic_enabled": null,
+            "machine": {
+              "id": 687,
+              "name": "The Addams Family",
+              "updated_at": "2023-01-17T10:44:22.813-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=20",
+              "year": 1992,
+              "manufacturer": "Bally",
+              "machine_group_id": 55,
+              "ipdb_id": 20,
+              "opdb_id": "G4ODR-MDXEy",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/the-addams-family-1992"
+            }
+          },
+          {
+            "id": 110656,
+            "created_at": "2022-05-20T06:40:03.783-07:00",
+            "updated_at": "2025-01-11T23:37:17.841-08:00",
+            "location_id": 1309,
+            "machine_id": 1518,
+            "ic_enabled": null,
+            "machine": {
+              "id": 1518,
+              "name": "Nip-It",
+              "updated_at": "2023-01-17T10:44:29.931-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=1680",
+              "year": 1972,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 1680,
+              "opdb_id": "Gre0B-MYewk",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/nip-it-1973"
+            }
+          },
+          {
+            "id": 110653,
+            "created_at": "2022-05-20T06:25:57.877-07:00",
+            "updated_at": "2025-01-11T23:44:26.398-08:00",
+            "location_id": 1309,
+            "machine_id": 671,
+            "ic_enabled": null,
+            "machine": {
+              "id": 671,
+              "name": "Haunted House",
+              "updated_at": "2023-01-17T10:44:26.999-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=1133",
+              "year": 1982,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 1133,
+              "opdb_id": "G5BP6-MJK4Z",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/haunted-house-1982"
+            }
+          },
+          {
+            "id": 87532,
+            "created_at": "2020-10-14T19:26:35.779-07:00",
+            "updated_at": "2020-10-14T19:26:35.779-07:00",
+            "location_id": 1309,
+            "machine_id": 3271,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3271,
+              "name": "Guns N' Roses (LE)",
+              "updated_at": "2023-09-14T11:44:15.698-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6765",
+              "year": 2020,
+              "manufacturer": "Jersey Jack",
+              "machine_group_id": 83,
+              "ipdb_id": 6765,
+              "opdb_id": "GqZZ1-M85y9",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/guns-n-roses-2020"
+            }
+          },
+          {
+            "id": 144127,
+            "created_at": "2023-12-09T16:14:58.543-08:00",
+            "updated_at": "2023-12-09T16:14:58.543-08:00",
+            "location_id": 1309,
+            "machine_id": 3785,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3785,
+              "name": "Elton John (PE)",
+              "updated_at": "2023-12-01T09:25:57.810-08:00",
+              "ipdb_link": null,
+              "year": 2023,
+              "manufacturer": "Jersey Jack",
+              "machine_group_id": 105,
+              "ipdb_id": null,
+              "opdb_id": "G2LWd-M4o3Y",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/elton-john-2023"
+            }
+          },
+          {
+            "id": 101312,
+            "created_at": "2021-10-25T09:02:46.903-07:00",
+            "updated_at": "2022-11-04T16:36:39.522-07:00",
+            "location_id": 1309,
+            "machine_id": 2569,
+            "ic_enabled": null,
+            "machine": {
+              "id": 2569,
+              "name": "Ghostbusters (Pro)",
+              "updated_at": "2023-01-17T10:44:30.577-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6332",
+              "year": 2016,
+              "manufacturer": "Stern",
+              "machine_group_id": 57,
+              "ipdb_id": 6332,
+              "opdb_id": "GR9Nr-Mz2dY",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/ghostbusters-2016"
+            }
+          },
+          {
+            "id": 111953,
+            "created_at": "2022-06-17T12:31:52.541-07:00",
+            "updated_at": "2022-06-20T12:05:54.713-07:00",
+            "location_id": 1309,
+            "machine_id": 3519,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3519,
+              "name": "Toy Story 4 (LE)",
+              "updated_at": "2023-09-14T11:44:16.634-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6950",
+              "year": 2022,
+              "manufacturer": "Jersey Jack",
+              "machine_group_id": 94,
+              "ipdb_id": 6950,
+              "opdb_id": "GJ2o0-MrRye-ARNwE",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/toy-story-4-2022"
+            }
+          },
+          {
+            "id": 111955,
+            "created_at": "2022-06-17T12:39:10.202-07:00",
+            "updated_at": "2022-06-17T12:39:10.202-07:00",
+            "location_id": 1309,
+            "machine_id": 785,
+            "ic_enabled": null,
+            "machine": {
+              "id": 785,
+              "name": "Kiss",
+              "updated_at": "2023-01-17T10:44:26.869-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=1386",
+              "year": 1978,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 1386,
+              "opdb_id": "G4jXr-MQ6kz",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/kiss-1979"
+            }
+          },
+          {
+            "id": 63248,
+            "created_at": "2019-02-02T16:48:38.961-08:00",
+            "updated_at": "2025-01-11T23:54:49.168-08:00",
+            "location_id": 1309,
+            "machine_id": 703,
+            "ic_enabled": null,
+            "machine": {
+              "id": 703,
+              "name": "Funhouse",
+              "updated_at": "2023-01-17T10:44:29.431-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=966",
+              "year": 1990,
+              "manufacturer": "Williams",
+              "machine_group_id": null,
+              "ipdb_id": 966,
+              "opdb_id": "G5Dz7-Mq139",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/funhouse-1990"
+            }
+          }
+        ]
+      },
+      {
+        "id": 8052,
+        "name": "Seattle Tavern & Pool Hall",
+        "street": "5811 Airport Way S",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": "98108",
+        "phone": null,
+        "lat": "47.5504082",
+        "lon": "-122.3184339",
+        "website": null,
+        "created_at": "2017-02-19T12:01:13.790-08:00",
+        "updated_at": "2025-05-31T15:35:25.640-07:00",
+        "zone_id": null,
+        "region_id": 3,
+        "location_type_id": 4,
+        "description": null,
+        "operator_id": null,
+        "date_last_updated": "2025-05-31",
+        "last_updated_by_user_id": 491,
+        "is_stern_army": null,
+        "country": "US",
+        "ic_active": true,
+        "machine_count": 9,
+        "last_updated_by_username": "travam",
+        "num_machines": 9,
+        "location_machine_xrefs": [
+          {
+            "id": 177888,
+            "created_at": "2025-03-22T01:31:54.035-07:00",
+            "updated_at": "2025-03-22T01:31:54.156-07:00",
+            "location_id": 8052,
+            "machine_id": 3738,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3738,
+              "name": "Venom (Pro)",
+              "updated_at": "2023-09-14T11:44:16.092-07:00",
+              "ipdb_link": null,
+              "year": 2023,
+              "manufacturer": "Stern",
+              "machine_group_id": 104,
+              "ipdb_id": null,
+              "opdb_id": "G3EBl-Mq1zy",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/venom-2023"
+            }
+          },
+          {
+            "id": 183139,
+            "created_at": "2025-05-31T15:35:38.458-07:00",
+            "updated_at": "2025-05-31T15:35:38.458-07:00",
+            "location_id": 8052,
+            "machine_id": 645,
+            "ic_enabled": null,
+            "machine": {
+              "id": 645,
+              "name": "The Sopranos",
+              "updated_at": "2023-01-17T10:44:22.338-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=5053",
+              "year": 2005,
+              "manufacturer": "Stern",
+              "machine_group_id": null,
+              "ipdb_id": 5053,
+              "opdb_id": "G5WoB-MDyNZ",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/the-sopranos-2005"
+            }
+          },
+          {
+            "id": 126911,
+            "created_at": "2023-03-23T15:35:26.562-07:00",
+            "updated_at": "2024-07-20T14:38:58.738-07:00",
+            "location_id": 8052,
+            "machine_id": 687,
+            "ic_enabled": null,
+            "machine": {
+              "id": 687,
+              "name": "The Addams Family",
+              "updated_at": "2023-01-17T10:44:22.813-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=20",
+              "year": 1992,
+              "manufacturer": "Bally",
+              "machine_group_id": 55,
+              "ipdb_id": 20,
+              "opdb_id": "G4ODR-MDXEy",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/the-addams-family-1992"
+            }
+          },
+          {
+            "id": 152497,
+            "created_at": "2024-04-01T16:28:24.396-07:00",
+            "updated_at": "2024-04-01T16:28:24.611-07:00",
+            "location_id": 8052,
+            "machine_id": 3226,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3226,
+              "name": "Stranger Things (Pro)",
+              "updated_at": "2023-04-18T20:05:51.189-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6642",
+              "year": 2019,
+              "manufacturer": "Stern",
+              "machine_group_id": 80,
+              "ipdb_id": 6642,
+              "opdb_id": "Gzy89-MNEeO",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/stranger-things-2019"
+            }
+          },
+          {
+            "id": 160910,
+            "created_at": "2024-07-20T14:38:39.419-07:00",
+            "updated_at": "2024-07-20T14:40:47.125-07:00",
+            "location_id": 8052,
+            "machine_id": 3845,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3845,
+              "name": "John Wick (Pro)",
+              "updated_at": "2024-05-18T07:24:16.627-07:00",
+              "ipdb_link": null,
+              "year": 2024,
+              "manufacturer": "Stern",
+              "machine_group_id": 115,
+              "ipdb_id": null,
+              "opdb_id": "GQK1P-MW9pj",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/john-wick-2024"
+            }
+          },
+          {
+            "id": 160909,
+            "created_at": "2024-07-20T14:38:22.697-07:00",
+            "updated_at": "2024-07-20T14:39:54.704-07:00",
+            "location_id": 8052,
+            "machine_id": 642,
+            "ic_enabled": null,
+            "machine": {
+              "id": 642,
+              "name": "Medieval Madness",
+              "updated_at": "2023-01-17T10:44:28.433-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=4032",
+              "year": 1997,
+              "manufacturer": "Williams",
+              "machine_group_id": 18,
+              "ipdb_id": 4032,
+              "opdb_id": "G5pe4-MePZv",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/medieval-madness-1997"
+            }
+          },
+          {
+            "id": 136624,
+            "created_at": "2023-08-14T17:25:18.235-07:00",
+            "updated_at": "2023-08-14T17:25:18.235-07:00",
+            "location_id": 8052,
+            "machine_id": 643,
+            "ic_enabled": null,
+            "machine": {
+              "id": 643,
+              "name": "Attack From Mars",
+              "updated_at": "2023-09-14T11:44:10.763-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=3781",
+              "year": 1995,
+              "manufacturer": "Bally",
+              "machine_group_id": 62,
+              "ipdb_id": 3781,
+              "opdb_id": "G4do5-MDlN7",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/attack-from-mars-1995"
+            }
+          },
+          {
+            "id": 126504,
+            "created_at": "2023-03-18T14:31:22.672-07:00",
+            "updated_at": "2023-05-15T19:25:26.715-07:00",
+            "location_id": 8052,
+            "machine_id": 3167,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3167,
+              "name": "Jurassic Park (Pro)",
+              "updated_at": "2023-04-18T20:05:39.850-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6573",
+              "year": 2019,
+              "manufacturer": "Stern",
+              "machine_group_id": 78,
+              "ipdb_id": 6573,
+              "opdb_id": "GK17D-MdEqz",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/jurassic-park-2019"
+            }
+          },
+          {
+            "id": 90600,
+            "created_at": "2021-03-02T05:08:30.900-08:00",
+            "updated_at": "2024-07-20T14:41:17.634-07:00",
+            "location_id": 8052,
+            "machine_id": 3022,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3022,
+              "name": "Deadpool (Pro)",
+              "updated_at": "2023-04-18T20:05:02.662-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6558",
+              "year": 2018,
+              "manufacturer": "Stern",
+              "machine_group_id": 70,
+              "ipdb_id": 6558,
+              "opdb_id": "G6lnq-Mq1kv",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/deadpool-2018"
+            }
+          }
+        ]
+      },
+      {
+        "id": 20380,
+        "name": "Supernova Seattle",
+        "street": "110 S Horton St",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": "98134",
+        "phone": "(206) 474-4341",
+        "lat": "47.5745961",
+        "lon": "-122.3335617",
+        "website": "http://supernovaseattle.com/",
+        "created_at": "2023-06-16T08:40:32.992-07:00",
+        "updated_at": "2023-06-16T08:40:33.053-07:00",
+        "zone_id": null,
+        "region_id": 3,
+        "location_type_id": 4,
+        "description": null,
+        "operator_id": null,
+        "date_last_updated": "2023-06-16",
+        "last_updated_by_user_id": null,
+        "is_stern_army": null,
+        "country": "US",
+        "ic_active": null,
+        "machine_count": 1,
+        "last_updated_by_username": "",
+        "num_machines": 1,
+        "location_machine_xrefs": [
+          {
+            "id": 132773,
+            "created_at": "2023-06-16T08:40:33.048-07:00",
+            "updated_at": "2023-06-16T08:40:33.048-07:00",
+            "location_id": 20380,
+            "machine_id": 2165,
+            "ic_enabled": null,
+            "machine": {
+              "id": 2165,
+              "name": "Star Trek (Pro)",
+              "updated_at": "2023-01-17T10:44:30.504-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6044",
+              "year": 2013,
+              "manufacturer": "Stern",
+              "machine_group_id": 4,
+              "ipdb_id": 6044,
+              "opdb_id": "Gryw4-MwNky",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/star-trek-2013"
+            }
+          }
+        ]
+      },
+      {
+        "id": 20688,
+        "name": "West Seattle Arcade",
+        "street": "2758 Alki Ave SW",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": "98116",
+        "phone": "206-695-2532",
+        "lat": "47.5786934",
+        "lon": "-122.4114746",
+        "website": "https://westseattlearcade.com/",
+        "created_at": "2023-07-18T10:29:01.537-07:00",
+        "updated_at": "2024-12-14T23:09:04.301-08:00",
+        "zone_id": null,
+        "region_id": 3,
+        "location_type_id": 1,
+        "description": "State of the art arcade with pinball. Machines do not accept coins. Instead, you need to purchase a play card. The play card will also work at Gary\u2019s Place.",
+        "operator_id": 620,
+        "date_last_updated": "2024-12-14",
+        "last_updated_by_user_id": 32730,
+        "is_stern_army": null,
+        "country": "US",
+        "ic_active": true,
+        "machine_count": 7,
+        "last_updated_by_username": "zerometers",
+        "num_machines": 7,
+        "location_machine_xrefs": [
+          {
+            "id": 135960,
+            "created_at": "2023-08-04T10:17:27.654-07:00",
+            "updated_at": "2023-08-04T10:35:57.982-07:00",
+            "location_id": 20688,
+            "machine_id": 3640,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3640,
+              "name": "James Bond 007 (Pro)",
+              "updated_at": "2023-09-14T11:44:15.999-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6896",
+              "year": 2022,
+              "manufacturer": "Stern",
+              "machine_group_id": 95,
+              "ipdb_id": 6896,
+              "opdb_id": "GQKyP-Mx0O4",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/james-bond-007-2022"
+            }
+          },
+          {
+            "id": 140268,
+            "created_at": "2023-10-10T10:15:29.566-07:00",
+            "updated_at": "2023-10-10T10:15:29.566-07:00",
+            "location_id": 20688,
+            "machine_id": 697,
+            "ic_enabled": null,
+            "machine": {
+              "id": 697,
+              "name": "Twilight Zone",
+              "updated_at": "2023-01-17T10:44:30.406-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2684",
+              "year": 1993,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 2684,
+              "opdb_id": "GrXzD-MjBPX",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/twilight-zone-1993"
+            }
+          },
+          {
+            "id": 169736,
+            "created_at": "2024-11-29T16:45:04.254-08:00",
+            "updated_at": "2024-11-29T16:45:04.417-08:00",
+            "location_id": 20688,
+            "machine_id": 3167,
+            "ic_enabled": true,
+            "machine": {
+              "id": 3167,
+              "name": "Jurassic Park (Pro)",
+              "updated_at": "2023-04-18T20:05:39.850-07:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=6573",
+              "year": 2019,
+              "manufacturer": "Stern",
+              "machine_group_id": 78,
+              "ipdb_id": 6573,
+              "opdb_id": "GK17D-MdEqz",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/jurassic-park-2019"
+            }
+          },
+          {
+            "id": 169738,
+            "created_at": "2024-11-29T16:46:44.514-08:00",
+            "updated_at": "2024-11-29T16:46:44.514-08:00",
+            "location_id": 20688,
+            "machine_id": 3687,
+            "ic_enabled": null,
+            "machine": {
+              "id": 3687,
+              "name": "Galactic Tank Force (LE)",
+              "updated_at": "2023-09-14T11:44:16.771-07:00",
+              "ipdb_link": null,
+              "year": 2023,
+              "manufacturer": "American",
+              "machine_group_id": 103,
+              "ipdb_id": null,
+              "opdb_id": "Gj6PZ-Mb5z6-A9Lbd",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/galactic-tank-force-2023"
+            }
+          },
+          {
+            "id": 169737,
+            "created_at": "2024-11-29T16:45:14.086-08:00",
+            "updated_at": "2024-11-29T16:45:14.086-08:00",
+            "location_id": 20688,
+            "machine_id": 1077,
+            "ic_enabled": null,
+            "machine": {
+              "id": 1077,
+              "name": "Super Mario Bros.",
+              "updated_at": "2023-01-17T10:44:26.804-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2435",
+              "year": 1992,
+              "manufacturer": "Gottlieb",
+              "machine_group_id": null,
+              "ipdb_id": 2435,
+              "opdb_id": "GRBzQ-MLO1j",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/super-mario-bros-1992"
+            }
+          },
+          {
+            "id": 134798,
+            "created_at": "2023-07-18T10:29:01.607-07:00",
+            "updated_at": "2024-03-05T18:14:45.097-08:00",
+            "location_id": 20688,
+            "machine_id": 726,
+            "ic_enabled": null,
+            "machine": {
+              "id": 726,
+              "name": "Xenon",
+              "updated_at": "2023-01-17T10:44:28.752-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=2821",
+              "year": 1979,
+              "manufacturer": "Bally",
+              "machine_group_id": null,
+              "ipdb_id": 2821,
+              "opdb_id": "G42Pk-MZe2e",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/xenon-1980"
+            }
+          },
+          {
+            "id": 134799,
+            "created_at": "2023-07-18T10:29:01.639-07:00",
+            "updated_at": "2023-07-18T16:09:50.139-07:00",
+            "location_id": 20688,
+            "machine_id": 687,
+            "ic_enabled": null,
+            "machine": {
+              "id": 687,
+              "name": "The Addams Family",
+              "updated_at": "2023-01-17T10:44:22.813-08:00",
+              "ipdb_link": "https://www.ipdb.org/machine.cgi?id=20",
+              "year": 1992,
+              "manufacturer": "Bally",
+              "machine_group_id": 55,
+              "ipdb_id": 20,
+              "opdb_id": "G4ODR-MDXEy",
+              "kineticist_url": "https://www.kineticist.com/pinball-machines/the-addams-family-1992"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

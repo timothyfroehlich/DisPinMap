@@ -174,7 +174,9 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         channel_config = self.db.get_channel_config(ctx.channel.id)
 
         if not targets:
-            await self.notifier.log_and_send(ctx, Messages.Command.List.NO_TARGETS)
+            await self.notifier.log_and_send(
+                ctx, Messages.Command.TargetList.NO_TARGETS
+            )
             return
 
         headers = ["Index", "Target", "Poll (min)", "Notifications", "Last Checked"]
@@ -389,6 +391,19 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
     ):
         """Handle adding a coordinate-based monitoring target."""
         try:
+            # Validate coordinates
+            if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+                await self.notifier.log_and_send(
+                    ctx, Messages.Command.Add.INVALID_COORDS
+                )
+                return
+
+            # Validate radius if provided
+            if radius is not None and (radius < 1 or radius > 100):
+                await self.notifier.log_and_send(
+                    ctx, Messages.Command.Add.INVALID_RADIUS
+                )
+                return
             target_name = f"{lat},{lon}"
             if radius:
                 target_name += f",{radius}"
@@ -461,6 +476,15 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
 
             self.db.update_channel_last_poll_time(
                 ctx.channel.id, datetime.now(timezone.utc)
+            )
+
+            # Send success message
+            radius_info = f" with a {radius} mile radius" if radius else ""
+            await self.notifier.log_and_send(
+                ctx,
+                Messages.Command.Add.SUCCESS.format(
+                    target_type="city", name=f"{display_name}{radius_info}"
+                ),
             )
 
         elif status == "multiple":
