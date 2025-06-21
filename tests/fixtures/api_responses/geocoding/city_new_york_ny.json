@@ -1,0 +1,13 @@
+{
+  "captured_at": "2025-06-20T15:40:01.660866",
+  "name": "city_new_york_ny",
+  "metadata": {
+    "city_input": "New York, NY"
+  },
+  "data": {
+    "status": "success",
+    "lat": 40.71427,
+    "lon": -74.00597,
+    "display_name": "New York, New York, US"
+  }
+}

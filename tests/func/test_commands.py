@@ -273,7 +273,7 @@ class TestListCommand:
         ctx = MockContext(12345, 67890)
         ctx.message.content = "!list"
         await monitoring_cog.list_targets.callback(monitoring_cog, ctx)
-        await assert_discord_message(ctx, Messages.Command.List.NO_TARGETS)
+        await assert_discord_message(ctx, Messages.Command.TargetList.NO_TARGETS)
 
 
 class TestExportCommand:

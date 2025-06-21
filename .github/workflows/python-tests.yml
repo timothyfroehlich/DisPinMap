@@ -28,5 +28,13 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install pytest # Ensure pytest is available in the CI environment
 
-    - name: Run pytest
-      run: pytest
+    - name: Run core tests
+      run: pytest tests/ --ignore=tests/simulation -v
+
+    - name: Run simulation tests
+      run: pytest tests/simulation/ -v
+      env:
+        # Optional: Enable LLM assertions if API key is available
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        # Skip LLM tests gracefully if no API key
+        SKIP_LLM_TESTS: ${{ secrets.GOOGLE_API_KEY == '' }}
