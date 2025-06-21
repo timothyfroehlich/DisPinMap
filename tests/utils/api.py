@@ -5,8 +5,8 @@ This module provides utilities for mocking API responses, simulating rate limiti
 and generating test data for API endpoints.
 """
 
-from typing import Any, Dict, Optional
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any, Dict
+from unittest.mock import AsyncMock
 
 
 class MockResponse:

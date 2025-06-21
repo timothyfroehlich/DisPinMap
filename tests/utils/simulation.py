@@ -5,19 +5,16 @@ This module provides the primary simulation testing framework that coordinates
 Discord bot simulation, API mocking, time control, and response validation.
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from src.cogs.monitor import MachineMonitor
 from src.cogs.monitoring import MonitoringCog
-from src.database import Database
 from src.notifier import Notifier
 
-from .api_mock import APISimulator, create_fast_mock, create_realistic_mock
+from .api_mock import create_fast_mock, create_realistic_mock
 from .database import setup_test_database
-from .discord_mock import DiscordSimulator, MessageAnalyzer, MockChannel, MockUser
+from .discord_mock import DiscordSimulator, MessageAnalyzer, MockUser
 from .time_mock import DatabaseTimeHelper, MonitoringSimulator, TimeController
 
 logger = logging.getLogger(__name__)
@@ -378,9 +375,11 @@ class SimulationTestFramework:
         summary = {
             "framework_info": {
                 "use_realistic_timing": self.use_realistic_timing,
-                "current_time": self.time_controller.current_time.isoformat()
-                if self.time_controller
-                else None,
+                "current_time": (
+                    self.time_controller.current_time.isoformat()
+                    if self.time_controller
+                    else None
+                ),
             },
             "test_environment": {
                 "channel_id": self.test_channel.id if self.test_channel else None,
@@ -390,9 +389,9 @@ class SimulationTestFramework:
             "results": self.simulation_results,
             "database_state": self.get_database_state() if self.database else None,
             "api_logs": self.api_sim.get_request_logs() if self.api_sim else None,
-            "discord_logs": self.discord_sim.get_execution_log()
-            if self.discord_sim
-            else None,
+            "discord_logs": (
+                self.discord_sim.get_execution_log() if self.discord_sim else None
+            ),
         }
 
         return summary

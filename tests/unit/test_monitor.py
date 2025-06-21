@@ -3,14 +3,12 @@ Unit tests for the monitor background tasks
 Tests polling behavior, notification sending, and rate limiting
 """
 
-import asyncio
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from src.cogs.monitor import MachineMonitor  # Changed from src.monitor
-from src.database import Database
 from tests.utils.database import cleanup_test_database, setup_test_database
 from tests.utils.generators import generate_submission_data
 
