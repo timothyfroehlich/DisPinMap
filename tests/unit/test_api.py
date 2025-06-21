@@ -2,7 +2,7 @@
 Unit tests for API module including rate limiting, error handling, and input validation
 """
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
@@ -20,6 +20,7 @@ from tests.utils.api import (
     create_success_response,
 )
 from tests.utils.assertions import assert_error_response
+from tests.utils.generators import generate_submission_data
 
 
 class TestRateLimiting:

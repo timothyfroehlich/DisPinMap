@@ -8,7 +8,7 @@ import pytest
 
 from src.api import geocode_city_name, parse_city_input
 from tests.utils.api import create_async_error_response, create_async_success_response
-from tests.utils.assertions import assert_error_response
+from tests.utils.assertions import assert_api_response, assert_error_response
 
 
 class TestParseCityInput:
