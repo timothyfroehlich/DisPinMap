@@ -8,13 +8,11 @@ and periodic monitoring behavior.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List
+from typing import Dict
 
 import pytest
 
 from tests.utils.llm_assertions import (
-    assert_error_response,
     assert_information_response,
     assert_success_response,
 )

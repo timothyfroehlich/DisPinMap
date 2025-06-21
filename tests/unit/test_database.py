@@ -4,22 +4,16 @@ Supports both SQLite and PostgreSQL databases
 """
 
 import os
-from unittest.mock import MagicMock, patch
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm import sessionmaker
 
-from src.database import Base, ChannelConfig, Database, MonitoringTarget, SeenSubmission
+from src.database import ChannelConfig, MonitoringTarget, SeenSubmission
 from tests.utils.database import (
     cleanup_test_database,
     setup_test_database,
-    test_db,
     verify_channel_config,
     verify_database_target,
 )
-from tests.utils.generators import generate_location_data, generate_submission_data
 
 
 @pytest.fixture(params=["sqlite", "postgres"])
