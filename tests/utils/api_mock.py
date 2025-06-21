@@ -10,10 +10,10 @@ import json
 import logging
 import random
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Any, Dict, List, Optional
+from unittest.mock import patch
 
 logger = logging.getLogger(__name__)
 

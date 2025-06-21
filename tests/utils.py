@@ -2,13 +2,12 @@
 Shared test utilities for the DisPinMap test suite.
 """
 
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any, Dict, List
+from unittest.mock import MagicMock
 
 import pytest
 
 from src.database import Database
-from src.messages import Messages
 
 
 class MockContext:
@@ -104,16 +103,3 @@ async def assert_discord_message(ctx, expected_message):
     assert any(
         expected_message in msg for msg in ctx.sent_messages
     ), f"Expected message '{expected_message}' not found in sent messages: {ctx.sent_messages}"
-
-
-def verify_database_target(db, channel_id, expected_count, target_type=None):
-    """Verify the number of targets in the database"""
-    targets = db.get_monitoring_targets(channel_id)
-    assert (
-        len(targets) == expected_count
-    ), f"Expected {expected_count} targets, got {len(targets)}"
-
-    if target_type:
-        assert all(
-            t["target_type"] == target_type for t in targets
-        ), f"Expected all targets to be of type {target_type}"

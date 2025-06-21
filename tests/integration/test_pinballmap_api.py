@@ -2,8 +2,6 @@
 Integration tests for Pinball Map API that make real API calls
 """
 
-import asyncio
-
 import pytest
 
 from src.api import (

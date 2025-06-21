@@ -80,7 +80,7 @@ async def demo_periodic_monitoring():
 
         # Record start time and messages
         start_time = framework.time_controller.current_time
-        initial_messages = len(framework.test_channel.get_sent_messages())
+        _ = len(framework.test_channel.get_sent_messages())  # Record initial state
 
         # Run monitoring simulation
         monitoring_results = await framework.simulate_periodic_monitoring(
@@ -280,15 +280,15 @@ async def demo_complete_framework():
     framework_info = summary["framework_info"]
     api_logs = summary["api_logs"]
 
-    print(f"\n🔧 Framework Configuration:")
+    print("\n🔧 Framework Configuration:")
     print(f"   Realistic timing: {framework_info['use_realistic_timing']}")
     print(f"   Simulation end time: {framework_info['current_time']}")
 
-    print(f"\n🌐 API Activity:")
+    print("\n🌐 API Activity:")
     print(f"   PinballMap calls: {len(api_logs['pinballmap'])}")
     print(f"   Geocoding calls: {len(api_logs['geocoding'])}")
 
-    print(f"\n💾 Database State:")
+    print("\n💾 Database State:")
     db_state = summary["database_state"]
     print(f"   Active channels: {len(db_state['channels'])}")
     print(f"   Monitoring targets: {len(db_state['targets'])}")

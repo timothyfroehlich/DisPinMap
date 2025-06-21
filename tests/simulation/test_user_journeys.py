@@ -8,13 +8,11 @@ and periodic monitoring behavior.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List
+from typing import Dict
 
 import pytest
 
 from tests.utils.llm_assertions import (
-    assert_error_response,
     assert_information_response,
     assert_success_response,
 )
@@ -259,7 +257,7 @@ class TestCompleteUserJourney:
 
             # List all targets
             list_messages = await framework.simulate_list_targets()
-            list_text = " ".join(list_messages)
+            _ = " ".join(list_messages)  # Prepare for analysis
 
             # Should show multiple targets
             assert len(framework.get_database_state()["targets"]) >= 2
@@ -375,7 +373,7 @@ class TestPeriodicMonitoringBehavior:
 
             # With real API data that hasn't changed, should have minimal new messages
             # (This assumes our captured data represents a stable state)
-            notification_messages = [
+            _ = [  # Filter notification messages
                 msg
                 for msg in monitoring_results["new_messages"]
                 if "🎮" in msg or "🗑️" in msg or "🔧" in msg

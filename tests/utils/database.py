@@ -6,11 +6,11 @@ and verifying database state. It supports both SQLite and PostgreSQL databases.
 """
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
 from src.database import Database
@@ -81,7 +81,7 @@ def cleanup_test_database(db: Database):
             session.query(SeenSubmission).delete()
             session.query(ChannelConfig).delete()
             session.commit()
-    except Exception as e:
+    except Exception:
         # Ignore errors if tables don't exist
         pass
 
