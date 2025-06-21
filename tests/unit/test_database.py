@@ -34,7 +34,7 @@ class TestDatabaseEdgeCases:
     def test_duplicate_target_addition(self, db):
         """Test that adding duplicate targets raises IntegrityError"""
         channel_id = 12345
-        guild_id = 67890
+        _ = 67890  # guild_id for context
 
         # Add first target
         db.add_monitoring_target(channel_id, "latlong", "30.0,97.0,10")
@@ -295,7 +295,7 @@ class TestPostgreSQLSpecific:
             db.update_channel_config(channel_id, guild_id, is_active=True)
 
             # Start another session and verify it doesn't see the uncommitted change
-            with db.get_session() as session2:
+            with db.get_session() as _:
                 config = db.get_channel_config(channel_id)
                 assert config is None  # Should not see uncommitted change
 

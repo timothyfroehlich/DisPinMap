@@ -21,18 +21,32 @@ except ImportError:
 
 class Database:
     def __init__(self, db_path: str = "pinball_bot.db"):
-        """Initialize database with SQLAlchemy - supports both SQLite and PostgreSQL"""
+        """
+        Initialize database with SQLAlchemy - supports both SQLite and PostgreSQL
+
+        DUAL-MODE ARCHITECTURE:
+        - SQLite: Default mode for cost optimization (local files + cloud storage backup)
+        - PostgreSQL: Preserved for GCP production deployments (currently disabled for cost savings)
+
+        Switch modes by setting DB_TYPE environment variable:
+        - DB_TYPE=sqlite (default, cost-optimized)
+        - DB_TYPE=postgres (GCP Cloud SQL, higher cost but enterprise features)
+        """
         db_type = os.getenv("DB_TYPE", "sqlite").lower()
 
         if db_type == "postgres":
+            # POSTGRESQL MODE - MAINTAINED FOR GCP PRODUCTION USE
+            # Currently disabled by default for cost optimization
+            # Re-enable by setting DB_TYPE=postgres and deploying Terraform PostgreSQL resources
             self.engine = self._create_postgres_engine()
         else:
-            # SQLite (default for local development and testing)
+            # SQLITE MODE - ACTIVE FOR COST OPTIMIZATION
+            # Default for local development, testing, and cost-conscious cloud deployments
             if db_path == ":memory:":
                 # For in-memory databases (testing)
                 self.engine = create_engine("sqlite:///:memory:", echo=False)
             else:
-                # For file databases
+                # For file databases (production SQLite mode)
                 self.engine = create_engine(f"sqlite:///{db_path}", echo=False)
 
         # Create session factory
@@ -44,7 +58,24 @@ class Database:
         self.init_database()
 
     def _create_postgres_engine(self):
-        """Create PostgreSQL engine using Google Cloud SQL Connector"""
+        """
+        Create PostgreSQL engine using Google Cloud SQL Connector
+
+        POSTGRESQL INFRASTRUCTURE - PRESERVED FOR FUTURE GCP DEPLOYMENTS
+
+        This method maintains full PostgreSQL connectivity for GCP Cloud SQL.
+        Currently not active by default due to cost optimization (SQLite mode active).
+
+        To re-enable PostgreSQL mode:
+        1. Set DB_TYPE=postgres environment variable
+        2. Deploy Terraform PostgreSQL resources (terraform/main.tf)
+        3. Ensure all required environment variables are set:
+           - DB_INSTANCE_CONNECTION_NAME
+           - DB_USER, DB_NAME
+           - DB_PASSWORD_SECRET_NAME
+
+        Dependencies: google-cloud-sql-connector[pg8000], google-cloud-secret-manager
+        """
         try:
             from google.cloud.sql.connector import Connector
         except ImportError:
