@@ -2,7 +2,6 @@
 Integration tests for Pinball Map API that make real API calls
 """
 
-
 import pytest
 
 from src.api import (
