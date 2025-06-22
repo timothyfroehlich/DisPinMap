@@ -146,8 +146,8 @@ scaling {
 
 resources {
   limits = {
-    memory = "512Mi"  # Optimized for Discord bot workload
-    cpu    = "1000m"  # Sufficient for message processing
+    memory = "256Mi"  # Reduced for cost optimization
+    cpu    = "500m"   # Sufficient for Discord bot processing
   }
 }
 ```
