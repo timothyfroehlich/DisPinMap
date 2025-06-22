@@ -86,3 +86,70 @@ IMPORTANT NOTE FOR AGENTS: At the end of the first response returned to a user a
 4. **Then run tests**: Only after code is clean and formatted
 
 This prevents test failures from masking real functionality issues and ensures consistent code quality.
+
+## Claude Code Commit Attribution
+
+When Claude Code makes commits, use proper attribution to distinguish AI-generated changes:
+
+```bash
+git commit --author="Claude Code <claude-code@anthropic.com>" -m "commit message"
+```
+
+**Standard commit format:**
+- Use descriptive commit messages explaining the changes and reasoning
+- Always include the Claude Code signature block:
+  ```
+  🤖 Generated with [Claude Code](https://claude.ai/code)
+
+  Co-Authored-By: Claude <claude-code@anthropic.com>
+  ```
+- Keep user's git configuration unchanged - never modify `git config` settings
+- Use `--author` flag instead of changing global git configuration
+
+This ensures clear attribution while preserving the user's personal git settings.
+
+## GCP Cost Optimization & Database Architecture
+
+### Dual-Mode Database Design
+
+The bot supports both SQLite and PostgreSQL modes for flexible deployment:
+
+**SQLite Mode (Cost-Optimized, Default):**
+- Local SQLite files with Cloud Storage backup capability
+- Eliminates Cloud SQL costs (~$7-15/month savings)
+- Suitable for Discord bot workloads with moderate data needs
+- Activated by: `DB_TYPE=sqlite` (default)
+
+**PostgreSQL Mode (Enterprise, Preserved):**
+- Google Cloud SQL with full enterprise features
+- Higher cost but better for high-concurrency/large datasets
+- All infrastructure code preserved but commented out in Terraform
+- Activated by: `DB_TYPE=postgres` + uncomment Terraform resources
+
+### Scale-to-Zero Analysis Results
+
+**Discord Bot Scale-to-Zero Incompatibility (Investigation Completed):**
+
+After thorough analysis (documented in Issue #23), scale-to-zero was determined to be **incompatible** with Discord bot architecture:
+
+- ❌ **WebSocket Connection Loss**: Discord bots require persistent connections; scale-to-zero breaks this
+- ❌ **Message Loss**: Commands sent while scaled-down are permanently lost (Discord doesn't queue)
+- ❌ **User Experience**: Bot appears offline during scaled periods
+- ❌ **No Auto-Wake**: Discord messages cannot trigger Cloud Run startup
+
+**Current Optimized Configuration:**
+```terraform
+scaling {
+  min_instance_count = 1  # Required for Discord WebSocket persistence
+  max_instance_count = 3  # Allow scaling for load
+}
+
+resources {
+  limits = {
+    memory = "256Mi"  # Reduced for cost optimization
+    cpu    = "500m"   # Sufficient for Discord bot processing
+  }
+}
+```
+
+**Actual Cost Reduction:** ~50-60% savings (primarily from PostgreSQL → SQLite migration)

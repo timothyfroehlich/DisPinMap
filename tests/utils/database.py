@@ -81,7 +81,7 @@ def cleanup_test_database(db: Database):
             session.query(SeenSubmission).delete()
             session.query(ChannelConfig).delete()
             session.commit()
-    except Exception as e:
+    except Exception:
         # Ignore errors if tables don't exist
         pass
 

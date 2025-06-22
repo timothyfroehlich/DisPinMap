@@ -253,7 +253,7 @@ class SimulationTestFramework:
         # Record initial channel message count
         initial_count = len(self.test_channel.get_sent_messages())
 
-        ctx = await self.discord_sim.simulate_user_interaction(
+        _ = await self.discord_sim.simulate_user_interaction(
             "check", [], self.test_channel, self.test_user
         )
 
