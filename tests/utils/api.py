@@ -33,9 +33,6 @@ class MockAsyncResponse:
     async def json(self):
         return self._json_data
 
-    def json(self):
-        return self._json_data
-
 
 def create_rate_limit_response() -> MockResponse:
     """Create a mock rate limit response."""

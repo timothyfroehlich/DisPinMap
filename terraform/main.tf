@@ -32,13 +32,29 @@ resource "google_artifact_registry_repository" "docker_repo" {
   depends_on = [google_project_service.required_apis]
 }
 
-# Random password for database user
+# Random password for database user - PRESERVED BUT DISABLED
+/*
 resource "random_password" "db_password" {
   length  = 32
   special = true
 }
+*/
 
-# Cloud SQL PostgreSQL instance (public IP only)
+# ============================================================================
+# POSTGRESQL INFRASTRUCTURE - PRESERVED FOR FUTURE GCP DEPLOYMENTS
+# Currently commented out for cost optimization (using SQLite mode)
+#
+# COST SAVINGS: Commenting out PostgreSQL saves ~$7-15/month
+#
+# TO RE-ENABLE POSTGRESQL:
+# 1. Uncomment all PostgreSQL resources below
+# 2. Set DB_TYPE=postgres in Cloud Run environment
+# 3. Apply terraform changes: terraform apply
+# 4. Update database connection strings in application
+# ============================================================================
+
+# Cloud SQL PostgreSQL instance (public IP only) - PRESERVED BUT DISABLED
+/*
 resource "google_sql_database_instance" "postgres_instance" {
   name             = "${var.service_name}-db-instance"
   database_version = "POSTGRES_15"
@@ -69,18 +85,19 @@ resource "google_sql_database_instance" "postgres_instance" {
   ]
 }
 
-# Database
+# Database - PRESERVED BUT DISABLED
 resource "google_sql_database" "database" {
   name     = var.service_name
   instance = google_sql_database_instance.postgres_instance.name
 }
 
-# Database user
+# Database user - PRESERVED BUT DISABLED
 resource "google_sql_user" "db_user" {
   name     = "${var.service_name}-user"
   instance = google_sql_database_instance.postgres_instance.name
   password = random_password.db_password.result
 }
+*/
 
 # Secret Manager secret for Discord token (empty - must be populated manually)
 resource "google_secret_manager_secret" "discord_token" {
@@ -97,6 +114,8 @@ resource "google_secret_manager_secret" "discord_token" {
   depends_on = [google_project_service.required_apis]
 }
 
+# PostgreSQL Database Secrets - PRESERVED BUT DISABLED
+/*
 # Secret Manager secret for database password
 resource "google_secret_manager_secret" "db_password" {
   secret_id = "${var.service_name}-db-password"
@@ -117,6 +136,7 @@ resource "google_secret_manager_secret_version" "db_password_version" {
   secret      = google_secret_manager_secret.db_password.id
   secret_data = random_password.db_password.result
 }
+*/
 
 # Service Account for Cloud Run
 resource "google_service_account" "cloud_run_sa" {
@@ -145,8 +165,10 @@ resource "google_cloud_run_v2_service" "bot_service" {
 
   template {
     scaling {
+      # COST OPTIMIZATION: Minimal scaling for Discord bot
+      # Discord bots require persistent WebSocket connections, so min_instance_count = 1
       min_instance_count = 1
-      max_instance_count = 1
+      max_instance_count = 3
     }
 
     service_account = google_service_account.cloud_run_sa.email
@@ -158,11 +180,15 @@ resource "google_cloud_run_v2_service" "bot_service" {
         container_port = 8080
       }
 
+      # SQLITE MODE - ACTIVE FOR COST OPTIMIZATION
       env {
         name  = "DB_TYPE"
-        value = "postgres"
+        value = "sqlite"
       }
 
+      # POSTGRESQL ENVIRONMENT VARIABLES - PRESERVED BUT DISABLED
+      # Uncomment when re-enabling PostgreSQL mode
+      /*
       env {
         name  = "DB_INSTANCE_CONNECTION_NAME"
         value = google_sql_database_instance.postgres_instance.connection_name
@@ -182,6 +208,7 @@ resource "google_cloud_run_v2_service" "bot_service" {
         name  = "DB_NAME"
         value = google_sql_database.database.name
       }
+      */
 
       env {
         name  = "DISCORD_TOKEN_SECRET_NAME"
@@ -195,16 +222,17 @@ resource "google_cloud_run_v2_service" "bot_service" {
 
       resources {
         limits = {
-          memory = "512Mi"
-          cpu    = "1000m"
+          # COST OPTIMIZATION: Reduced resource limits for Discord bot workload
+          memory = "256Mi"
+          cpu    = "500m"
         }
       }
     }
   }
 
   depends_on = [
-    google_project_service.required_apis,
-    google_sql_database_instance.postgres_instance
+    google_project_service.required_apis
+    # google_sql_database_instance.postgres_instance  # Commented out with PostgreSQL resources
   ]
 }
 

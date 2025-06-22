@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from src.api import geocode_city_name, parse_city_input
-from tests.utils.api import create_async_error_response, create_async_success_response
+from tests.utils.api import create_error_response, create_success_response
 from tests.utils.assertions import assert_api_response, assert_error_response
 
 
@@ -79,8 +79,8 @@ class TestGeocodeCityName:
         """Test geocoding with rate limit response"""
         with patch("src.api.rate_limited_request") as mock_request:
             mock_request.side_effect = [
-                create_async_error_response({"results": []}),
-                create_async_success_response(
+                create_error_response(429, "Rate limit exceeded"),
+                create_success_response(
                     {
                         "results": [
                             {
@@ -103,23 +103,21 @@ class TestGeocodeCityName:
     async def test_geocoding_malformed_response(self):
         """Test geocoding with malformed API response"""
         with patch("src.api.rate_limited_request") as mock_request:
-            mock_request.return_value = create_async_success_response(
-                {"invalid": "response"}
-            )
+            mock_request.return_value = create_success_response({"invalid": "response"})
             result = await geocode_city_name("Austin, TX")
             assert_error_response(result, "No results found")
 
     async def test_geocoding_empty_results(self):
         """Test geocoding with empty results"""
         with patch("src.api.rate_limited_request") as mock_request:
-            mock_request.return_value = create_async_success_response({"results": []})
+            mock_request.return_value = create_success_response({"results": []})
             result = await geocode_city_name("Nowhere, ZZ")
             assert_error_response(result, "No results found")
 
     async def test_geocoding_multiple_results(self):
         """Test geocoding with multiple results"""
         with patch("src.api.rate_limited_request") as mock_request:
-            mock_request.return_value = create_async_success_response(
+            mock_request.return_value = create_success_response(
                 {
                     "results": [
                         {

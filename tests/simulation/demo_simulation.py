@@ -80,7 +80,7 @@ async def demo_periodic_monitoring():
 
         # Record start time and messages
         start_time = framework.time_controller.current_time
-        initial_messages = len(framework.test_channel.get_sent_messages())
+        _ = len(framework.test_channel.get_sent_messages())  # Record initial state
 
         # Run monitoring simulation
         monitoring_results = await framework.simulate_periodic_monitoring(
