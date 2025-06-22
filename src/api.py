@@ -169,7 +169,10 @@ def get_yesterday_date() -> str:
 
 
 async def fetch_submissions_for_coordinates(
-    lat: float, lon: float, radius_miles: int = None, use_min_date: bool = True
+    lat: float,
+    lon: float,
+    radius_miles: Optional[int] = None,
+    use_min_date: bool = True,
 ) -> List[Dict[str, Any]]:
     """Fetch user submissions within radius of given coordinates"""
     try:

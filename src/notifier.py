@@ -4,7 +4,7 @@ Notifier class for sending Discord messages
 
 import asyncio
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .database import Database
 from .messages import Messages
@@ -69,7 +69,10 @@ class Notifier:
             )
 
     async def post_submissions(
-        self, ctx, submissions: List[Dict[str, Any]], config: Dict[str, Any] = None
+        self,
+        ctx,
+        submissions: List[Dict[str, Any]],
+        config: Optional[Dict[str, Any]] = None,
     ):
         """Post submissions to the channel"""
         # Filter submissions based on notification type

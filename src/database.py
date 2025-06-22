@@ -351,9 +351,9 @@ class Database:
         channel_id: int,
         target_type: str,
         target_name: str,
-        target_data: str = None,
-        poll_rate_minutes: int = None,
-        notification_types: str = None,
+        target_data: Optional[str] = None,
+        poll_rate_minutes: Optional[int] = None,
+        notification_types: Optional[str] = None,
     ) -> None:
         """Add a monitoring target for a channel"""
         with self.get_session() as session:
