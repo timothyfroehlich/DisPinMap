@@ -11,7 +11,7 @@ from src.cogs.config import ConfigCog
 from src.cogs.monitoring import MonitoringCog
 from src.notifier import Notifier
 from tests.utils import MockContext, verify_database_target
-from tests.utils.database import cleanup_test_database, setup_test_database
+from tests.utils.db_utils import cleanup_test_database, setup_test_database
 
 
 @pytest.fixture

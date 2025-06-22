@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.cogs.monitor import MachineMonitor  # Changed from src.monitor
-from tests.utils.database import cleanup_test_database, setup_test_database
+from tests.utils.db_utils import cleanup_test_database, setup_test_database
 from tests.utils.generators import generate_submission_data
 
 
