@@ -165,10 +165,10 @@ resource "google_cloud_run_v2_service" "bot_service" {
 
   template {
     scaling {
-      # COST OPTIMIZATION: Scale to zero when idle
-      # Discord bot will auto-start on incoming webhook requests (1-3 second cold start)
-      min_instance_count = 0
-      max_instance_count = 1
+      # COST OPTIMIZATION: Minimal scaling for Discord bot
+      # Discord bots require persistent WebSocket connections, so min_instance_count = 1
+      min_instance_count = 1
+      max_instance_count = 3
     }
 
     service_account = google_service_account.cloud_run_sa.email
@@ -222,17 +222,17 @@ resource "google_cloud_run_v2_service" "bot_service" {
 
       resources {
         limits = {
-          # COST OPTIMIZATION: Reduced from 512Mi/1000m for Discord bot workload
-          memory = "256Mi"
-          cpu    = "500m"
+          # COST OPTIMIZATION: Optimized for Discord bot workload
+          memory = "512Mi"
+          cpu    = "1000m"
         }
       }
     }
   }
 
   depends_on = [
-    google_project_service.required_apis,
-    google_sql_database_instance.postgres_instance
+    google_project_service.required_apis
+    # google_sql_database_instance.postgres_instance  # Commented out with PostgreSQL resources
   ]
 }
 

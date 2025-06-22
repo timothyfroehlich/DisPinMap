@@ -126,28 +126,30 @@ The bot supports both SQLite and PostgreSQL modes for flexible deployment:
 - All infrastructure code preserved but commented out in Terraform
 - Activated by: `DB_TYPE=postgres` + uncomment Terraform resources
 
-### Scale-to-Zero Considerations
+### Scale-to-Zero Analysis Results
 
-**Discord Bot Scale-to-Zero Compatibility:**
-- ✅ **HTTP Health Checks**: Cloud Run can wake bot via `/health` endpoint
-- ✅ **Command Handling**: Stateless request-response works with cold starts
-- ✅ **Database Persistence**: SQLite files survive container restarts
-- ⚠️ **WebSocket Reconnection**: 1-3 second delay on first command after idle
-- ⚠️ **Background Tasks**: Periodic monitoring paused during scale-to-zero
+**Discord Bot Scale-to-Zero Incompatibility (Investigation Completed):**
 
-**Recommended Configuration:**
+After thorough analysis (documented in Issue #23), scale-to-zero was determined to be **incompatible** with Discord bot architecture:
+
+- ❌ **WebSocket Connection Loss**: Discord bots require persistent connections; scale-to-zero breaks this
+- ❌ **Message Loss**: Commands sent while scaled-down are permanently lost (Discord doesn't queue)
+- ❌ **User Experience**: Bot appears offline during scaled periods
+- ❌ **No Auto-Wake**: Discord messages cannot trigger Cloud Run startup
+
+**Current Optimized Configuration:**
 ```terraform
 scaling {
-  min_instance_count = 0  # Scale to zero when idle
-  max_instance_count = 1  # Single instance sufficient
+  min_instance_count = 1  # Required for Discord WebSocket persistence
+  max_instance_count = 3  # Allow scaling for load
 }
 
 resources {
   limits = {
-    memory = "256Mi"  # Reduced from 512Mi
-    cpu    = "500m"   # Reduced from 1000m
+    memory = "512Mi"  # Optimized for Discord bot workload
+    cpu    = "1000m"  # Sufficient for message processing
   }
 }
 ```
 
-**Expected Cost Reduction:** 70-85% savings (from ~$12-15/month to ~$1.50-4/month)
+**Actual Cost Reduction:** ~50-60% savings (primarily from PostgreSQL → SQLite migration)
