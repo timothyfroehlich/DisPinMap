@@ -24,8 +24,13 @@ class MockContext:
             (),
             {"content": "", "author": type("Author", (), {"name": "TestUser"})()},
         )()
-        self.send = AsyncMock()
         self.sent_messages: List[str] = []
+
+        # Create a custom send method that populates sent_messages
+        async def send(message):
+            self.sent_messages.append(message)
+
+        self.send = AsyncMock(side_effect=send)
 
         if self.bot and hasattr(self.bot, "notifier"):
             self.notifier = self.bot.notifier
