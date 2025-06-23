@@ -22,6 +22,7 @@ IMPORTANT NOTE FOR AGENTS: At the end of the first response returned to a user a
 4. **Wait for approval before merging**
 5. **Include test results and verification in PR description**
 6. **Use descriptive branch names that clearly indicate the purpose**
+7. **GitHub branch protection rules require passing status checks before merge**
 
 ## Current Status
 

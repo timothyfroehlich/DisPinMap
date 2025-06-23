@@ -12,7 +12,7 @@ the simulation framework.
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Callable
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -86,11 +86,11 @@ class PollingSimulator:
 
     def __init__(self, time_controller: TimeController):
         self.time_controller = time_controller
-        self.polling_tasks = []
+        self.polling_tasks: List[Dict[str, Any]] = []
         self.simulation_running = False
 
     def add_polling_task(
-        self, task_func: Callable, interval_minutes: int, name: str = None
+        self, task_func: Callable, interval_minutes: int, name: Optional[str] = None
     ):
         """Add a polling task to simulate."""
         self.polling_tasks.append(
@@ -179,7 +179,9 @@ class MonitoringSimulator:
         self.polling_simulator = PollingSimulator(time_controller)
 
     async def simulate_monitoring_cycle(
-        self, duration_minutes: int = 120, channels_to_monitor: list = None
+        self,
+        duration_minutes: int = 120,
+        channels_to_monitor: Optional[List[Any]] = None,
     ):
         """Simulate the monitoring loop for specified channels."""
 
@@ -260,7 +262,7 @@ class DatabaseTimeHelper:
 # Convenience functions
 
 
-def create_time_controller(start_time: datetime = None) -> TimeController:
+def create_time_controller(start_time: Optional[datetime] = None) -> TimeController:
     """Create a time controller with optional start time."""
     controller = TimeController()
     if start_time:
@@ -269,7 +271,7 @@ def create_time_controller(start_time: datetime = None) -> TimeController:
 
 
 def create_monitoring_simulation(
-    monitor_cog=None, start_time: datetime = None
+    monitor_cog: Optional[Any] = None, start_time: Optional[datetime] = None
 ) -> tuple[TimeController, MonitoringSimulator]:
     """Create a complete monitoring simulation setup."""
     time_controller = create_time_controller(start_time)

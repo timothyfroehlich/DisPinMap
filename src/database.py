@@ -14,9 +14,19 @@ from sqlalchemy.orm import Session, sessionmaker
 
 logger = logging.getLogger(__name__)
 try:
-    from .models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
+    from .models import (  # type: ignore
+        Base,
+        ChannelConfig,
+        MonitoringTarget,
+        SeenSubmission,
+    )
 except ImportError:
-    from models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
+    from models import (  # type: ignore
+        Base,
+        ChannelConfig,
+        MonitoringTarget,
+        SeenSubmission,
+    )
 
 
 class Database:
@@ -329,7 +339,7 @@ class Database:
         with self.get_session() as session:
             config = session.get(ChannelConfig, channel_id)
             if config:
-                config.last_poll_at = poll_time
+                config.last_poll_at = poll_time  # type: ignore[assignment]
                 session.commit()
 
     def update_target_last_checked_time(
@@ -372,9 +382,9 @@ class Database:
 
             # Use channel defaults if not specified
             if poll_rate_minutes is None:
-                poll_rate_minutes = config.poll_rate_minutes
+                poll_rate_minutes = config.poll_rate_minutes  # type: ignore[assignment]
             if notification_types is None:
-                notification_types = config.notification_types
+                notification_types = config.notification_types  # type: ignore[assignment]
 
             target = MonitoringTarget(
                 channel_id=channel_id,
@@ -468,7 +478,7 @@ class Database:
         with self.get_session() as session:
             target = session.get(MonitoringTarget, target_id)
             if target:
-                target.poll_rate_minutes = poll_rate_minutes
+                target.poll_rate_minutes = poll_rate_minutes  # type: ignore[assignment]
                 session.commit()
                 return True
             return False
@@ -484,7 +494,7 @@ class Database:
             targets = session.execute(stmt).scalars().all()
 
             for target in targets:
-                target.poll_rate_minutes = poll_rate_minutes
+                target.poll_rate_minutes = poll_rate_minutes  # type: ignore[assignment]
 
             session.commit()
             return len(targets)

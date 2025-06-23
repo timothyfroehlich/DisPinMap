@@ -290,3 +290,27 @@ class Messages:
             """Format parameters:
             - error: str - Error message
             """
+
+            RESPONSE_MISSING_FIELD = "Response missing '{field}' field"
+            """Format parameters:
+            - field: str - Name of the missing field
+            """
+
+            DATA_MISSING_FIELD = "{data_type} data missing '{field}' field"
+            """Format parameters:
+            - data_type: str - Type of data (e.g., "Location", "Submission")
+            - field: str - Name of the missing field
+            """
+
+            INVALID_TIMESTAMP = "Invalid timestamp format: {timestamp}"
+            """Format parameters:
+            - timestamp: str - The invalid timestamp string
+            """
+
+            INVALID_COORDINATE_TYPE = (
+                "Invalid {coord_type} type: expected number, got {type}"
+            )
+            """Format parameters:
+            - coord_type: str - Type of coordinate ("Latitude" or "Longitude")
+            - type: type - Actual type received
+            """
