@@ -14,7 +14,7 @@ from src.notifier import Notifier
 
 try:
     from .api_mock import create_fast_mock, create_realistic_mock
-    from .database import setup_test_database
+    from .db_utils import setup_test_database
     from .discord_mock import DiscordSimulator, MessageAnalyzer, MockUser
     from .time_mock import DatabaseTimeHelper, MonitoringSimulator, TimeController
 except ImportError:
