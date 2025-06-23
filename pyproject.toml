@@ -59,7 +59,11 @@ module = [
     "discord.*",
     "google.cloud.*",
     "cloud_sql_python_connector.*",
-    "pg8000.*"
+    "pg8000.*",
+    "tests.utils.*",
+    "setuptools.*",
+    "colorama.*",
+    "notifier"
 ]
 ignore_missing_imports = true
 
