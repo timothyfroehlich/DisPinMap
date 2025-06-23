@@ -22,7 +22,7 @@ IMPORTANT NOTE FOR AGENTS: At the end of the first response returned to a user a
 4. **Wait for approval before merging**
 5. **Include test results and verification in PR description**
 6. **Use descriptive branch names that clearly indicate the purpose**
-7. **Github has been configured to only allow changes to main via PR. Always create branches for any work.**
+7. **GitHub has been configured to only allow changes to main via PR. Always create branches for any work.**
 
 ## Current Status
 
