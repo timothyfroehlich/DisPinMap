@@ -44,6 +44,18 @@ class Messages:
             - suggestions: str - List of suggested locations
             """
 
+            LOCATION_SUGGESTIONS = "Location '{search_term}' not found directly. Did you mean one of these?\n{suggestions}\n\nPlease use `!add location <ID>` with the ID of the correct location."
+            """Format parameters:
+            - search_term: str - The search term that was used
+            - suggestions: str - List of suggested locations
+            """
+
+            CITY_SUGGESTIONS = "Multiple cities found for '{city_name}'. Please be more specific:\n{suggestions}"
+            """Format parameters:
+            - city_name: str - The city name that was searched
+            - suggestions: str - List of suggested city names
+            """
+
             INVALID_COORDS = "❌ Invalid coordinates. Latitude must be -90 to 90, longitude -180 to 180"
             """No format parameters."""
 
@@ -289,4 +301,28 @@ class Messages:
             UNEXPECTED = "❌ An unexpected error occurred while running the command"
             """Format parameters:
             - error: str - Error message
+            """
+
+            RESPONSE_MISSING_FIELD = "Response missing '{field}' field"
+            """Format parameters:
+            - field: str - Name of the missing field
+            """
+
+            DATA_MISSING_FIELD = "{data_type} data missing '{field}' field"
+            """Format parameters:
+            - data_type: str - Type of data (e.g., "Location", "Submission")
+            - field: str - Name of the missing field
+            """
+
+            INVALID_TIMESTAMP = "Invalid timestamp format: {timestamp}"
+            """Format parameters:
+            - timestamp: str - The invalid timestamp string
+            """
+
+            INVALID_COORDINATE_TYPE = (
+                "Invalid {coord_type} type: expected number, got {type}"
+            )
+            """Format parameters:
+            - coord_type: str - Type of coordinate ("Latitude" or "Longitude")
+            - type: type - Actual type received
             """

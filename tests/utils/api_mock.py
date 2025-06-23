@@ -143,10 +143,14 @@ class MockAPIConfig:
 class PinballMapAPIMock:
     """Mock for PinballMap API functions."""
 
-    def __init__(self, config: MockAPIConfig = None, loader: APIResponseLoader = None):
+    def __init__(
+        self,
+        config: Optional[MockAPIConfig] = None,
+        loader: Optional[APIResponseLoader] = None,
+    ):
         self.config = config or MockAPIConfig()
         self.loader = loader or APIResponseLoader()
-        self.request_log = []
+        self.request_log: List[Dict[str, Any]] = []
 
     def _simulate_delay(self):
         """Simulate realistic API response time."""
@@ -278,10 +282,14 @@ class PinballMapAPIMock:
 class GeocodingAPIMock:
     """Mock for geocoding API functions."""
 
-    def __init__(self, config: MockAPIConfig = None, loader: APIResponseLoader = None):
+    def __init__(
+        self,
+        config: Optional[MockAPIConfig] = None,
+        loader: Optional[APIResponseLoader] = None,
+    ):
         self.config = config or MockAPIConfig()
         self.loader = loader or APIResponseLoader()
-        self.request_log = []
+        self.request_log: List[Dict[str, Any]] = []
 
     def _simulate_delay(self):
         """Simulate realistic API response time."""
@@ -332,12 +340,12 @@ class GeocodingAPIMock:
 class APISimulator:
     """Main API simulation coordinator."""
 
-    def __init__(self, config: MockAPIConfig = None):
+    def __init__(self, config: Optional[MockAPIConfig] = None):
         self.config = config or MockAPIConfig()
         self.loader = APIResponseLoader()
         self.pinballmap_mock = PinballMapAPIMock(self.config, self.loader)
         self.geocoding_mock = GeocodingAPIMock(self.config, self.loader)
-        self.patches = []
+        self.patches: List[Any] = []
 
     def __enter__(self):
         """Context manager entry - apply patches."""

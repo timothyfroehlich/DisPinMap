@@ -45,13 +45,25 @@ warn_unused_ignores = false
 warn_no_return = false
 warn_unreachable = false
 strict_equality = false
+explicit_package_bases = true
+mypy_path = "."
+exclude = [
+    "migrations/.*",
+    ".venv/.*",
+    "build/.*",
+    "dist/.*"
+]
 
 [[tool.mypy.overrides]]
 module = [
     "discord.*",
     "google.cloud.*",
     "cloud_sql_python_connector.*",
-    "pg8000.*"
+    "pg8000.*",
+    "tests.utils.*",
+    "setuptools.*",
+    "colorama.*",
+    "notifier"
 ]
 ignore_missing_imports = true
 

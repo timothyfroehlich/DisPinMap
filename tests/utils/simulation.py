@@ -6,16 +6,20 @@ Discord bot simulation, API mocking, time control, and response validation.
 """
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.cogs.monitor import MachineMonitor
 from src.cogs.monitoring import MonitoringCog
 from src.notifier import Notifier
 
-from .api_mock import create_fast_mock, create_realistic_mock
-from .database import setup_test_database
-from .discord_mock import DiscordSimulator, MessageAnalyzer, MockUser
-from .time_mock import DatabaseTimeHelper, MonitoringSimulator, TimeController
+try:
+    from .api_mock import create_fast_mock, create_realistic_mock
+    from .db_utils import setup_test_database
+    from .discord_mock import DiscordSimulator, MessageAnalyzer, MockUser
+    from .time_mock import DatabaseTimeHelper, MonitoringSimulator, TimeController
+except ImportError:
+    # Handle case where test modules aren't available
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -25,32 +29,39 @@ class SimulationTestFramework:
 
     def __init__(self, use_realistic_timing: bool = False):
         # Core components
-        self.database = None
-        self.notifier = None
-        self.discord_sim = None
-        self.api_sim = None
-        self.time_controller = None
+        self.database: Optional[Any] = None
+        self.notifier: Optional[Notifier] = None
+        self.discord_sim: Optional[Any] = None  # DiscordSimulator when available
+        self.api_sim: Optional[Any] = None
+        self.time_controller: Optional[Any] = None  # TimeController when available
 
         # Monitoring components
-        self.monitor_cog = None
-        self.monitoring_cog = None
-        self.monitoring_sim = None
+        self.monitor_cog: Optional[MachineMonitor] = None
+        self.monitoring_cog: Optional[MonitoringCog] = None
+        self.monitoring_sim: Optional[Any] = None  # MonitoringSimulator when available
 
         # Test environment
-        self.test_guild = None
-        self.test_channel = None
-        self.test_user = None
+        self.test_guild: Optional[Any] = None
+        self.test_channel: Optional[Any] = None
+        self.test_user: Optional[Any] = None  # MockUser when available
 
         # Analysis tools
-        self.message_analyzer = MessageAnalyzer()
-        self.db_time_helper = None
+        self.message_analyzer: Any = None  # MessageAnalyzer when available
+        self.db_time_helper: Optional[Any] = None  # DatabaseTimeHelper when available
 
         # Configuration
         self.use_realistic_timing = use_realistic_timing
 
         # State tracking
         self.is_setup = False
-        self.simulation_results = {}
+        self.simulation_results: Dict[str, Any] = {}
+
+        # Initialize message analyzer if available
+        try:
+            self.message_analyzer = MessageAnalyzer()
+        except NameError:
+            # MessageAnalyzer not available in this environment
+            pass
 
     async def setup(self):
         """Set up the complete simulation environment."""
@@ -60,23 +71,38 @@ class SimulationTestFramework:
         logger.info("Setting up simulation test framework...")
 
         # 1. Create test database
-        self.database = setup_test_database()
+        try:
+            self.database = setup_test_database()
+        except NameError:
+            raise RuntimeError("Test database setup not available")
 
         # 2. Create Discord simulation
-        self.discord_sim = DiscordSimulator()
-        self.test_guild, self.test_channel = self.discord_sim.setup_test_environment()
-        self.test_user = MockUser(name="TestUser")
+        try:
+            self.discord_sim = DiscordSimulator()
+            (
+                self.test_guild,
+                self.test_channel,
+            ) = self.discord_sim.setup_test_environment()
+            self.test_user = MockUser(name="TestUser")
+        except NameError:
+            raise RuntimeError("Discord simulation components not available")
 
         # 3. Create API simulation
-        if self.use_realistic_timing:
-            self.api_sim = create_realistic_mock()
-        else:
-            self.api_sim = create_fast_mock()
-        self.api_sim.start()
+        try:
+            if self.use_realistic_timing:
+                self.api_sim = create_realistic_mock()
+            else:
+                self.api_sim = create_fast_mock()
+            self.api_sim.start()
+        except NameError:
+            raise RuntimeError("API mock components not available")
 
         # 4. Create time controller
-        self.time_controller = TimeController()
-        self.time_controller.start()
+        try:
+            self.time_controller = TimeController()
+            self.time_controller.start()
+        except NameError:
+            raise RuntimeError("Time controller not available")
 
         # 5. Create notifier with Discord simulation
         self.notifier = Notifier(self.database)
@@ -97,12 +123,20 @@ class SimulationTestFramework:
         )
 
         # 8. Create monitoring simulator
-        self.monitoring_sim = MonitoringSimulator(
-            self.time_controller, self.monitor_cog
-        )
+        try:
+            self.monitoring_sim = MonitoringSimulator(
+                self.time_controller, self.monitor_cog
+            )
+        except NameError:
+            raise RuntimeError("Monitoring simulator not available")
 
         # 9. Create database time helper
-        self.db_time_helper = DatabaseTimeHelper(self.database, self.time_controller)
+        try:
+            self.db_time_helper = DatabaseTimeHelper(
+                self.database, self.time_controller
+            )
+        except NameError:
+            raise RuntimeError("Database time helper not available")
 
         self.is_setup = True
         logger.info("Simulation framework setup complete")
@@ -149,6 +183,8 @@ class SimulationTestFramework:
         logger.info(f"Simulating: User adds location {location_id}")
 
         # Execute the command
+        if self.discord_sim is None:
+            raise RuntimeError("Discord simulator not initialized")
         ctx = await self.discord_sim.simulate_user_interaction(
             "add", ["location", str(location_id)], self.test_channel, self.test_user
         )
@@ -170,7 +206,7 @@ class SimulationTestFramework:
         return success, messages
 
     async def simulate_add_coordinates(
-        self, lat: float, lon: float, radius: int = None
+        self, lat: float, lon: float, radius: Optional[int] = None
     ) -> Tuple[bool, List[str]]:
         """Simulate a user adding coordinates monitoring."""
         await self._ensure_setup()
@@ -183,6 +219,8 @@ class SimulationTestFramework:
         if radius:
             args.append(str(radius))
 
+        if self.discord_sim is None:
+            raise RuntimeError("Discord simulator not initialized")
         ctx = await self.discord_sim.simulate_user_interaction(
             "add", args, self.test_channel, self.test_user
         )
@@ -200,7 +238,7 @@ class SimulationTestFramework:
         return success, messages
 
     async def simulate_add_city(
-        self, city_name: str, radius: int = None
+        self, city_name: str, radius: Optional[int] = None
     ) -> Tuple[bool, List[str]]:
         """Simulate a user adding city monitoring."""
         await self._ensure_setup()
@@ -211,6 +249,8 @@ class SimulationTestFramework:
         if radius:
             args.append(str(radius))
 
+        if self.discord_sim is None:
+            raise RuntimeError("Discord simulator not initialized")
         ctx = await self.discord_sim.simulate_user_interaction(
             "add", args, self.test_channel, self.test_user
         )
@@ -234,6 +274,8 @@ class SimulationTestFramework:
 
         logger.info("Simulating: User lists monitoring targets")
 
+        if self.discord_sim is None:
+            raise RuntimeError("Discord simulator not initialized")
         ctx = await self.discord_sim.simulate_user_interaction(
             "list", [], self.test_channel, self.test_user
         )
@@ -251,8 +293,12 @@ class SimulationTestFramework:
         logger.info("Simulating: User runs manual check")
 
         # Record initial channel message count
+        if self.test_channel is None:
+            raise RuntimeError("Test channel not initialized")
         initial_count = len(self.test_channel.get_sent_messages())
 
+        if self.discord_sim is None:
+            raise RuntimeError("Discord simulator not initialized")
         _ = await self.discord_sim.simulate_user_interaction(
             "check", [], self.test_channel, self.test_user
         )
@@ -278,6 +324,12 @@ class SimulationTestFramework:
         logger.info(f"Simulating periodic monitoring for {duration_minutes} minutes")
 
         # Set up channel configuration
+        if self.database is None:
+            raise RuntimeError("Database not initialized")
+        if self.test_channel is None:
+            raise RuntimeError("Test channel not initialized")
+        if self.test_guild is None:
+            raise RuntimeError("Test guild not initialized")
         self.database.update_channel_config(
             self.test_channel.id,
             self.test_guild.id,
@@ -289,6 +341,8 @@ class SimulationTestFramework:
         initial_messages = len(self.test_channel.get_sent_messages())
 
         # Run monitoring simulation
+        if self.monitoring_sim is None:
+            raise RuntimeError("Monitoring simulator not initialized")
         await self.monitoring_sim.simulate_monitoring_cycle(
             duration_minutes=duration_minutes,
             channels_to_monitor=[self.test_channel.id],
@@ -331,11 +385,13 @@ class SimulationTestFramework:
 
     def validate_message_format(self, message: str, expected_format: str) -> bool:
         """Validate that a message matches expected format."""
+        if self.message_analyzer is None:
+            return False
         return self.message_analyzer.validate_response_format(message, expected_format)
 
     def analyze_messages(self, messages: List[str]) -> Dict[str, Any]:
         """Analyze a list of messages for patterns and content."""
-        analysis = {
+        analysis: Dict[str, Any] = {
             "total_messages": len(messages),
             "categories": {},
             "locations_mentioned": [],
@@ -343,25 +399,40 @@ class SimulationTestFramework:
             "successes": [],
         }
 
+        if self.message_analyzer is None:
+            # Return basic analysis if message analyzer is not available
+            return analysis
+
         for message in messages:
             category = self.message_analyzer.categorize_message(message)
-            analysis["categories"][category] = (
-                analysis["categories"].get(category, 0) + 1
-            )
+            categories = analysis["categories"]
+            if isinstance(categories, dict):
+                categories[category] = categories.get(category, 0) + 1
 
             if category == "error":
-                analysis["errors"].append(message)
+                errors = analysis["errors"]
+                if isinstance(errors, list):
+                    errors.append(message)
             elif category == "success":
-                analysis["successes"].append(message)
+                successes = analysis["successes"]
+                if isinstance(successes, list):
+                    successes.append(message)
 
             location_info = self.message_analyzer.extract_location_info(message)
             if location_info:
-                analysis["locations_mentioned"].append(location_info)
+                locations = analysis["locations_mentioned"]
+                if isinstance(locations, list):
+                    locations.append(location_info)
 
         return analysis
 
     def get_database_state(self) -> Dict[str, Any]:
         """Get current database state for verification."""
+        if self.database is None:
+            return {"error": "Database not initialized"}
+        if self.test_channel is None:
+            return {"error": "Test channel not initialized"}
+
         return {
             "channels": [self.database.get_channel_config(self.test_channel.id)],
             "targets": self.database.get_monitoring_targets(self.test_channel.id),
@@ -388,9 +459,15 @@ class SimulationTestFramework:
             },
             "results": self.simulation_results,
             "database_state": self.get_database_state() if self.database else None,
-            "api_logs": self.api_sim.get_request_logs() if self.api_sim else None,
+            "api_logs": (
+                self.api_sim.get_request_logs()
+                if self.api_sim and hasattr(self.api_sim, "get_request_logs")
+                else None
+            ),
             "discord_logs": (
-                self.discord_sim.get_execution_log() if self.discord_sim else None
+                self.discord_sim.get_execution_log()
+                if self.discord_sim and hasattr(self.discord_sim, "get_execution_log")
+                else None
             ),
         }
 
@@ -405,11 +482,11 @@ class SimulationTestFramework:
 
     def reset_state(self):
         """Reset simulation state for new test."""
-        if self.test_channel:
+        if self.test_channel and hasattr(self.test_channel, "clear_messages"):
             self.test_channel.clear_messages()
-        if self.discord_sim:
+        if self.discord_sim and hasattr(self.discord_sim, "clear_logs"):
             self.discord_sim.clear_logs()
-        if self.api_sim:
+        if self.api_sim and hasattr(self.api_sim, "clear_logs"):
             self.api_sim.clear_logs()
         self.simulation_results.clear()
 
@@ -421,9 +498,12 @@ async def create_simulation_framework(
     realistic_timing: bool = False,
 ) -> SimulationTestFramework:
     """Create and set up a simulation framework."""
-    framework = SimulationTestFramework(use_realistic_timing=realistic_timing)
-    await framework.setup()
-    return framework
+    try:
+        framework = SimulationTestFramework(use_realistic_timing=realistic_timing)
+        await framework.setup()
+        return framework
+    except (NameError, RuntimeError) as e:
+        raise RuntimeError(f"Failed to create simulation framework: {e}")
 
 
 async def run_complete_user_journey(location_id: int = 1309) -> Dict[str, Any]:

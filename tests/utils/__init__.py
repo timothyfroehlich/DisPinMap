@@ -25,7 +25,7 @@ from .assertions import (
     assert_submission_data,
     assert_timestamp_format,
 )
-from .database import (
+from .db_utils import (
     cleanup_test_database,
     setup_test_database,
     test_db,

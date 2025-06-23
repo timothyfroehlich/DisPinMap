@@ -21,11 +21,11 @@ load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
 
 # Try to import from src, fallback for running directly
 try:
-    from .database import Database
+    from .database import Database  # type: ignore
 
     # from .messages import Messages
 except ImportError:
-    from database import Database
+    from database import Database  # type: ignore
 
     # from messages import Messages
 

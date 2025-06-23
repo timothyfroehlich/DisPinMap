@@ -4,7 +4,7 @@ Cog for monitoring-related commands
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
+from typing import List, Optional
 
 from discord.ext import commands
 
@@ -98,14 +98,14 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     )
                     return
 
-                city_name_parts = []
+                city_name_parts: List[str] = []
                 radius = None
 
                 if len(args) > 1 and args[-1].isdigit():
                     radius = int(args[-1])
-                    city_name_parts = args[:-1]
+                    city_name_parts = list(args[:-1])
                 else:
-                    city_name_parts = args
+                    city_name_parts = list(args)
 
                 city_name = " ".join(city_name_parts)
                 await self._handle_city_add(ctx, city_name, radius)
@@ -332,7 +332,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 status = search_result.get("status")
                 data = search_result.get("data")
 
-                if status == "exact":
+                if status == "exact" and data:
                     location_details = data
                     location_id = location_details["id"]
                     location_name = location_details["name"]
@@ -366,7 +366,10 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                         Messages.Command.Add.LOCATION_SUGGESTIONS.format(
                             search_term=location_input_stripped,
                             suggestions="\n".join(
-                                [f"• {loc['name']} (ID: {loc['id']})" for loc in data]
+                                [
+                                    f"• {loc['name']} (ID: {loc['id']})"
+                                    for loc in (data or [])
+                                ]
                             ),
                         ),
                     )

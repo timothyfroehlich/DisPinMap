@@ -6,7 +6,7 @@ and verifying database state. It supports both SQLite and PostgreSQL databases.
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Generator, Optional
 
 import pytest
 from sqlalchemy import create_engine
@@ -95,7 +95,7 @@ def db_engine(db_type):
 
 
 @pytest.fixture(scope="function")
-def db_session(db_engine) -> Session:
+def db_session(db_engine) -> Generator[Session, None, None]:
     """Create a new database session for a test."""
     connection = db_engine.connect()
     transaction = connection.begin()

@@ -9,7 +9,7 @@ import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,10 @@ class MockUser:
     """Mock Discord user object."""
 
     def __init__(
-        self, user_id: int = None, name: str = "TestUser", discriminator: str = "0001"
+        self,
+        user_id: Optional[int] = None,
+        name: str = "TestUser",
+        discriminator: str = "0001",
     ):
         self.id = user_id or int(str(uuid.uuid4().int)[:18])  # 18-digit Discord ID
         self.name = name
@@ -27,7 +30,7 @@ class MockUser:
         self.display_name = name
         self.bot = False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}#{self.discriminator}"
 
 
@@ -35,7 +38,10 @@ class MockChannel:
     """Mock Discord channel object with message tracking."""
 
     def __init__(
-        self, channel_id: int = None, name: str = "test-channel", guild_id: int = None
+        self,
+        channel_id: Optional[int] = None,
+        name: str = "test-channel",
+        guild_id: Optional[int] = None,
     ):
         self.id = channel_id or int(str(uuid.uuid4().int)[:18])
         self.name = name
@@ -44,9 +50,9 @@ class MockChannel:
         self.type = "text"
 
         # Track sent messages
-        self.sent_messages = []
+        self.sent_messages: List["MockMessage"] = []
 
-    async def send(self, content: str = None, **kwargs) -> "MockMessage":
+    async def send(self, content: Optional[str] = None, **kwargs: Any) -> "MockMessage":
         """Mock channel.send() method that captures messages."""
         message = MockMessage(
             content=content,
@@ -65,7 +71,7 @@ class MockChannel:
         """Get all messages sent to this channel."""
         return self.sent_messages.copy()
 
-    def clear_messages(self):
+    def clear_messages(self) -> None:
         """Clear message history."""
         self.sent_messages.clear()
 
@@ -77,10 +83,10 @@ class MockChannel:
 class MockGuild:
     """Mock Discord guild (server) object."""
 
-    def __init__(self, guild_id: int = None, name: str = "Test Server"):
+    def __init__(self, guild_id: Optional[int] = None, name: str = "Test Server"):
         self.id = guild_id or int(str(uuid.uuid4().int)[:18])
         self.name = name
-        self.channels = {}
+        self.channels: Dict[int, MockChannel] = {}
 
     def add_channel(self, channel: MockChannel) -> MockChannel:
         """Add a channel to this guild."""
@@ -96,7 +102,13 @@ class MockGuild:
 class MockMessage:
     """Mock Discord message object."""
 
-    def __init__(self, content: str, channel: MockChannel, author: MockUser, **kwargs):
+    def __init__(
+        self,
+        content: Optional[str],
+        channel: MockChannel,
+        author: MockUser,
+        **kwargs: Any,
+    ) -> None:
         self.id = int(str(uuid.uuid4().int)[:18])
         self.content = content
         self.channel = channel
@@ -105,16 +117,20 @@ class MockMessage:
         self.created_at = datetime.now(timezone.utc)
 
         # Additional message attributes
-        self.embeds = kwargs.get("embeds", [])
-        self.attachments = kwargs.get("attachments", [])
-        self.reactions = []
+        self.embeds: List[Any] = kwargs.get("embeds", [])
+        self.attachments: List[Any] = kwargs.get("attachments", [])
+        self.reactions: List[Any] = []
 
 
 class MockContext:
     """Mock Discord command context."""
 
     def __init__(
-        self, channel: MockChannel, user: MockUser, command: str, args: List[str] = None
+        self,
+        channel: MockChannel,
+        user: MockUser,
+        command: str,
+        args: Optional[List[str]] = None,
     ):
         self.channel = channel
         self.author = user
@@ -123,9 +139,9 @@ class MockContext:
         self.args = args or []
 
         # Track sent messages for this context
-        self.sent_messages = []
+        self.sent_messages: List[MockMessage] = []
 
-    async def send(self, content: str = None, **kwargs) -> MockMessage:
+    async def send(self, content: Optional[str] = None, **kwargs: Any) -> MockMessage:
         """Mock ctx.send() method."""
         message = await self.channel.send(content, **kwargs)
         self.sent_messages.append(message)
@@ -142,15 +158,15 @@ class MockBot:
     def __init__(self, command_prefix: str = "!"):
         self.command_prefix = command_prefix
         self.user = MockUser(name="DisPinMap Bot")
-        self.guilds = {}
-        self.cogs = {}
+        self.guilds: Dict[int, MockGuild] = {}
+        self.cogs: Dict[str, Any] = {}
 
         # Mock database and notifier (to be injected)
-        self.database = None
-        self.notifier = None
+        self.database: Optional[Any] = None
+        self.notifier: Optional[Any] = None
 
         # Track events
-        self.events = []
+        self.events: List[Any] = []
 
     def add_guild(self, guild: MockGuild) -> MockGuild:
         """Add a guild to the bot."""
@@ -165,7 +181,7 @@ class MockBot:
                 return channel
         return None
 
-    def add_cog(self, name: str, cog_instance: Any):
+    def add_cog(self, name: str, cog_instance: Any) -> None:
         """Add a cog to the bot."""
         self.cogs[name] = cog_instance
 
@@ -173,12 +189,12 @@ class MockBot:
         """Get a cog by name."""
         return self.cogs.get(name)
 
-    async def wait_until_ready(self):
+    async def wait_until_ready(self) -> None:
         """Mock wait_until_ready method."""
         # Instant ready for testing
         pass
 
-    async def close(self):
+    async def close(self) -> None:
         """Mock close method."""
         pass
 
@@ -192,14 +208,14 @@ class CommandSimulator:
 
     def __init__(self, bot: MockBot):
         self.bot = bot
-        self.execution_log = []
+        self.execution_log: List[Dict[str, Any]] = []
 
     async def execute_command(
         self,
         command: str,
         channel: MockChannel,
-        user: MockUser = None,
-        args: List[str] = None,
+        user: Optional[MockUser] = None,
+        args: Optional[List[str]] = None,
     ) -> MockContext:
         """Execute a command and return the context."""
         user = user or MockUser()
@@ -274,14 +290,14 @@ class CommandSimulator:
 class DiscordSimulator:
     """Main Discord simulation coordinator."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.bot = MockBot()
         self.command_simulator = CommandSimulator(self.bot)
-        self.setup_done = False
+        self.setup_done: bool = False
 
     def setup_test_environment(
         self, guild_name: str = "Test Server", channel_name: str = "test-channel"
-    ) -> tuple[MockGuild, MockChannel]:
+    ) -> Tuple[MockGuild, MockChannel]:
         """Set up a basic test environment with guild and channel."""
         guild = MockGuild(name=guild_name)
         channel = MockChannel(name=channel_name)
@@ -291,12 +307,12 @@ class DiscordSimulator:
 
         return guild, channel
 
-    def inject_dependencies(self, database, notifier):
+    def inject_dependencies(self, database: Any, notifier: Any) -> None:
         """Inject database and notifier dependencies."""
         self.bot.database = database
         self.bot.notifier = notifier
 
-    def load_cogs(self, cog_instances: Dict[str, Any]):
+    def load_cogs(self, cog_instances: Dict[str, Any]) -> None:
         """Load cogs into the bot."""
         for name, cog in cog_instances.items():
             self.bot.add_cog(name, cog)
@@ -304,9 +320,9 @@ class DiscordSimulator:
     async def simulate_user_interaction(
         self,
         command: str,
-        args: List[str] = None,
-        channel: MockChannel = None,
-        user: MockUser = None,
+        args: Optional[List[str]] = None,
+        channel: Optional[MockChannel] = None,
+        user: Optional[MockUser] = None,
     ) -> MockContext:
         """Simulate a user running a command."""
         if not channel:
@@ -325,11 +341,11 @@ class DiscordSimulator:
             command, channel, user, args
         )
 
-    def get_execution_log(self) -> List[Dict]:
+    def get_execution_log(self) -> List[Dict[str, Any]]:
         """Get command execution log."""
         return self.command_simulator.execution_log.copy()
 
-    def clear_logs(self):
+    def clear_logs(self) -> None:
         """Clear all logs and messages."""
         self.command_simulator.execution_log.clear()
         for guild in self.bot.guilds.values():
@@ -340,8 +356,8 @@ class DiscordSimulator:
 class MessageAnalyzer:
     """Analyzes bot responses for validation."""
 
-    def __init__(self):
-        self.patterns = {
+    def __init__(self) -> None:
+        self.patterns: Dict[str, List[str]] = {
             "success": ["✅", "Added", "Success", "✨"],
             "error": ["❌", "Error", "Failed", "Invalid"],
             "info": ["📋", "Found", "Status", "📍"],
@@ -405,14 +421,14 @@ class MessageAnalyzer:
 # Convenience functions for quick setup
 
 
-def create_basic_simulation() -> tuple[DiscordSimulator, MockChannel]:
+def create_basic_simulation() -> Tuple[DiscordSimulator, MockChannel]:
     """Create a basic simulation setup with one channel."""
     simulator = DiscordSimulator()
     guild, channel = simulator.setup_test_environment()
     return simulator, channel
 
 
-def create_multi_channel_simulation() -> tuple[DiscordSimulator, List[MockChannel]]:
+def create_multi_channel_simulation() -> Tuple[DiscordSimulator, List[MockChannel]]:
     """Create a simulation with multiple channels for testing."""
     simulator = DiscordSimulator()
 
