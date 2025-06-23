@@ -66,11 +66,11 @@ class ConfigCog(commands.Cog, name="Configuration"):
                 )
                 targets = self.db.get_monitoring_targets(ctx.channel.id)
                 for target in targets:
+                    channel_config = self.db.get_channel_config(ctx.channel.id)
                     if (
-                        target["poll_rate_minutes"]
-                        == self.db.get_channel_config(ctx.channel.id)[
-                            "poll_rate_minutes"
-                        ]
+                        channel_config
+                        and target["poll_rate_minutes"]
+                        == channel_config["poll_rate_minutes"]
                     ):
                         self.db.update_monitoring_target(
                             ctx.channel.id,
@@ -137,9 +137,11 @@ class ConfigCog(commands.Cog, name="Configuration"):
             )
             targets = self.db.get_monitoring_targets(ctx.channel.id)
             for target in targets:
+                channel_config = self.db.get_channel_config(ctx.channel.id)
                 if (
-                    target["notification_types"]
-                    == self.db.get_channel_config(ctx.channel.id)["notification_types"]
+                    channel_config
+                    and target["notification_types"]
+                    == channel_config["notification_types"]
                 ):
                     self.db.update_monitoring_target(
                         ctx.channel.id,

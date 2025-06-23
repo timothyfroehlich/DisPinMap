@@ -47,7 +47,7 @@ class Notifier:
     ):
         """Post initial submissions for a new target"""
         channel_config = self.db.get_channel_config(ctx.channel.id)
-        notification_type = channel_config.get("notification_types", "all")
+        notification_type = (channel_config or {}).get("notification_types", "all")
 
         filtered_submissions = self._filter_submissions_by_type(
             submissions, notification_type

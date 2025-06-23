@@ -44,6 +44,18 @@ class Messages:
             - suggestions: str - List of suggested locations
             """
 
+            LOCATION_SUGGESTIONS = "Location '{search_term}' not found directly. Did you mean one of these?\n{suggestions}\n\nPlease use `!add location <ID>` with the ID of the correct location."
+            """Format parameters:
+            - search_term: str - The search term that was used
+            - suggestions: str - List of suggested locations
+            """
+
+            CITY_SUGGESTIONS = "Multiple cities found for '{city_name}'. Please be more specific:\n{suggestions}"
+            """Format parameters:
+            - city_name: str - The city name that was searched
+            - suggestions: str - List of suggested city names
+            """
+
             INVALID_COORDS = "❌ Invalid coordinates. Latitude must be -90 to 90, longitude -180 to 180"
             """No format parameters."""
 
