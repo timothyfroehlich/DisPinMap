@@ -12,7 +12,7 @@ from src.cogs.monitoring import MonitoringCog
 from src.messages import Messages
 from src.notifier import Notifier
 from tests.utils import MockContext, assert_discord_message, verify_database_target
-from tests.utils.database import cleanup_test_database, setup_test_database
+from tests.utils.db_utils import cleanup_test_database, setup_test_database
 
 
 @pytest.fixture

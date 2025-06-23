@@ -36,7 +36,7 @@ import pytest
 from src.cogs.monitor import MachineMonitor
 from src.cogs.monitoring import MonitoringCog
 from tests.utils import MockContext
-from tests.utils.database import cleanup_test_database, setup_test_database
+from tests.utils.db_utils import cleanup_test_database, setup_test_database
 from tests.utils.generators import generate_submission_data
 
 

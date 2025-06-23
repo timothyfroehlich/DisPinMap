@@ -8,7 +8,7 @@ import os
 import pytest
 
 from src.database import ChannelConfig, MonitoringTarget, SeenSubmission
-from tests.utils.database import (
+from tests.utils.db_utils import (
     cleanup_test_database,
     setup_test_database,
     verify_channel_config,
