@@ -186,6 +186,11 @@ resource "google_cloud_run_v2_service" "bot_service" {
         value = "sqlite"
       }
 
+      env {
+        name  = "DATABASE_PATH"
+        value = "/tmp/pinball_bot.db"
+      }
+
       # POSTGRESQL ENVIRONMENT VARIABLES - PRESERVED BUT DISABLED
       # Uncomment when re-enabling PostgreSQL mode
       /*
