@@ -1,0 +1,26 @@
+# Litestream configuration for SQLite database backup to Google Cloud Storage
+#
+# This configuration enables continuous backup of the SQLite database
+# to Google Cloud Storage for persistence across container restarts.
+#
+# Environment variables required:
+# - LITESTREAM_BUCKET: GCS bucket name for backups
+# - LITESTREAM_PATH: Path to SQLite database file (e.g., /tmp/pinball_bot.db)
+
+# Access logging configuration
+access-key-id: ""
+secret-access-key: ""
+
+# Database replication configuration
+dbs:
+  - path: ${LITESTREAM_PATH}
+    replicas:
+      - type: gcs
+        bucket: ${LITESTREAM_BUCKET}
+        path: db
+        # Real-time replication settings
+        sync-interval: 1s
+        # Retention settings (aligned with GCS bucket lifecycle)
+        retention: 72h
+        # Validation settings
+        validation-interval: 6h
