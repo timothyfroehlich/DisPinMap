@@ -12,8 +12,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install Litestream
-RUN curl -L https://github.com/benbjohnson/litestream/releases/latest/download/litestream-linux-amd64.tar.gz \
-    | tar -C /usr/local/bin -xzf - litestream
+RUN curl -L -o litestream-linux-amd64.tar.gz https://github.com/benbjohnson/litestream/releases/latest/download/litestream-linux-amd64.tar.gz && \
+    curl -L -o litestream-linux-amd64.tar.gz.sha256 https://github.com/benbjohnson/litestream/releases/latest/download/litestream-linux-amd64.tar.gz.sha256 && \
+    sha256sum -c litestream-linux-amd64.tar.gz.sha256 && \
+    tar -C /usr/local/bin -xzf litestream-linux-amd64.tar.gz litestream && \
+    rm litestream-linux-amd64.tar.gz litestream-linux-amd64.tar.gz.sha256
 
 # Create virtual environment
 RUN python -m venv /opt/venv
