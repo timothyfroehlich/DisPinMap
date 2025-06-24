@@ -82,7 +82,9 @@ def check_litestream_binary():
 
 def check_litestream_config():
     """Check if Litestream configuration is valid"""
-    config_path = "litestream.yml"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    default_config_path = os.path.join(script_dir, "..", "litestream.yml")
+    config_path = os.getenv("LITESTREAM_CONFIG_PATH", default_config_path)
 
     if not os.path.exists(config_path):
         print(f"❌ Litestream config not found: {config_path}")
@@ -113,7 +115,9 @@ def test_database_operations():
     """Test basic database operations"""
     try:
         # Import database module
-        sys.path.append("src")
+        sys.path.append(
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+        )
         from database import Database
 
         # Test database creation and basic operations
