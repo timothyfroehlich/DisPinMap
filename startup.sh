@@ -44,8 +44,8 @@ cleanup() {
     # Stop Discord bot
     if [ ! -z "$BOT_PID" ]; then
         echo "Stopping Discord bot..."
-        kill $BOT_PID 2>/dev/null || true
-        wait $BOT_PID 2>/dev/null || true
+        kill "$BOT_PID" 2>/dev/null || true
+        wait "$BOT_PID" 2>/dev/null || true
     fi
 
     echo "Cleanup complete"
