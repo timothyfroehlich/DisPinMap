@@ -4,10 +4,11 @@ Supports both SQLite and PostgreSQL databases
 """
 
 import os
+import tempfile
 
 import pytest
 
-from src.database import ChannelConfig, MonitoringTarget, SeenSubmission
+from src.database import ChannelConfig, Database, MonitoringTarget, SeenSubmission
 from tests.utils.db_utils import (
     cleanup_test_database,
     setup_test_database,
@@ -306,3 +307,98 @@ class TestPostgreSQLSpecific:
         config = db.get_channel_config(channel_id)
         assert config is not None
         assert config["is_active"] is True
+
+
+class TestDatabasePathConfiguration:
+    """Test configurable database path functionality"""
+
+    def test_default_database_path(self):
+        """Test that Database uses default path when no path specified"""
+        # Create database without specifying path
+        db = Database()
+
+        # Should use default path for SQLite
+        assert "pinball_bot.db" in str(db.engine.url)
+        db.close()
+
+    def test_explicit_database_path(self):
+        """Test that Database uses explicitly provided path"""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as temp_file:
+            temp_path = temp_file.name
+
+        try:
+            # Create database with explicit path
+            db = Database(db_path=temp_path)
+
+            # Should use the provided path
+            assert temp_path in str(db.engine.url)
+            db.close()
+        finally:
+            # Clean up temp file
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    def test_environment_variable_database_path(self, monkeypatch):
+        """Test that Database uses DATABASE_PATH environment variable"""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as temp_file:
+            temp_path = temp_file.name
+
+        try:
+            # Set environment variable
+            monkeypatch.setenv("DATABASE_PATH", temp_path)
+
+            # Create database without explicit path
+            db = Database()
+
+            # Should use environment variable path
+            assert temp_path in str(db.engine.url)
+            db.close()
+        finally:
+            # Clean up temp file
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    def test_explicit_path_overrides_environment(self, monkeypatch):
+        """Test that explicit path parameter overrides environment variable"""
+        env_path = "/tmp/env_database.db"
+        explicit_path = ":memory:"
+
+        # Set environment variable
+        monkeypatch.setenv("DATABASE_PATH", env_path)
+
+        # Create database with explicit path
+        db = Database(db_path=explicit_path)
+
+        # Should use explicit path, not environment variable
+        assert "memory" in str(db.engine.url)
+        assert env_path not in str(db.engine.url)
+        db.close()
+
+    def test_database_functionality_with_custom_path(self):
+        """Test that database operations work correctly with custom path"""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as temp_file:
+            temp_path = temp_file.name
+
+        try:
+            # Create database with custom path
+            db = Database(db_path=temp_path)
+
+            # Test basic database operations
+            channel_id = 12345
+            guild_id = 67890
+
+            # Add a channel config
+            db.update_channel_config(channel_id, guild_id, is_active=True)
+
+            # Verify it was saved
+            config = db.get_channel_config(channel_id)
+            assert config is not None
+            assert config["channel_id"] == channel_id
+            assert config["guild_id"] == guild_id
+            assert config["is_active"] is True
+
+            db.close()
+        finally:
+            # Clean up temp file
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)

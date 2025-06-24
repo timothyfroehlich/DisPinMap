@@ -14,7 +14,8 @@ resource "google_project_service" "required_apis" {
     "artifactregistry.googleapis.com",
     "vpcaccess.googleapis.com",
     "compute.googleapis.com",
-    "servicenetworking.googleapis.com"
+    "servicenetworking.googleapis.com",
+    "storage.googleapis.com"
   ])
 
   project = var.gcp_project_id
@@ -29,6 +30,43 @@ resource "google_artifact_registry_repository" "docker_repo" {
   repository_id = "${var.service_name}-repo"
   description   = "Docker repository for ${var.service_name}"
   format        = "DOCKER"
+  depends_on = [google_project_service.required_apis]
+}
+
+# Cloud Storage bucket for SQLite database backups (Litestream)
+resource "google_storage_bucket" "sqlite_backups" {
+  name     = "${var.service_name}-sqlite-backups"
+  location = var.gcp_region
+
+  # Enable versioning for backup history
+  versioning {
+    enabled = true
+  }
+
+  # Lifecycle management to control storage costs
+  lifecycle_rule {
+    condition {
+      age = 30
+    }
+    action {
+      type = "Delete"
+    }
+  }
+
+  # Lifecycle rule to move older versions to cheaper storage
+  lifecycle_rule {
+    condition {
+      age                   = 7
+      with_state           = "ARCHIVED"
+    }
+    action {
+      type = "Delete"
+    }
+  }
+
+  # Uniform bucket-level access
+  uniform_bucket_level_access = true
+
   depends_on = [google_project_service.required_apis]
 }
 
@@ -158,6 +196,13 @@ resource "google_project_iam_member" "secret_accessor" {
   member  = "serviceAccount:${google_service_account.cloud_run_sa.email}"
 }
 
+# IAM binding for Cloud Storage access (Litestream backups)
+resource "google_storage_bucket_iam_member" "litestream_storage_admin" {
+  bucket = google_storage_bucket.sqlite_backups.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+}
+
 # Cloud Run Service
 resource "google_cloud_run_v2_service" "bot_service" {
   name     = var.service_name
@@ -188,6 +233,17 @@ resource "google_cloud_run_v2_service" "bot_service" {
 
       env {
         name  = "DATABASE_PATH"
+        value = "/tmp/pinball_bot.db"
+      }
+
+      # Litestream backup configuration
+      env {
+        name  = "LITESTREAM_BUCKET"
+        value = google_storage_bucket.sqlite_backups.name
+      }
+
+      env {
+        name  = "LITESTREAM_PATH"
         value = "/tmp/pinball_bot.db"
       }
 
