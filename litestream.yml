@@ -7,9 +7,8 @@
 # - LITESTREAM_BUCKET: GCS bucket name for backups
 # - LITESTREAM_PATH: Path to SQLite database file (e.g., /tmp/pinball_bot.db)
 
-# Access logging configuration
-access-key-id: ""
-secret-access-key: ""
+# Litestream uses Google Cloud service account authentication
+# No access keys needed - authentication handled by Cloud Run service account
 
 # Database replication configuration
 dbs:
