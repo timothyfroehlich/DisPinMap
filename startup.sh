@@ -37,8 +37,8 @@ cleanup() {
     # Stop Litestream replication
     if [ ! -z "$LITESTREAM_PID" ]; then
         echo "Stopping Litestream..."
-        kill $LITESTREAM_PID 2>/dev/null || true
-        wait $LITESTREAM_PID 2>/dev/null || true
+        kill "$LITESTREAM_PID" 2>/dev/null || true
+        wait "$LITESTREAM_PID" 2>/dev/null || true
     fi
 
     # Stop Discord bot
