@@ -231,6 +231,11 @@ resource "google_cloud_run_v2_service" "bot_service" {
         value = "sqlite"
       }
 
+      env {
+        name  = "DATABASE_PATH"
+        value = "/tmp/pinball_bot.db"
+      }
+
       # Litestream backup configuration
       env {
         name  = "LITESTREAM_BUCKET"
@@ -239,7 +244,7 @@ resource "google_cloud_run_v2_service" "bot_service" {
 
       env {
         name  = "LITESTREAM_PATH"
-        value = "/data/pinball_bot.db"
+        value = "/tmp/pinball_bot.db"
       }
 
       # POSTGRESQL ENVIRONMENT VARIABLES - PRESERVED BUT DISABLED
