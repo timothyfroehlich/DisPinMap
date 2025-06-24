@@ -266,3 +266,6 @@ simulation_results_*.json
 simulation_output/
 temp/
 tmp/
+
+# Git worktrees directory
+worktrees/
