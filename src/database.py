@@ -30,9 +30,13 @@ except ImportError:
 
 
 class Database:
-    def __init__(self, db_path: str = "pinball_bot.db"):
+    def __init__(self, db_path: Optional[str] = None):
         """
         Initialize database with SQLAlchemy - supports both SQLite and PostgreSQL
+
+        Args:
+            db_path: Optional database file path. If None, uses DATABASE_PATH environment
+                    variable or defaults to "pinball_bot.db" for backward compatibility.
 
         DUAL-MODE ARCHITECTURE:
         - SQLite: Default mode for cost optimization (local files + cloud storage backup)
@@ -41,7 +45,16 @@ class Database:
         Switch modes by setting DB_TYPE environment variable:
         - DB_TYPE=sqlite (default, cost-optimized)
         - DB_TYPE=postgres (GCP Cloud SQL, higher cost but enterprise features)
+
+        DATABASE PATH CONFIGURATION:
+        - Local development: "pinball_bot.db" (default)
+        - Cloud Run deployment: "/tmp/pinball_bot.db" (writable filesystem)
+        - Custom environments: Set DATABASE_PATH environment variable
         """
+        # Get database path from parameter, environment variable, or default
+        if db_path is None:
+            db_path = os.getenv("DATABASE_PATH", "pinball_bot.db")
+
         db_type = os.getenv("DB_TYPE", "sqlite").lower()
 
         if db_type == "postgres":
