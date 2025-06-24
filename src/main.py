@@ -124,9 +124,7 @@ async def cleanup():
     if http_runner:
         await http_runner.cleanup()
         logger.info("HTTP server cleaned up.")
-    if bot.database:
-        bot.database.close()
-        logger.info("Database connection closed.")
+    # Note: SQLAlchemy database connections are managed by sessions and don't require explicit cleanup
     if not bot.is_closed():
         await bot.close()
         logger.info("Discord bot client closed.")
