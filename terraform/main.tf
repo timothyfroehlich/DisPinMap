@@ -283,9 +283,9 @@ resource "google_cloud_run_v2_service" "bot_service" {
 
       resources {
         limits = {
-          # COST OPTIMIZATION: Reduced resource limits for Discord bot workload
-          memory = "256Mi"
-          cpu    = "500m"
+          # Cloud Run minimum requirements for always-allocated instances
+          memory = "512Mi"
+          cpu    = "1000m"
         }
       }
     }
