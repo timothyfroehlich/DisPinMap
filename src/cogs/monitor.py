@@ -40,15 +40,13 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         self.monitor_start_time = None
 
     async def cog_load(self):
-        """Starts the monitoring task when the cog is loaded."""
-        logger.info("🔄 Starting MachineMonitor task loop")
+        """Prepare the monitoring task when the cog is loaded (task will start when bot is ready)."""
+        logger.info("🔄 Preparing MachineMonitor task loop")
         self.monitor_start_time = datetime.now(timezone.utc)
-        try:
-            self.monitor_task_loop.start()
-            logger.info("✅ MachineMonitor task loop started successfully")
-        except Exception as e:
-            logger.error(f"❌ Failed to start MachineMonitor task loop: {e}")
-            raise
+        # Note: Task loop will start automatically via before_loop when bot is ready
+        logger.info(
+            "✅ MachineMonitor cog loaded, task loop will start when bot is ready"
+        )
 
     async def cog_unload(self):
         """Cancels the monitoring task when the cog is unloaded."""
