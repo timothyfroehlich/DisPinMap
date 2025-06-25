@@ -195,7 +195,9 @@ class Database:
                         select(MonitoringTarget.id)
                         .where(MonitoringTarget.channel_id == config.channel_id)
                         .limit(1)
-                    ).first()
+                    )
+                    .scalars()
+                    .first()
                     is not None
                 )
 

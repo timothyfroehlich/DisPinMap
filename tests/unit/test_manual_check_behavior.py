@@ -580,4 +580,79 @@ class TestManualCheckBehavior:
         monitoring_cog.notifier.log_and_send.assert_called()
         call_args = monitoring_cog.notifier.log_and_send.call_args
         message = call_args[0][1]
-        assert "Monitor system is not available" in message
+        assert "❌ Error: Monitor system is not available." in message
+
+
+@pytest.mark.asyncio
+async def test_monitor_health_command_with_monitor_available(mock_bot):
+    """Test monitor_health command when monitor cog is available."""
+    from src.cogs.monitor import MachineMonitor
+    from src.cogs.monitoring import MonitoringCog
+    from src.notifier import Notifier
+
+    db = setup_test_database()
+    notifier = Notifier(db)
+
+    # Create monitoring cog
+    monitoring_cog = MonitoringCog(mock_bot, db, notifier)
+    monitoring_cog.notifier.log_and_send = AsyncMock()
+
+    # Create and attach monitor cog to bot
+    monitor_cog = MachineMonitor(mock_bot, db, notifier)
+    monitor_cog.manual_health_check = AsyncMock(return_value="🟢 Monitor system healthy")
+    mock_bot.get_cog = MagicMock(return_value=monitor_cog)
+
+    # Setup channel config
+    channel_id = 12345
+    guild_id = 67890
+    db.update_channel_config(channel_id, guild_id, is_active=True, poll_rate_minutes=30)
+
+    # Create mock context
+    mock_ctx = AsyncMock()
+    mock_ctx.channel.id = channel_id
+
+    # Run monitor_health command
+    await monitoring_cog.monitor_health.callback(monitoring_cog, mock_ctx)
+
+    # Verify health check was called and result sent
+    monitor_cog.manual_health_check.assert_called_once()
+    monitoring_cog.notifier.log_and_send.assert_called_once()
+    call_args = monitoring_cog.notifier.log_and_send.call_args
+    message = call_args[0][1]
+    assert "🟢 Monitor system healthy" in message
+    assert "This Channel Status:" in message
+    assert "Active: ✅ Yes" in message
+
+    cleanup_test_database(db)
+
+
+@pytest.mark.asyncio
+async def test_monitor_health_command_without_monitor_available(mock_bot):
+    """Test monitor_health command when monitor cog is not available."""
+    from src.cogs.monitoring import MonitoringCog
+    from src.notifier import Notifier
+
+    db = setup_test_database()
+    notifier = Notifier(db)
+
+    # Create monitoring cog without monitor cog available
+    monitoring_cog = MonitoringCog(mock_bot, db, notifier)
+    monitoring_cog.notifier.log_and_send = AsyncMock()
+
+    # Mock bot to return None for monitor cog
+    mock_bot.get_cog = MagicMock(return_value=None)
+
+    # Create mock context
+    mock_ctx = AsyncMock()
+    mock_ctx.channel.id = 12345
+
+    # Run monitor_health command
+    await monitoring_cog.monitor_health.callback(monitoring_cog, mock_ctx)
+
+    # Verify error message was sent
+    monitoring_cog.notifier.log_and_send.assert_called_once()
+    call_args = monitoring_cog.notifier.log_and_send.call_args
+    message = call_args[0][1]
+    assert "❌ Error: Monitor system is not available." in message
+
+    cleanup_test_database(db)
