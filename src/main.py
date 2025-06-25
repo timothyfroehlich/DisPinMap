@@ -172,11 +172,23 @@ async def main():
         for filename in os.listdir(cogs_dir):
             if filename.endswith(".py") and not filename.startswith("__"):
                 try:
+                    logger.info(f"🔄 Loading cog: {filename}")
                     await bot.load_extension(f"src.cogs.{filename[:-3]}")
-                    logger.info(f"Loaded cog: {filename}")
+                    logger.info(f"✅ Successfully loaded cog: {filename}")
+
+                    # Special handling for monitor cog
+                    if filename == "monitor.py":
+                        monitor_cog = bot.get_cog("MachineMonitor")
+                        if monitor_cog:
+                            logger.info(
+                                f"🔍 Monitor cog loaded, task loop status: {monitor_cog.monitor_task_loop.is_running()}"
+                            )
+                        else:
+                            logger.warning("⚠️ Monitor cog not found after loading")
+
                 except Exception as e:
                     logger.error(
-                        f"Failed to load extension {filename}: {e}", exc_info=True
+                        f"❌ Failed to load extension {filename}: {e}", exc_info=True
                     )
 
         # Get Discord token from environment variable or Secret Manager

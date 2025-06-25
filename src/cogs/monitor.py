@@ -39,13 +39,18 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         self.total_error_count = 0
         self.monitor_start_time = None
 
-    def cog_load(self):
+    async def cog_load(self):
         """Starts the monitoring task when the cog is loaded."""
         logger.info("🔄 Starting MachineMonitor task loop")
         self.monitor_start_time = datetime.now(timezone.utc)
-        self.monitor_task_loop.start()
+        try:
+            self.monitor_task_loop.start()
+            logger.info("✅ MachineMonitor task loop started successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to start MachineMonitor task loop: {e}")
+            raise
 
-    def cog_unload(self):
+    async def cog_unload(self):
         """Cancels the monitoring task when the cog is unloaded."""
         logger.info("⏹️ Stopping MachineMonitor task loop")
         uptime = None
@@ -54,7 +59,9 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             logger.info(
                 f"📊 Monitor uptime: {uptime}, iterations: {self.loop_iteration_count}, total errors: {self.total_error_count}"
             )
-        self.monitor_task_loop.cancel()
+        if self.monitor_task_loop.is_running():
+            self.monitor_task_loop.cancel()
+            logger.info("✅ MachineMonitor task loop cancelled")
 
     @tasks.loop(minutes=1)
     async def monitor_task_loop(self):
@@ -65,6 +72,13 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         logger.info(
             f"🔄 Monitor loop iteration #{self.loop_iteration_count} starting at {loop_start_time.strftime('%Y-%m-%d %H:%M:%S UTC')}"
         )
+
+        # Debug: Log that we're actually inside the loop
+        logger.info(
+            f"🔍 Inside monitor_task_loop, bot user: {self.bot.user.name if self.bot.user else 'None'}"
+        )
+        logger.info(f"🔍 Loop is running: {self.monitor_task_loop.is_running()}")
+        logger.info(f"🔍 Loop next iteration: {self.monitor_task_loop.next_iteration}")
 
         try:
             # Get active channels with error handling
@@ -400,6 +414,14 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         await self.bot.wait_until_ready()
         logger.info("✅ Bot ready, monitor loop will start shortly")
 
+        # Additional debug info
+        logger.info(f"🔍 Bot user: {self.bot.user}")
+        logger.info(f"🔍 Bot guilds: {len(self.bot.guilds)} guilds")
+        logger.info(
+            f"🔍 Task loop current iteration: {self.monitor_task_loop.current_loop}"
+        )
+        logger.info(f"🔍 Task loop is running: {self.monitor_task_loop.is_running()}")
+
     def get_monitor_health_status(self) -> Dict[str, Any]:
         """Get health status information for the monitor loop"""
         from datetime import timedelta
@@ -415,6 +437,16 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         if self.last_successful_run:
             last_run_ago = now - self.last_successful_run
 
+        try:
+            next_iteration_seconds = None
+            if self.monitor_task_loop.next_iteration:
+                next_iteration_seconds = (
+                    self.monitor_task_loop.next_iteration.timestamp() - now.timestamp()
+                )
+        except Exception as e:
+            logger.warning(f"Could not calculate next iteration time: {e}")
+            next_iteration_seconds = None
+
         return {
             "is_running": not self.monitor_task_loop.is_being_cancelled()
             and self.monitor_task_loop.is_running(),
@@ -425,11 +457,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             ),
             "consecutive_errors": self.last_error_count,
             "total_errors": self.total_error_count,
-            "next_iteration_in_seconds": (
-                self.monitor_task_loop.next_iteration.timestamp() - now.timestamp()
-                if self.monitor_task_loop.next_iteration
-                else None
-            ),
+            "next_iteration_in_seconds": next_iteration_seconds,
         }
 
     async def manual_health_check(self) -> str:
@@ -477,13 +505,25 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
 
 async def setup(bot):
     """Setup function for Discord.py extension loading"""
+    logger.info("🔧 Setting up MachineMonitor cog...")
+
     # Get shared instances from bot
     database = getattr(bot, "database", None)
     notifier = getattr(bot, "notifier", None)
 
     if database is None or notifier is None:
-        raise RuntimeError(
+        error_msg = (
             "Database and Notifier must be initialized on bot before loading cogs"
         )
+        logger.error(f"❌ {error_msg}")
+        raise RuntimeError(error_msg)
 
-    await bot.add_cog(MachineMonitor(bot, database, notifier))
+    logger.info("✅ Database and Notifier instances found, creating MachineMonitor cog")
+    monitor_cog = MachineMonitor(bot, database, notifier)
+
+    try:
+        await bot.add_cog(monitor_cog)
+        logger.info("✅ MachineMonitor cog added to bot successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to add MachineMonitor cog to bot: {e}")
+        raise
