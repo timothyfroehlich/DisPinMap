@@ -4,6 +4,7 @@ Handles background polling and notification sending using the new submission-bas
 """
 
 import logging
+import traceback
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
@@ -31,21 +32,140 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         self.db = database
         self.notifier = notifier
 
+        # Health monitoring attributes
+        self.loop_iteration_count = 0
+        self.last_successful_run = None
+        self.last_error_count = 0
+        self.total_error_count = 0
+        self.monitor_start_time = None
+
     def cog_load(self):
         """Starts the monitoring task when the cog is loaded."""
+        logger.info("🔄 Starting MachineMonitor task loop")
+        self.monitor_start_time = datetime.now(timezone.utc)
         self.monitor_task_loop.start()
 
     def cog_unload(self):
         """Cancels the monitoring task when the cog is unloaded."""
+        logger.info("⏹️ Stopping MachineMonitor task loop")
+        uptime = None
+        if self.monitor_start_time:
+            uptime = datetime.now(timezone.utc) - self.monitor_start_time
+            logger.info(
+                f"📊 Monitor uptime: {uptime}, iterations: {self.loop_iteration_count}, total errors: {self.total_error_count}"
+            )
         self.monitor_task_loop.cancel()
 
     @tasks.loop(minutes=1)
     async def monitor_task_loop(self):
-        """Main monitoring loop"""
-        active_channel_configs = self.db.get_active_channels()
-        for config in active_channel_configs:
-            if await self._should_poll_channel(config):
-                await self.run_checks_for_channel(config["channel_id"], config)
+        """Main monitoring loop with comprehensive logging and error handling"""
+        loop_start_time = datetime.now(timezone.utc)
+        self.loop_iteration_count += 1
+
+        logger.info(
+            f"🔄 Monitor loop iteration #{self.loop_iteration_count} starting at {loop_start_time.strftime('%Y-%m-%d %H:%M:%S UTC')}"
+        )
+
+        try:
+            # Get active channels with error handling
+            try:
+                active_channel_configs = self.db.get_active_channels()
+                logger.info(
+                    f"📋 Found {len(active_channel_configs)} active channels with monitoring targets"
+                )
+            except Exception as e:
+                logger.error(f"❌ Database error getting active channels: {e}")
+                logger.error(f"Full traceback: {traceback.format_exc()}")
+                self.total_error_count += 1
+                return  # Skip this iteration but don't crash the loop
+
+            if not active_channel_configs:
+                logger.info("😴 No active channels to monitor, skipping iteration")
+                return
+
+            # Process each channel
+            channels_polled = 0
+            channels_skipped = 0
+
+            for config in active_channel_configs:
+                channel_id = config["channel_id"]
+
+                try:
+                    # Check if it's time to poll this channel
+                    should_poll = await self._should_poll_channel(config)
+
+                    if should_poll:
+                        logger.info(
+                            f"📞 Polling channel {channel_id} (poll rate: {config.get('poll_rate_minutes', 60)} min)"
+                        )
+
+                        # Track performance
+                        channel_start_time = datetime.now(timezone.utc)
+                        result = await self.run_checks_for_channel(channel_id, config)
+                        channel_duration = (
+                            datetime.now(timezone.utc) - channel_start_time
+                        ).total_seconds()
+
+                        logger.info(
+                            f"✅ Channel {channel_id} polling completed in {channel_duration:.2f}s, result: {result}"
+                        )
+                        channels_polled += 1
+                    else:
+                        last_poll = config.get("last_poll_at")
+                        if last_poll:
+                            minutes_since = int(
+                                (datetime.now(timezone.utc) - last_poll).total_seconds()
+                                / 60
+                            )
+                            logger.debug(
+                                f"⏰ Skipping channel {channel_id} (last polled {minutes_since} min ago)"
+                            )
+                        else:
+                            logger.debug(
+                                f"⏰ Skipping channel {channel_id} (never polled, but poll conditions not met)"
+                            )
+                        channels_skipped += 1
+
+                except Exception as e:
+                    logger.error(f"❌ Error processing channel {channel_id}: {e}")
+                    logger.error(f"Full traceback: {traceback.format_exc()}")
+                    self.total_error_count += 1
+                    # Continue with other channels even if one fails
+                    continue
+
+            # Log iteration summary
+            loop_duration = (
+                datetime.now(timezone.utc) - loop_start_time
+            ).total_seconds()
+            logger.info(
+                f"✅ Monitor loop iteration #{self.loop_iteration_count} completed in {loop_duration:.2f}s: {channels_polled} polled, {channels_skipped} skipped"
+            )
+
+            # Update health monitoring
+            self.last_successful_run = datetime.now(timezone.utc)
+            self.last_error_count = 0  # Reset error counter on successful run
+
+        except Exception as e:
+            # Catch-all for any unexpected errors in the main loop
+            logger.error(f"❌ CRITICAL: Unexpected error in monitor task loop: {e}")
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+            self.total_error_count += 1
+            self.last_error_count += 1
+
+            # If we have too many consecutive errors, log a warning but keep running
+            if self.last_error_count >= 5:
+                logger.warning(
+                    f"⚠️ Monitor loop has had {self.last_error_count} consecutive errors. System may need attention."
+                )
+
+        finally:
+            # Always log the end of the loop iteration
+            total_duration = (
+                datetime.now(timezone.utc) - loop_start_time
+            ).total_seconds()
+            logger.debug(
+                f"🏁 Monitor loop iteration #{self.loop_iteration_count} finished (total time: {total_duration:.2f}s)"
+            )
 
     async def run_checks_for_channel(
         self, channel_id: int, config: Dict[str, Any], is_manual_check: bool = False
@@ -106,8 +226,10 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
 
         except Exception as e:
             logger.error(
-                f"Error {'in manual check' if is_manual_check else 'polling'} for channel {channel_id}: {e}"
+                f"❌ Error {'in manual check' if is_manual_check else 'polling'} for channel {channel_id}: {e}"
             )
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+
             if is_manual_check:
                 channel = self.bot.get_channel(channel_id)
                 if channel:
@@ -236,27 +358,120 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         return False
 
     async def _should_poll_channel(self, config: Dict[str, Any]) -> bool:
-        """Check if it's time to poll a channel based on its poll rate"""
+        """Check if it's time to poll a channel based on its poll rate with detailed logging"""
         try:
+            channel_id = config.get("channel_id", "unknown")
             poll_interval_minutes = config.get("poll_rate_minutes", 60)
             last_poll = config.get("last_poll_at")
 
             if last_poll is None:
+                logger.debug(
+                    f"🔄 Channel {channel_id}: First poll (no previous poll time)"
+                )
                 return True
 
             time_since_last_poll = datetime.now(timezone.utc) - last_poll
             minutes_since_last_poll = time_since_last_poll.total_seconds() / 60
 
-            return minutes_since_last_poll >= poll_interval_minutes
+            should_poll = minutes_since_last_poll >= poll_interval_minutes
+
+            if should_poll:
+                logger.debug(
+                    f"✅ Channel {channel_id}: Ready to poll ({minutes_since_last_poll:.1f} min >= {poll_interval_minutes} min)"
+                )
+            else:
+                logger.debug(
+                    f"⏰ Channel {channel_id}: Not ready ({minutes_since_last_poll:.1f} min < {poll_interval_minutes} min)"
+                )
+
+            return should_poll
+
         except Exception as e:
             logger.error(
-                f"Error checking poll time for channel {config.get('channel_id')}: {e}"
+                f"❌ Error checking poll time for channel {config.get('channel_id')}: {e}"
             )
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             return False
 
     @monitor_task_loop.before_loop
     async def before_monitor_task_loop(self):
+        """Setup before starting the monitor loop"""
+        logger.info("⏳ Waiting for bot to be ready before starting monitor loop...")
         await self.bot.wait_until_ready()
+        logger.info("✅ Bot ready, monitor loop will start shortly")
+
+    def get_monitor_health_status(self) -> Dict[str, Any]:
+        """Get health status information for the monitor loop"""
+        from datetime import timedelta
+        from typing import Optional
+
+        now = datetime.now(timezone.utc)
+        uptime: Optional[timedelta] = None
+        last_run_ago: Optional[timedelta] = None
+
+        if self.monitor_start_time:
+            uptime = now - self.monitor_start_time
+
+        if self.last_successful_run:
+            last_run_ago = now - self.last_successful_run
+
+        return {
+            "is_running": not self.monitor_task_loop.is_being_cancelled()
+            and self.monitor_task_loop.is_running(),
+            "iteration_count": self.loop_iteration_count,
+            "uptime_seconds": uptime.total_seconds() if uptime else None,
+            "last_successful_run_ago_seconds": last_run_ago.total_seconds()
+            if last_run_ago
+            else None,
+            "consecutive_errors": self.last_error_count,
+            "total_errors": self.total_error_count,
+            "next_iteration_in_seconds": self.monitor_task_loop.next_iteration.timestamp()
+            - now.timestamp()
+            if self.monitor_task_loop.next_iteration
+            else None,
+        }
+
+    async def manual_health_check(self) -> str:
+        """Manual health check that can be called from commands"""
+        status = self.get_monitor_health_status()
+
+        lines = [
+            "🌡️ **Monitor Loop Health Status**",
+            f"Running: {'✅ Yes' if status['is_running'] else '❌ No'}",
+            f"Iterations: {status['iteration_count']}",
+        ]
+
+        if status["uptime_seconds"] is not None:
+            uptime_str = self._format_duration(status["uptime_seconds"])
+            lines.append(f"Uptime: {uptime_str}")
+
+        if status["last_successful_run_ago_seconds"] is not None:
+            last_run_str = self._format_duration(
+                status["last_successful_run_ago_seconds"]
+            )
+            lines.append(f"Last successful run: {last_run_str} ago")
+        else:
+            lines.append("Last successful run: Never")
+
+        lines.append(f"Total errors: {status['total_errors']}")
+
+        if status["consecutive_errors"] > 0:
+            lines.append(f"⚠️ Consecutive errors: {status['consecutive_errors']}")
+
+        if status["next_iteration_in_seconds"] is not None:
+            next_str = self._format_duration(status["next_iteration_in_seconds"])
+            lines.append(f"Next iteration: in {next_str}")
+
+        return "\n".join(lines)
+
+    def _format_duration(self, seconds: float) -> str:
+        """Format duration in seconds to human readable string"""
+        if seconds < 60:
+            return f"{seconds:.0f}s"
+        elif seconds < 3600:
+            return f"{seconds/60:.1f}m"
+        else:
+            return f"{seconds/3600:.1f}h"
 
 
 async def setup(bot):
