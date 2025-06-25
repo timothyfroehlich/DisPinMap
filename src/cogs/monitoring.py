@@ -361,7 +361,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 return
 
             logger.info(
-                f"🔍 Manual check requested by {ctx.author} in channel {channel_id}"
+                f"🔍 Manual check requested by {getattr(ctx, 'author', 'unknown')} in channel {channel_id}"
             )
 
             # Perform the check with timing

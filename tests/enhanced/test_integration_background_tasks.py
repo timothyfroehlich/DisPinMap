@@ -15,16 +15,19 @@ Key focus areas:
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+
+# from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from src.cogs.monitor import MachineMonitor
-from src.cogs.monitoring import MonitoringCog
+
+# from src.cogs.monitoring import MonitoringCog
 from src.notifier import Notifier
 from tests.utils.db_utils import cleanup_test_database, setup_test_database
-from tests.utils.time_mock import MonitoringSimulator, TimeController
+
+# from tests.utils.time_mock import MonitoringSimulator, TimeController
 
 logger = logging.getLogger(__name__)
 
@@ -113,11 +116,16 @@ class TestActualMonitoringLoopExecution:
         }
 
         # Mock API calls to track execution
-        with patch(
-            "src.cogs.monitor.fetch_submissions_for_location", new_callable=AsyncMock
-        ) as mock_location_fetch, patch(
-            "src.cogs.monitor.fetch_submissions_for_coordinates", new_callable=AsyncMock
-        ) as mock_coord_fetch:
+        with (
+            patch(
+                "src.cogs.monitor.fetch_submissions_for_location",
+                new_callable=AsyncMock,
+            ) as mock_location_fetch,
+            patch(
+                "src.cogs.monitor.fetch_submissions_for_coordinates",
+                new_callable=AsyncMock,
+            ) as mock_coord_fetch,
+        ):
             # Setup API mocks to return controlled data
             mock_location_fetch.return_value = [
                 {
@@ -358,12 +366,15 @@ class TestActualMonitoringLoopExecution:
                 error_recovery_log.append(f"API success #{api_call_count}")
                 return []
 
-        with patch(
-            "src.cogs.monitor.fetch_submissions_for_location",
-            side_effect=failing_api_fetch,
-        ), patch(
-            "src.cogs.monitor.fetch_submissions_for_coordinates",
-            side_effect=failing_api_fetch,
+        with (
+            patch(
+                "src.cogs.monitor.fetch_submissions_for_location",
+                side_effect=failing_api_fetch,
+            ),
+            patch(
+                "src.cogs.monitor.fetch_submissions_for_coordinates",
+                side_effect=failing_api_fetch,
+            ),
         ):
             # Start monitoring
             monitor_cog.cog_load()
@@ -496,11 +507,16 @@ class TestEndToEndMonitoringFunctionality:
         integration_notifier.post_submissions = tracking_post_submissions
 
         # Mock API calls with realistic submissions
-        with patch(
-            "src.cogs.monitor.fetch_submissions_for_location", new_callable=AsyncMock
-        ) as mock_location_fetch, patch(
-            "src.cogs.monitor.fetch_submissions_for_coordinates", new_callable=AsyncMock
-        ) as mock_coord_fetch:
+        with (
+            patch(
+                "src.cogs.monitor.fetch_submissions_for_location",
+                new_callable=AsyncMock,
+            ) as mock_location_fetch,
+            patch(
+                "src.cogs.monitor.fetch_submissions_for_coordinates",
+                new_callable=AsyncMock,
+            ) as mock_coord_fetch,
+        ):
             # Setup realistic submission data
             test_submissions = [
                 {
@@ -646,11 +662,16 @@ class TestEndToEndMonitoringFunctionality:
         monitor_cog.run_checks_for_channel = channel_tracking_run_checks
 
         # Mock API with different responses for different channels
-        with patch(
-            "src.cogs.monitor.fetch_submissions_for_location", new_callable=AsyncMock
-        ) as mock_location_fetch, patch(
-            "src.cogs.monitor.fetch_submissions_for_coordinates", new_callable=AsyncMock
-        ) as mock_coord_fetch:
+        with (
+            patch(
+                "src.cogs.monitor.fetch_submissions_for_location",
+                new_callable=AsyncMock,
+            ) as mock_location_fetch,
+            patch(
+                "src.cogs.monitor.fetch_submissions_for_coordinates",
+                new_callable=AsyncMock,
+            ) as mock_coord_fetch,
+        ):
             # Different submission data for different calls (simulating different locations)
             submission_responses = [
                 [
@@ -822,7 +843,7 @@ class TestPerformanceAndReliabilityTesting:
                 )
 
                 return result
-            except Exception as e:
+            except Exception:
                 performance_metrics["errors_encountered"] += 1
                 raise
 
@@ -931,7 +952,7 @@ class TestPerformanceAndReliabilityTesting:
 
                 return result
 
-            except Exception as e:
+            except Exception:
                 # Track failed cycle
                 reliability_metrics["failed_cycles"] += 1
                 reliability_metrics["consecutive_failures"] += 1

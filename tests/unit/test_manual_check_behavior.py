@@ -557,6 +557,7 @@ class TestManualCheckBehavior:
 
         Starting conditions:
         - bot.get_cog returns None (monitor cog not loaded)
+        - Valid channel configuration exists
         - Valid Discord context for error message
 
         Assertions:
@@ -565,6 +566,9 @@ class TestManualCheckBehavior:
         - User receives informative error message
         """
         ctx = MockContext(12345, 67890)
+
+        # Setup a valid channel configuration first
+        db.update_channel_config(12345, 67890, is_active=True)
 
         # Setup bot to return None for monitor cog
         monitoring_cog.bot.get_cog = MagicMock(return_value=None)
@@ -576,4 +580,4 @@ class TestManualCheckBehavior:
         monitoring_cog.notifier.log_and_send.assert_called()
         call_args = monitoring_cog.notifier.log_and_send.call_args
         message = call_args[0][1]
-        assert "Could not find the monitor" in message
+        assert "Monitor system is not available" in message

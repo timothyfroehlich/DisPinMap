@@ -420,15 +420,16 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             and self.monitor_task_loop.is_running(),
             "iteration_count": self.loop_iteration_count,
             "uptime_seconds": uptime.total_seconds() if uptime else None,
-            "last_successful_run_ago_seconds": last_run_ago.total_seconds()
-            if last_run_ago
-            else None,
+            "last_successful_run_ago_seconds": (
+                last_run_ago.total_seconds() if last_run_ago else None
+            ),
             "consecutive_errors": self.last_error_count,
             "total_errors": self.total_error_count,
-            "next_iteration_in_seconds": self.monitor_task_loop.next_iteration.timestamp()
-            - now.timestamp()
-            if self.monitor_task_loop.next_iteration
-            else None,
+            "next_iteration_in_seconds": (
+                self.monitor_task_loop.next_iteration.timestamp() - now.timestamp()
+                if self.monitor_task_loop.next_iteration
+                else None
+            ),
         }
 
     async def manual_health_check(self) -> str:
