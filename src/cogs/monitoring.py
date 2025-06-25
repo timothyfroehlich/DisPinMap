@@ -3,6 +3,7 @@ Cog for monitoring-related commands
 """
 
 import logging
+import traceback
 from datetime import datetime, timezone
 from typing import List, Optional
 
@@ -273,18 +274,111 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             ctx, Messages.Command.Export.HEADER.format(commands="\n".join(commands))
         )
 
+    @commands.command(name="monitor_health")
+    async def monitor_health(self, ctx):
+        """Show monitor loop health status and diagnostics."""
+        try:
+            # Get the monitor cog
+            monitor_cog = self.bot.get_cog("MachineMonitor")
+            if not monitor_cog:
+                await self.notifier.log_and_send(
+                    ctx, "❌ Error: Monitor system is not available."
+                )
+                return
+
+            # Get health status
+            health_status = await monitor_cog.manual_health_check()
+
+            # Add channel-specific information
+            channel_config = self.db.get_channel_config(ctx.channel.id)
+            targets = self.db.get_monitoring_targets(ctx.channel.id)
+
+            channel_info = []
+            if channel_config:
+                channel_info.append("\n📞 **This Channel Status:**")
+                channel_info.append(
+                    f"Active: {'✅ Yes' if channel_config.get('is_active') else '❌ No'}"
+                )
+                channel_info.append(f"Targets: {len(targets)}")
+                channel_info.append(
+                    f"Poll rate: {channel_config.get('poll_rate_minutes', 60)} minutes"
+                )
+
+                last_poll = channel_config.get("last_poll_at")
+                if last_poll:
+                    now = datetime.now(timezone.utc)
+                    if last_poll.tzinfo is None:
+                        last_poll = last_poll.replace(tzinfo=timezone.utc)
+                    ago = now - last_poll
+                    if ago.total_seconds() < 3600:
+                        time_str = f"{int(ago.total_seconds() / 60)} minutes ago"
+                    else:
+                        time_str = f"{int(ago.total_seconds() / 3600)} hours ago"
+                    channel_info.append(f"Last polled: {time_str}")
+                else:
+                    channel_info.append("Last polled: Never")
+            else:
+                channel_info.append("\n📞 **This Channel Status:** Not configured")
+
+            full_status = health_status + "\n".join(channel_info)
+            await self.notifier.log_and_send(ctx, full_status)
+
+        except Exception as e:
+            logger.error(f"Error getting monitor health status: {e}")
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+            await self.notifier.log_and_send(
+                ctx, f"❌ Error getting health status: {str(e)}"
+            )
+
     @commands.command(name="check")
     async def check(self, ctx):
-        """Immediately check for new submissions."""
-        # Get the monitor cog and channel config
-        monitor_cog = self.bot.get_cog("MachineMonitor")
-        if monitor_cog:
-            config = self.db.get_channel_config(ctx.channel.id)
-            await monitor_cog.run_checks_for_channel(
-                ctx.channel.id, config, is_manual_check=True
+        """Immediately check for new submissions with improved error handling."""
+        channel_id = ctx.channel.id
+
+        try:
+            # Validate channel configuration
+            config = self.db.get_channel_config(channel_id)
+            if not config:
+                await self.notifier.log_and_send(
+                    ctx,
+                    "❌ This channel is not configured for monitoring. Use `!setup` first.",
+                )
+                return
+
+            if not config["is_active"]:
+                await self.notifier.log_and_send(
+                    ctx,
+                    "❌ Monitoring is not active for this channel. Use `!start` first.",
+                )
+                return
+
+            # Get the monitor cog
+            monitor_cog = self.bot.get_cog("MachineMonitor")
+            if not monitor_cog:
+                await self.notifier.log_and_send(
+                    ctx, "❌ Error: Monitor system is not available."
+                )
+                return
+
+            logger.info(
+                f"🔍 Manual check requested by {ctx.author} in channel {channel_id}"
             )
-        else:
-            await self.notifier.log_and_send(ctx, "Error: Could not find the monitor.")
+
+            # Perform the check with timing
+            start_time = datetime.now(timezone.utc)
+            result = await monitor_cog.run_checks_for_channel(
+                channel_id, config, is_manual_check=True
+            )
+            duration = (datetime.now(timezone.utc) - start_time).total_seconds()
+
+            logger.info(
+                f"✅ Manual check completed for channel {channel_id} in {duration:.2f}s, result: {result}"
+            )
+
+        except Exception as e:
+            logger.error(f"❌ Manual check failed for channel {channel_id}: {e}")
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+            await self.notifier.log_and_send(ctx, f"❌ Manual check failed: {str(e)}")
 
     async def _handle_location_add(self, ctx, location_input: str):
         try:
@@ -382,6 +476,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     )
         except Exception as e:
             logger.error(f"Error handling location add for '{location_input}': {e}")
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             await self.notifier.log_and_send(
                 ctx,
                 Messages.Command.Add.ERROR.format(
@@ -438,6 +533,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             )
         except Exception as e:
             logger.error(f"Error handling coordinates add for '{lat}, {lon}': {e}")
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             await self.notifier.log_and_send(
                 ctx,
                 Messages.Command.Add.ERROR.format(
