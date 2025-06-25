@@ -1,13 +1,27 @@
 # Discord Pinball Map Bot
 
-A Python Discord bot that continuously monitors the pinballmap.com API for changes in pinball machine locations and automatically posts updates to configured Discord channels.
+A Python Discord bot that continuously monitors the [pinballmap.com](https://pinballmap.com) API for changes in pinball machine locations and posts updates to Discord channels.
+
+The project is deployed on Google Cloud Platform using Terraform and Docker.
 
 ## Features
-- **Coordinate-Based Monitoring**: Monitor any geographic area using lat/lon coordinates with custom radius
-- **Individual Location Tracking**: Monitor specific pinball locations by ID
-- **Multi-Channel Support**: Each Discord channel can monitor different combinations independently
-- **Real-Time Updates**: Instant notifications when machines are added or removed
-- **Flexible Configuration**: Mix and match coordinate areas and specific locations
+
+- Monitor locations, cities, or geographic coordinates.
+- Per-channel configuration for targets, poll rate, and notification types.
+- Export and import configurations easily.
+- Built to run efficiently on GCP Cloud Run.
+
+---
+
+## Getting Started
+
+- **For Users**: To learn how to use the bot's commands in your Discord server, please see the **[User Guide](USER_DOCUMENTATION.md)**.
+
+- **For Developers**: To contribute to the project, please consult the **[Developer Handbook](docs/DEVELOPER_HANDBOOK.md)** for a complete guide on architecture, setup, testing, and deployment.
+
+- **For AI Agents**: If you are using an AI code agent (Claude, Copilot, etc.), see [`CLAUDE.md`](CLAUDE.md) in the project root for agent-specific instructions.
+
+---
 
 ## Dependencies
 
