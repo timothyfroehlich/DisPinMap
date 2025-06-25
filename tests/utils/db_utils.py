@@ -2,10 +2,9 @@
 Database utilities for testing.
 
 This module provides utilities for setting up test databases, cleaning up test data,
-and verifying database state. It supports both SQLite and PostgreSQL databases.
+and verifying database state. (SQLite only)
 """
 
-import os
 from typing import Any, Dict, Generator, Optional
 
 import pytest
@@ -17,54 +16,31 @@ from src.database import Database
 from src.models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
 
 
-def get_test_db_url(db_type: str) -> str:
-    """Get test database URL from environment or use default."""
-    if db_type in ["postgres", "postgresql"]:
-        return os.getenv(
-            "TEST_DATABASE_URL", "postgresql://test:test@localhost:5432/test_db"
-        )
-    else:
-        return "sqlite:///:memory:"
-
-
-def create_test_engine(db_type: str):
-    """Create test database engine."""
+def create_test_engine():
+    """Create test database engine (SQLite only)."""
     return create_engine(
-        get_test_db_url(db_type),
+        "sqlite:///:memory:",
         poolclass=NullPool,  # Disable connection pooling for tests
         echo=False,
     )
 
 
-def setup_test_database(
-    db_type: str = "sqlite", db_path: Optional[str] = None
-) -> Database:
+def setup_test_database(db_path: Optional[str] = None) -> Database:
     """
-    Set up a test database.
+    Set up a test database (SQLite only).
 
     Args:
-        db_type: Type of database to use ('sqlite', 'postgres', or 'postgresql')
         db_path: Path to SQLite database file (only used for SQLite)
 
     Returns:
         Database instance configured for testing
     """
-    if db_type == "sqlite":
-        if db_path is None:
-            db_path = ":memory:"
-        # Create a fresh SQLite database instance
-        db = Database(db_path)
-    elif db_type in ["postgres", "postgresql"]:
-        # For PostgreSQL, we need to set the DATABASE_URL environment variable
-        # since the Database class uses environment variables for PostgreSQL config
-        os.environ["DATABASE_URL"] = get_test_db_url(db_type)
-        db = Database()
-    else:
-        raise ValueError(f"Unsupported database type: {db_type}")
-
+    if db_path is None:
+        db_path = ":memory:"
+    # Create a fresh SQLite database instance
+    db = Database(db_path)
     # Create tables
     db.init_database()
-
     return db
 
 
@@ -87,9 +63,9 @@ def cleanup_test_database(db: Database):
 
 
 @pytest.fixture(scope="session")
-def db_engine(db_type):
+def db_engine():
     """Create test database engine."""
-    engine = create_test_engine(db_type)
+    engine = create_test_engine()
     yield engine
     engine.dispose()
 

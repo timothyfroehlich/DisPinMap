@@ -1,6 +1,6 @@
 """
 Unit tests for Database module including session management, constraints, and error handling
-Supports both SQLite and PostgreSQL databases
+(SQLite only)
 """
 
 import os
@@ -17,16 +17,10 @@ from tests.utils.db_utils import (
 )
 
 
-@pytest.fixture(params=["sqlite", "postgres"])
-def db_type(request):
-    """Fixture to provide database type for testing"""
-    return request.param
-
-
 @pytest.fixture
-def db(db_type):
-    """Create test database of specified type"""
-    test_db = setup_test_database(db_type)
+def db():
+    """Create test database (SQLite only)"""
+    test_db = setup_test_database()
     yield test_db
     cleanup_test_database(test_db)
 
@@ -244,69 +238,6 @@ class TestDatabaseConstraints:
         for i in range(3):
             assert targets1[i]["target_name"] == targets2[i]["target_name"]
             assert targets1[i]["id"] == targets2[i]["id"]
-
-
-class TestPostgreSQLSpecific:
-    @pytest.mark.skipif(
-        os.getenv("DB_TYPE") != "postgres", reason="PostgreSQL specific test"
-    )
-    def test_concurrent_connections(self, db):
-        """Test handling of concurrent database connections"""
-        # Create multiple connections
-        connections = []
-        for _ in range(5):
-            conn = db.get_session()
-            connections.append(conn)
-
-        # Verify all connections work
-        for conn in connections:
-            with conn as session:
-                session.query(ChannelConfig).first()
-
-        # Clean up
-        for conn in connections:
-            conn.close()
-
-    @pytest.mark.skipif(
-        os.getenv("DB_TYPE") != "postgres", reason="PostgreSQL specific test"
-    )
-    def test_connection_pool(self, db):
-        """Test connection pool behavior"""
-        # Get multiple sessions from the pool
-        sessions = []
-        for _ in range(5):
-            with db.get_session() as session:
-                sessions.append(session)
-                session.query(ChannelConfig).first()
-
-        # Verify all sessions worked
-        assert len(sessions) == 5
-
-    @pytest.mark.skipif(
-        os.getenv("DB_TYPE") != "postgres", reason="PostgreSQL specific test"
-    )
-    def test_transaction_isolation(self, db):
-        """Test transaction isolation level"""
-        channel_id = 12345
-        guild_id = 67890
-
-        # Start a transaction
-        with db.get_session() as session1:
-            # Create a config in session1
-            db.update_channel_config(channel_id, guild_id, is_active=True)
-
-            # Start another session and verify it doesn't see the uncommitted change
-            with db.get_session() as _:
-                config = db.get_channel_config(channel_id)
-                assert config is None  # Should not see uncommitted change
-
-            # Commit the change
-            session1.commit()
-
-        # Now verify the change is visible
-        config = db.get_channel_config(channel_id)
-        assert config is not None
-        assert config["is_active"] is True
 
 
 class TestDatabasePathConfiguration:

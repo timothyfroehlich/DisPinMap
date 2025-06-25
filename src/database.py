@@ -32,19 +32,11 @@ except ImportError:
 class Database:
     def __init__(self, db_path: Optional[str] = None):
         """
-        Initialize database with SQLAlchemy - supports both SQLite and PostgreSQL
+        Initialize database with SQLAlchemy (SQLite only)
 
         Args:
             db_path: Optional database file path. If None, uses DATABASE_PATH environment
                     variable or defaults to "pinball_bot.db" for backward compatibility.
-
-        DUAL-MODE ARCHITECTURE:
-        - SQLite: Default mode for cost optimization (local files + cloud storage backup)
-        - PostgreSQL: Preserved for GCP production deployments (currently disabled for cost savings)
-
-        Switch modes by setting DB_TYPE environment variable:
-        - DB_TYPE=sqlite (default, cost-optimized)
-        - DB_TYPE=postgres (GCP Cloud SQL, higher cost but enterprise features)
 
         DATABASE PATH CONFIGURATION:
         - Local development: "pinball_bot.db" (default)
@@ -55,22 +47,12 @@ class Database:
         if db_path is None:
             db_path = os.getenv("DATABASE_PATH", "pinball_bot.db")
 
-        db_type = os.getenv("DB_TYPE", "sqlite").lower()
-
-        if db_type == "postgres":
-            # POSTGRESQL MODE - MAINTAINED FOR GCP PRODUCTION USE
-            # Currently disabled by default for cost optimization
-            # Re-enable by setting DB_TYPE=postgres and deploying Terraform PostgreSQL resources
-            self.engine = self._create_postgres_engine()
+        if db_path == ":memory:":
+            # For in-memory databases (testing)
+            self.engine = create_engine("sqlite:///:memory:", echo=False)
         else:
-            # SQLITE MODE - ACTIVE FOR COST OPTIMIZATION
-            # Default for local development, testing, and cost-conscious cloud deployments
-            if db_path == ":memory:":
-                # For in-memory databases (testing)
-                self.engine = create_engine("sqlite:///:memory:", echo=False)
-            else:
-                # For file databases (production SQLite mode)
-                self.engine = create_engine(f"sqlite:///{db_path}", echo=False)
+            # For file databases (production SQLite mode)
+            self.engine = create_engine(f"sqlite:///{db_path}", echo=False)
 
         # Create session factory
         self.SessionLocal = sessionmaker(
@@ -79,110 +61,6 @@ class Database:
 
         # Create all tables
         self.init_database()
-
-    def _create_postgres_engine(self):
-        """
-        Create PostgreSQL engine using Google Cloud SQL Connector
-
-        POSTGRESQL INFRASTRUCTURE - PRESERVED FOR FUTURE GCP DEPLOYMENTS
-
-        This method maintains full PostgreSQL connectivity for GCP Cloud SQL.
-        Currently not active by default due to cost optimization (SQLite mode active).
-
-        To re-enable PostgreSQL mode:
-        1. Set DB_TYPE=postgres environment variable
-        2. Deploy Terraform PostgreSQL resources (terraform/main.tf)
-        3. Ensure all required environment variables are set:
-           - DB_INSTANCE_CONNECTION_NAME
-           - DB_USER, DB_NAME
-           - DB_PASSWORD_SECRET_NAME
-
-        Dependencies: google-cloud-sql-connector[pg8000], google-cloud-secret-manager
-        """
-        try:
-            from google.cloud.sql.connector import Connector
-        except ImportError:
-            logger.error(
-                "google-cloud-sql-connector not available for PostgreSQL connection"
-            )
-            raise ImportError(
-                "Install google-cloud-sql-connector[pg8000] for PostgreSQL support"
-            )
-
-        # Get required environment variables
-        instance_connection_name = os.getenv("DB_INSTANCE_CONNECTION_NAME")
-        db_user = os.getenv("DB_USER")
-        db_name = os.getenv("DB_NAME")
-        db_password_secret_name = os.getenv("DB_PASSWORD_SECRET_NAME")
-
-        if not all(
-            [instance_connection_name, db_user, db_name, db_password_secret_name]
-        ):
-            missing_vars = [
-                var
-                for var, val in [
-                    ("DB_INSTANCE_CONNECTION_NAME", instance_connection_name),
-                    ("DB_USER", db_user),
-                    ("DB_NAME", db_name),
-                    ("DB_PASSWORD_SECRET_NAME", db_password_secret_name),
-                ]
-                if not val
-            ]
-            logger.error(
-                f"Missing required environment variables for PostgreSQL: {missing_vars}"
-            )
-            raise ValueError(f"Missing required environment variables: {missing_vars}")
-
-        # Get database password from Secret Manager
-        try:
-            from google.cloud import secretmanager
-
-            secret_client = secretmanager.SecretManagerServiceClient()
-            project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
-            if not project_id:
-                logger.error("GOOGLE_CLOUD_PROJECT environment variable not set")
-                raise ValueError(
-                    "GOOGLE_CLOUD_PROJECT environment variable required for Secret Manager"
-                )
-
-            secret_name = f"projects/{project_id}/secrets/{db_password_secret_name}/versions/latest"
-            response = secret_client.access_secret_version(
-                request={"name": secret_name}
-            )
-            db_pass = response.payload.data.decode("UTF-8")
-            logger.info("Successfully retrieved database password from Secret Manager")
-        except ImportError:
-            logger.error("google-cloud-secret-manager not available")
-            raise ImportError(
-                "Install google-cloud-secret-manager for GCP Secret Manager support"
-            )
-        except Exception as e:
-            logger.error(
-                f"Failed to retrieve database password from Secret Manager: {e}"
-            )
-            raise
-
-        # Initialize Cloud SQL Connector
-        connector = Connector()
-
-        def getconn():
-            """Create database connection using Cloud SQL Connector"""
-            conn = connector.connect(
-                instance_connection_name,
-                "pg8000",
-                user=db_user,
-                password=db_pass,
-                db=db_name,
-            )
-            return conn
-
-        # Create SQLAlchemy engine with the connector
-        engine = create_engine("postgresql+pg8000://", creator=getconn, echo=False)
-
-        logger.info(
-            f"Created PostgreSQL engine for instance: {instance_connection_name}"
-        )
-        return engine
 
     def init_database(self) -> None:
         """Initialize database tables"""

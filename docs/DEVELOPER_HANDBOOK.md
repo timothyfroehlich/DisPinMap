@@ -17,9 +17,7 @@ The DisPinMap bot is a Python application designed to run on Google Cloud Platfo
 
 ### Core Components
 - **Discord Bot**: The main application logic, built with `discord.py`. It handles user commands, schedules checks, and posts updates.
-- **Database**: The bot uses a dual-mode database architecture for flexibility and cost-optimization. The default and recommended mode is **SQLite**.
-    - **SQLite Mode (Default)**: Uses a local SQLite file for data persistence. This is cost-effective and sufficient for most use cases. The database file is backed up to Google Cloud Storage.
-    - **PostgreSQL Mode (Legacy)**: Support for Google Cloud SQL exists but is deprecated for standard deployments to minimize costs. The Terraform code for it is preserved but commented out.
+- **Database**: The bot uses SQLite for all data persistence. This is cost-effective and sufficient for all use cases. The database file is backed up to Google Cloud Storage.
 - **API Clients**: The bot interacts with two external APIs:
     - [Pinball Map API](https://pinballmap.com/api/v1/docs): To fetch location and machine data.
     - [Open-Meteo Geocoding API](https://open-meteo.com/en/docs/geocoding-api): To convert city names into coordinates.
