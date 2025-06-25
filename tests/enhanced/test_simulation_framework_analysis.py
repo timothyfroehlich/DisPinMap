@@ -15,8 +15,7 @@ Key focus areas:
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -116,7 +115,7 @@ class TestCurrentSimulationFrameworkLimitations:
             monitor_cog = MachineMonitor(mock_bot, test_db, mock_notifier)
 
             # Create monitoring simulator
-            monitoring_sim = MonitoringSimulator(time_controller, monitor_cog)
+            MonitoringSimulator(time_controller, monitor_cog)
 
             # Test if time advancement affects task loop scheduling
             original_time = time_controller.current_time
@@ -146,11 +145,6 @@ class TestCurrentSimulationFrameworkLimitations:
             api_sim = framework.api_sim
 
             # Test if API simulator tracks calls accurately
-            initial_logs = (
-                api_sim.get_request_logs()
-                if hasattr(api_sim, "get_request_logs")
-                else {}
-            )
 
             # Simulate monitoring that should make API calls
             await framework.simulate_periodic_monitoring(duration_minutes=60)
@@ -258,11 +252,7 @@ class TestEnhancedSimulationFrameworkProposals:
             # with patch('asyncio.sleep', side_effect=controlled_sleep):
 
             # For now, demonstrate the concept
-            mock_bot = AsyncMock()
             test_db = setup_test_database()
-            mock_notifier = AsyncMock()
-
-            monitor_cog = MachineMonitor(mock_bot, test_db, mock_notifier)
 
             # Set up timing expectations
             start_time = time_controller.current_time

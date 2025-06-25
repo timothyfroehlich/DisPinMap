@@ -13,14 +13,12 @@ Key improvements over existing tests:
 6. Validates message truncation and splitting behavior
 """
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
-from src.messages import Messages
 from src.notifier import Notifier
 from tests.utils.db_utils import cleanup_test_database, setup_test_database
-from tests.utils.generators import generate_submission_data
 
 
 @pytest.fixture
@@ -371,7 +369,6 @@ class TestExportCommandEdgeCases:
     ):
         """Test export with special characters in location/city names."""
         channel_id = 12345
-        guild_id = 67890
 
         # Add targets with special characters
         db.add_monitoring_target(channel_id, "location", "Dave & Buster's", "456")
@@ -381,7 +378,6 @@ class TestExportCommandEdgeCases:
         db.add_monitoring_target(channel_id, "location", "Barcade® NYC", "789")
 
         targets = db.get_monitoring_targets(channel_id)
-        config = db.get_channel_config(channel_id)
 
         # Generate export
         export_lines = ["# Channel Configuration Export"]
@@ -413,7 +409,6 @@ class TestExportCommandEdgeCases:
     async def test_export_command_truncation_handling(self, notifier, mock_channel, db):
         """Test export command with many targets that might exceed message limits."""
         channel_id = 12345
-        guild_id = 67890
 
         # Add many targets
         for i in range(50):
