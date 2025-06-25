@@ -13,14 +13,6 @@ output "artifact_registry_repository_url" {
   value       = "${var.gcp_region}-docker.pkg.dev/${var.gcp_project_id}/${google_artifact_registry_repository.docker_repo.repository_id}"
 }
 
-# PostgreSQL database outputs - PRESERVED BUT DISABLED (matches main.tf)
-/*
-output "database_connection_name" {
-  description = "Cloud SQL instance connection name"
-  value       = google_sql_database_instance.postgres_instance.connection_name
-}
-*/
-
 output "service_account_email" {
   description = "Email of the service account used by Cloud Run"
   value       = google_service_account.cloud_run_sa.email
