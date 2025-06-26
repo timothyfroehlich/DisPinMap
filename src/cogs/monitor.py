@@ -67,6 +67,35 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         loop_start_time = datetime.now(timezone.utc)
         self.loop_iteration_count += 1
 
+        await self._log_loop_startup(loop_start_time)
+
+        try:
+            active_channel_configs = (
+                await self._get_active_channels_with_error_handling()
+            )
+            if not active_channel_configs:
+                logger.info("😴 No active channels to monitor, skipping iteration")
+                return
+
+            channels_polled, channels_skipped = await self._process_all_channels(
+                active_channel_configs
+            )
+            await self._log_iteration_summary(
+                loop_start_time, channels_polled, channels_skipped
+            )
+
+            # Update health monitoring
+            self.last_successful_run = datetime.now(timezone.utc)
+            self.last_error_count = 0  # Reset error counter on successful run
+
+        except Exception as e:
+            await self._handle_critical_loop_error(e)
+
+        finally:
+            await self._log_loop_completion(loop_start_time)
+
+    async def _log_loop_startup(self, loop_start_time: datetime) -> None:
+        """Log the startup of a monitor loop iteration with debug information"""
         logger.info(
             f"🔄 Monitor loop iteration #{self.loop_iteration_count} starting at {loop_start_time.strftime('%Y-%m-%d %H:%M:%S UTC')}"
         )
@@ -78,106 +107,113 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         logger.info(f"🔍 Loop is running: {self.monitor_task_loop.is_running()}")
         logger.info(f"🔍 Loop next iteration: {self.monitor_task_loop.next_iteration}")
 
+    async def _get_active_channels_with_error_handling(self) -> List[Dict[str, Any]]:
+        """Get active channels with comprehensive error handling"""
         try:
-            # Get active channels with error handling
-            try:
-                active_channel_configs = self.db.get_active_channels()
-                logger.info(
-                    f"📋 Found {len(active_channel_configs)} active channels with monitoring targets"
-                )
-            except Exception as e:
-                logger.error(f"❌ Database error getting active channels: {e}")
-                logger.error(f"Full traceback: {traceback.format_exc()}")
-                self.total_error_count += 1
-                return  # Skip this iteration but don't crash the loop
-
-            if not active_channel_configs:
-                logger.info("😴 No active channels to monitor, skipping iteration")
-                return
-
-            # Process each channel
-            channels_polled = 0
-            channels_skipped = 0
-
-            for config in active_channel_configs:
-                channel_id = config["channel_id"]
-
-                try:
-                    # Check if it's time to poll this channel
-                    should_poll = await self._should_poll_channel(config)
-
-                    if should_poll:
-                        logger.info(
-                            f"📞 Polling channel {channel_id} (poll rate: {config.get('poll_rate_minutes', 60)} min)"
-                        )
-
-                        # Track performance
-                        channel_start_time = datetime.now(timezone.utc)
-                        result = await self.run_checks_for_channel(channel_id, config)
-                        channel_duration = (
-                            datetime.now(timezone.utc) - channel_start_time
-                        ).total_seconds()
-
-                        logger.info(
-                            f"✅ Channel {channel_id} polling completed in {channel_duration:.2f}s, result: {result}"
-                        )
-                        channels_polled += 1
-                    else:
-                        last_poll = config.get("last_poll_at")
-                        if last_poll:
-                            minutes_since = int(
-                                (datetime.now(timezone.utc) - last_poll).total_seconds()
-                                / 60
-                            )
-                            logger.debug(
-                                f"⏰ Skipping channel {channel_id} (last polled {minutes_since} min ago)"
-                            )
-                        else:
-                            logger.debug(
-                                f"⏰ Skipping channel {channel_id} (never polled, but poll conditions not met)"
-                            )
-                        channels_skipped += 1
-
-                except Exception as e:
-                    logger.error(f"❌ Error processing channel {channel_id}: {e}")
-                    logger.error(f"Full traceback: {traceback.format_exc()}")
-                    self.total_error_count += 1
-                    # Continue with other channels even if one fails
-                    continue
-
-            # Log iteration summary
-            loop_duration = (
-                datetime.now(timezone.utc) - loop_start_time
-            ).total_seconds()
+            active_channel_configs = self.db.get_active_channels()
             logger.info(
-                f"✅ Monitor loop iteration #{self.loop_iteration_count} completed in {loop_duration:.2f}s: {channels_polled} polled, {channels_skipped} skipped"
+                f"📋 Found {len(active_channel_configs)} active channels with monitoring targets"
             )
-
-            # Update health monitoring
-            self.last_successful_run = datetime.now(timezone.utc)
-            self.last_error_count = 0  # Reset error counter on successful run
-
+            return active_channel_configs
         except Exception as e:
-            # Catch-all for any unexpected errors in the main loop
-            logger.error(f"❌ CRITICAL: Unexpected error in monitor task loop: {e}")
+            logger.error(f"❌ Database error getting active channels: {e}")
             logger.error(f"Full traceback: {traceback.format_exc()}")
             self.total_error_count += 1
-            self.last_error_count += 1
+            return []  # Return empty list to skip iteration but don't crash the loop
 
-            # If we have too many consecutive errors, log a warning but keep running
-            if self.last_error_count >= 5:
-                logger.warning(
-                    f"⚠️ Monitor loop has had {self.last_error_count} consecutive errors. System may need attention."
-                )
+    async def _process_all_channels(
+        self, active_channel_configs: List[Dict[str, Any]]
+    ) -> tuple[int, int]:
+        """Process all active channels and return polling statistics"""
+        channels_polled = 0
+        channels_skipped = 0
 
-        finally:
-            # Always log the end of the loop iteration
-            total_duration = (
-                datetime.now(timezone.utc) - loop_start_time
-            ).total_seconds()
-            logger.debug(
-                f"🏁 Monitor loop iteration #{self.loop_iteration_count} finished (total time: {total_duration:.2f}s)"
+        for config in active_channel_configs:
+            channel_id = config["channel_id"]
+
+            try:
+                should_poll = await self._should_poll_channel(config)
+
+                if should_poll:
+                    await self._poll_single_channel(channel_id, config)
+                    channels_polled += 1
+                else:
+                    await self._skip_channel_with_logging(channel_id, config)
+                    channels_skipped += 1
+
+            except Exception as e:
+                logger.error(f"❌ Error processing channel {channel_id}: {e}")
+                logger.error(f"Full traceback: {traceback.format_exc()}")
+                self.total_error_count += 1
+                # Continue with other channels even if one fails
+                continue
+
+        return channels_polled, channels_skipped
+
+    async def _poll_single_channel(
+        self, channel_id: int, config: Dict[str, Any]
+    ) -> None:
+        """Poll a single channel with performance tracking"""
+        logger.info(
+            f"📞 Polling channel {channel_id} (poll rate: {config.get('poll_rate_minutes', 60)} min)"
+        )
+
+        # Track performance
+        channel_start_time = datetime.now(timezone.utc)
+        result = await self.run_checks_for_channel(channel_id, config)
+        channel_duration = (
+            datetime.now(timezone.utc) - channel_start_time
+        ).total_seconds()
+
+        logger.info(
+            f"✅ Channel {channel_id} polling completed in {channel_duration:.2f}s, result: {result}"
+        )
+
+    async def _skip_channel_with_logging(
+        self, channel_id: int, config: Dict[str, Any]
+    ) -> None:
+        """Skip a channel with appropriate logging based on last poll time"""
+        last_poll = config.get("last_poll_at")
+        if last_poll:
+            minutes_since = int(
+                (datetime.now(timezone.utc) - last_poll).total_seconds() / 60
             )
+            logger.debug(
+                f"⏰ Skipping channel {channel_id} (last polled {minutes_since} min ago)"
+            )
+        else:
+            logger.debug(
+                f"⏰ Skipping channel {channel_id} (never polled, but poll conditions not met)"
+            )
+
+    async def _log_iteration_summary(
+        self, loop_start_time: datetime, channels_polled: int, channels_skipped: int
+    ) -> None:
+        """Log a summary of the completed monitor loop iteration"""
+        loop_duration = (datetime.now(timezone.utc) - loop_start_time).total_seconds()
+        logger.info(
+            f"✅ Monitor loop iteration #{self.loop_iteration_count} completed in {loop_duration:.2f}s: {channels_polled} polled, {channels_skipped} skipped"
+        )
+
+    async def _handle_critical_loop_error(self, e: Exception) -> None:
+        """Handle critical errors in the main loop with appropriate logging and error tracking"""
+        logger.error(f"❌ CRITICAL: Unexpected error in monitor task loop: {e}")
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        self.total_error_count += 1
+        self.last_error_count += 1
+
+        # If we have too many consecutive errors, log a warning but keep running
+        if self.last_error_count >= 5:
+            logger.warning(
+                f"⚠️ Monitor loop has had {self.last_error_count} consecutive errors. System may need attention."
+            )
+
+    async def _log_loop_completion(self, loop_start_time: datetime) -> None:
+        """Log the completion of a monitor loop iteration"""
+        total_duration = (datetime.now(timezone.utc) - loop_start_time).total_seconds()
+        logger.debug(
+            f"🏁 Monitor loop iteration #{self.loop_iteration_count} finished (total time: {total_duration:.2f}s)"
+        )
 
     async def run_checks_for_channel(
         self, channel_id: int, config: Dict[str, Any], is_manual_check: bool = False
@@ -421,34 +457,24 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         logger.info(f"🔍 Task loop is running: {self.monitor_task_loop.is_running()}")
 
         # Run immediate first check to avoid waiting 60 minutes on startup
+        await self._run_startup_checks()
+
+    async def _run_startup_checks(self) -> None:
+        """Run immediate startup checks to avoid waiting for the first loop iteration"""
         logger.info("🚀 Running immediate first check to avoid startup delay...")
         try:
-            # Get active channels with error handling
-            active_channel_configs = self.db.get_active_channels()
+            # Get active channels with error handling - reuse the same helper method
+            active_channel_configs = (
+                await self._get_active_channels_with_error_handling()
+            )
             logger.info(
                 f"📋 Found {len(active_channel_configs)} active channels for immediate startup check"
             )
 
             if active_channel_configs:
-                # Process each channel immediately
-                startup_checks = 0
-                for config in active_channel_configs:
-                    channel_id = config["channel_id"]
-                    try:
-                        logger.info(
-                            f"📞 Running startup check for channel {channel_id}"
-                        )
-                        result = await self.run_checks_for_channel(channel_id, config)
-                        logger.info(
-                            f"✅ Startup check for channel {channel_id} completed, result: {result}"
-                        )
-                        startup_checks += 1
-                    except Exception as e:
-                        logger.error(
-                            f"❌ Error in startup check for channel {channel_id}: {e}"
-                        )
-                        continue
-
+                startup_checks = await self._process_startup_channels(
+                    active_channel_configs
+                )
                 logger.info(
                     f"✅ Completed {startup_checks} startup checks. Regular 1-minute loop will begin now."
                 )
@@ -463,6 +489,25 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             logger.info(
                 "Regular monitor loop will still start despite startup check error."
             )
+
+    async def _process_startup_channels(
+        self, active_channel_configs: List[Dict[str, Any]]
+    ) -> int:
+        """Process channels during startup and return the number of successful checks"""
+        startup_checks = 0
+        for config in active_channel_configs:
+            channel_id = config["channel_id"]
+            try:
+                logger.info(f"📞 Running startup check for channel {channel_id}")
+                result = await self.run_checks_for_channel(channel_id, config)
+                logger.info(
+                    f"✅ Startup check for channel {channel_id} completed, result: {result}"
+                )
+                startup_checks += 1
+            except Exception as e:
+                logger.error(f"❌ Error in startup check for channel {channel_id}: {e}")
+                continue
+        return startup_checks
 
     def get_monitor_health_status(self) -> Dict[str, Any]:
         """Get health status information for the monitor loop"""

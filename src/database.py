@@ -189,15 +189,13 @@ class Database:
             configs = []
             for config in active_configs:
                 # Check if this channel has any monitoring targets
-                # Use exists() for proper boolean check instead of first()
+                # Use scalar_one_or_none() for better clarity when checking single column
                 has_targets = (
                     session.execute(
                         select(MonitoringTarget.id)
                         .where(MonitoringTarget.channel_id == config.channel_id)
                         .limit(1)
-                    )
-                    .scalars()
-                    .first()
+                    ).scalar_one_or_none()
                     is not None
                 )
 

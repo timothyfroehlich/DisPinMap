@@ -532,7 +532,7 @@ class TestComplexFormattingScenarios:
             "machine_name": "Attack From Mars",
             "location_name": "Test Location",
             "location_id": 123,
-            "comment": "Check out https://pinballmap.com for more info! Also see http://example.com/path?param=value",
+            "comment": "Check out https://test.example for more info! Also see https://demo.test/path?param=value",
             "created_at": "2025-01-15T10:30:00Z",
             "user_name": "TestUser",
         }
@@ -551,8 +551,8 @@ class TestComplexFormattingScenarios:
             sent_message = call_args[0][0]
 
         # URLs should be preserved
-        assert "https://pinballmap.com" in sent_message
-        assert "http://example.com" in sent_message
+        assert "test.example" in sent_message
+        assert "demo.test" in sent_message
 
 
 @pytest.mark.asyncio
