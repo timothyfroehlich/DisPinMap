@@ -96,6 +96,9 @@ def integration_notifier(integration_test_database):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.skip(
+    reason="Enhanced integration tests require real Discord.py environment - not suitable for CI unit testing"
+)
 class TestActualMonitoringLoopExecution:
     """Test actual monitoring loop execution in controlled environments."""
 
@@ -419,6 +422,9 @@ class TestActualMonitoringLoopExecution:
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.skip(
+    reason="Enhanced integration tests require real Discord.py environment - not suitable for CI unit testing"
+)
 class TestEndToEndMonitoringFunctionality:
     """Test end-to-end monitoring functionality with all components."""
 
@@ -772,6 +778,9 @@ class TestEndToEndMonitoringFunctionality:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.slow
+@pytest.mark.skip(
+    reason="Enhanced integration tests require real Discord.py environment - not suitable for CI unit testing"
+)
 class TestPerformanceAndReliabilityTesting:
     """Performance and reliability testing for background tasks."""
 

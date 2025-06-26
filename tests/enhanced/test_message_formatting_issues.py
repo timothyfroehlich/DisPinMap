@@ -204,7 +204,7 @@ class TestMultiLineMessageValidation:
         call_args = mock_channel.send.call_args_list[0]
 
         if "content" in call_args[1]:
-            sent_message = call_args[0][0]
+            sent_message = call_args[1]["content"]
         else:
             sent_message = call_args[0][0]
 
@@ -315,7 +315,7 @@ class TestDiscordMessageLimits:
         # Get sent message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[0][0]
+            sent_message = call_args[1]["content"]
         else:
             sent_message = call_args[0][0]
 
@@ -475,7 +475,7 @@ class TestComplexFormattingScenarios:
         # Get sent message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[0][0]
+            sent_message = call_args[1]["content"]
         else:
             sent_message = call_args[0][0]
 
@@ -505,7 +505,7 @@ class TestComplexFormattingScenarios:
         # Get sent message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[0][0]
+            sent_message = call_args[1]["content"]
         else:
             sent_message = call_args[0][0]
 
@@ -537,7 +537,7 @@ class TestComplexFormattingScenarios:
         # Get sent message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[0][0]
+            sent_message = call_args[1]["content"]
         else:
             sent_message = call_args[0][0]
 
@@ -573,7 +573,7 @@ class TestMessageFormattingEdgeCases:
         # Should not crash and should send some message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[0][0]
+            sent_message = call_args[1]["content"]
         else:
             sent_message = call_args[0][0]
 
