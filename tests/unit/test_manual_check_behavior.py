@@ -599,7 +599,9 @@ async def test_monitor_health_command_with_monitor_available(mock_bot):
 
     # Create and attach monitor cog to bot
     monitor_cog = MachineMonitor(mock_bot, db, notifier)
-    monitor_cog.manual_health_check = AsyncMock(return_value="🟢 Monitor system healthy")
+    monitor_cog.manual_health_check = AsyncMock(
+        return_value="🟢 Monitor system healthy"
+    )
     mock_bot.get_cog = MagicMock(return_value=monitor_cog)
 
     # Setup channel config

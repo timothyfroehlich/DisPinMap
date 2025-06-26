@@ -435,7 +435,9 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
                 for config in active_channel_configs:
                     channel_id = config["channel_id"]
                     try:
-                        logger.info(f"📞 Running startup check for channel {channel_id}")
+                        logger.info(
+                            f"📞 Running startup check for channel {channel_id}"
+                        )
                         result = await self.run_checks_for_channel(channel_id, config)
                         logger.info(
                             f"✅ Startup check for channel {channel_id} completed, result: {result}"
