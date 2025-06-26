@@ -420,6 +420,48 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         )
         logger.info(f"🔍 Task loop is running: {self.monitor_task_loop.is_running()}")
 
+        # Run immediate first check to avoid waiting 60 minutes on startup
+        logger.info("🚀 Running immediate first check to avoid startup delay...")
+        try:
+            # Get active channels with error handling
+            active_channel_configs = self.db.get_active_channels()
+            logger.info(
+                f"📋 Found {len(active_channel_configs)} active channels for immediate startup check"
+            )
+
+            if active_channel_configs:
+                # Process each channel immediately
+                startup_checks = 0
+                for config in active_channel_configs:
+                    channel_id = config["channel_id"]
+                    try:
+                        logger.info(f"📞 Running startup check for channel {channel_id}")
+                        result = await self.run_checks_for_channel(channel_id, config)
+                        logger.info(
+                            f"✅ Startup check for channel {channel_id} completed, result: {result}"
+                        )
+                        startup_checks += 1
+                    except Exception as e:
+                        logger.error(
+                            f"❌ Error in startup check for channel {channel_id}: {e}"
+                        )
+                        continue
+
+                logger.info(
+                    f"✅ Completed {startup_checks} startup checks. Regular 1-minute loop will begin now."
+                )
+            else:
+                logger.info(
+                    "😴 No active channels for startup check, regular loop will begin now."
+                )
+
+        except Exception as e:
+            logger.error(f"❌ Error during startup check: {e}")
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+            logger.info(
+                "Regular monitor loop will still start despite startup check error."
+            )
+
     def get_monitor_health_status(self) -> Dict[str, Any]:
         """Get health status information for the monitor loop"""
         from datetime import timedelta
