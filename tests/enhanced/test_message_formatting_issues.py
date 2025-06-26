@@ -39,9 +39,9 @@ def mock_channel():
 
 
 @pytest.fixture
-def notifier(mock_channel):
+def notifier(mock_channel, db):
     """Create notifier instance"""
-    return Notifier()
+    return Notifier(db)
 
 
 @pytest.mark.asyncio

@@ -30,9 +30,11 @@ jobs:
 
     - name: Run core tests
       run: pytest tests/ --ignore=tests/simulation -v
+      timeout-minutes: 10
 
     - name: Run simulation tests
       run: pytest tests/simulation/ -v
+      timeout-minutes: 5
       env:
         # Optional: Enable LLM assertions if API key is available
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}

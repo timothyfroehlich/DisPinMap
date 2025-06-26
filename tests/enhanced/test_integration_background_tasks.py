@@ -89,9 +89,9 @@ def integration_mock_bot():
 
 
 @pytest.fixture
-def integration_notifier():
+def integration_notifier(integration_test_database):
     """Create notifier for integration testing."""
-    return Notifier()
+    return Notifier(integration_test_database)
 
 
 @pytest.mark.asyncio
