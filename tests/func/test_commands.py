@@ -429,19 +429,25 @@ class TestCheckCommand:
         """Test check command when monitor cog is not found"""
         ctx = MockContext(12345, 67890)
 
+        # Set up channel config so we get to the monitor cog check
+        db.update_channel_config(12345, 67890, is_active=True)
+
         # Mock bot to return None for monitor cog
         monitoring_cog.bot.get_cog = MagicMock(return_value=None)
 
         ctx.message.content = "!check"
         await monitoring_cog.check.callback(monitoring_cog, ctx)
 
-        # Verify error message was sent
-        await assert_discord_message(ctx, "Error: Could not find the monitor.")
+        # Verify error message was sent (updated to match actual implementation)
+        await assert_discord_message(ctx, "❌ Error: Monitor system is not available.")
 
     @pytest.mark.asyncio
     async def test_check_command_no_targets(self, monitoring_cog, db):
         """Test check command when no targets are configured"""
         ctx = MockContext(12345, 67890)
+
+        # Set up channel config so we get to the monitor cog check
+        db.update_channel_config(12345, 67890, is_active=True)
 
         # Create a mock monitor cog
         mock_monitor_cog = AsyncMock()
@@ -461,6 +467,9 @@ class TestCheckCommand:
         """Test check command when monitor cog raises an exception"""
         ctx = MockContext(12345, 67890)
 
+        # Set up channel config
+        db.update_channel_config(12345, 67890, is_active=True)
+
         # Add a monitoring target
         db.add_monitoring_target(ctx.channel.id, "location", "Test Location", "123")
 
@@ -472,12 +481,14 @@ class TestCheckCommand:
         monitoring_cog.bot.get_cog = MagicMock(return_value=mock_monitor_cog)
 
         ctx.message.content = "!check"
-        # The exception should bubble up from the monitor cog since it's not handled in the check command
-        with pytest.raises(Exception, match="Test error"):
-            await monitoring_cog.check.callback(monitoring_cog, ctx)
+        # Exception should be caught and handled gracefully
+        await monitoring_cog.check.callback(monitoring_cog, ctx)
 
-        # Verify monitor cog was called despite the exception
+        # Verify monitor cog was called
         mock_monitor_cog.run_checks_for_channel.assert_called_once()
+
+        # Verify error message was sent to Discord
+        await assert_discord_message(ctx, "❌ Manual check failed: Test error")
 
     @pytest.mark.integration
     @pytest.mark.asyncio

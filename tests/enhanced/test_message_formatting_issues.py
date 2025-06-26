@@ -107,7 +107,7 @@ class TestMultiLineMessageValidation:
 
         # Verify send was called
         mock_channel.send.assert_called_once()
-        sent_message = mock_channel.send.call_args[1]["content"]
+        sent_message = mock_channel.send.call_args[0][0]
 
         # Validate multi-line structure
         lines = sent_message.split("\n")
@@ -204,7 +204,7 @@ class TestMultiLineMessageValidation:
         call_args = mock_channel.send.call_args_list[0]
 
         if "content" in call_args[1]:
-            sent_message = call_args[1]["content"]
+            sent_message = call_args[0][0]
         else:
             sent_message = call_args[0][0]
 
@@ -315,7 +315,7 @@ class TestDiscordMessageLimits:
         # Get sent message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[1]["content"]
+            sent_message = call_args[0][0]
         else:
             sent_message = call_args[0][0]
 
@@ -357,7 +357,7 @@ class TestExportCommandEdgeCases:
 
         # Verify message was sent
         mock_channel.send.assert_called_once()
-        sent_message = mock_channel.send.call_args[1]["content"]
+        sent_message = mock_channel.send.call_args[0][0]
 
         # Should handle empty case gracefully
         assert "No targets configured" in sent_message
@@ -399,7 +399,7 @@ class TestExportCommandEdgeCases:
 
         # Verify message formatting
         mock_channel.send.assert_called_once()
-        sent_message = mock_channel.send.call_args[1]["content"]
+        sent_message = mock_channel.send.call_args[0][0]
 
         # Should properly quote names with special characters
         assert '"Dave & Buster\'s"' in sent_message or "Dave & Buster" in sent_message
@@ -444,7 +444,7 @@ class TestExportCommandEdgeCases:
 
         # Verify message was sent and within limits
         mock_channel.send.assert_called_once()
-        sent_message = mock_channel.send.call_args[1]["content"]
+        sent_message = mock_channel.send.call_args[0][0]
         assert len(sent_message) <= 2000
 
 
@@ -475,7 +475,7 @@ class TestComplexFormattingScenarios:
         # Get sent message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[1]["content"]
+            sent_message = call_args[0][0]
         else:
             sent_message = call_args[0][0]
 
@@ -505,7 +505,7 @@ class TestComplexFormattingScenarios:
         # Get sent message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[1]["content"]
+            sent_message = call_args[0][0]
         else:
             sent_message = call_args[0][0]
 
@@ -537,7 +537,7 @@ class TestComplexFormattingScenarios:
         # Get sent message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[1]["content"]
+            sent_message = call_args[0][0]
         else:
             sent_message = call_args[0][0]
 
@@ -573,7 +573,7 @@ class TestMessageFormattingEdgeCases:
         # Should not crash and should send some message
         call_args = mock_channel.send.call_args_list[0]
         if "content" in call_args[1]:
-            sent_message = call_args[1]["content"]
+            sent_message = call_args[0][0]
         else:
             sent_message = call_args[0][0]
 
@@ -590,7 +590,7 @@ class TestMessageFormattingEdgeCases:
         if mock_channel.send.call_count > 0:
             call_args = mock_channel.send.call_args_list[0]
             if "content" in call_args[1]:
-                sent_message = call_args[1]["content"]
+                sent_message = call_args[0][0]
             else:
                 sent_message = call_args[0][0]
 
@@ -606,7 +606,7 @@ class TestMessageFormattingEdgeCases:
         if mock_channel.send.call_count > 0:
             call_args = mock_channel.send.call_args_list[0]
             if "content" in call_args[1]:
-                sent_message = call_args[1]["content"]
+                sent_message = call_args[0][0]
             else:
                 sent_message = call_args[0][0]
 
