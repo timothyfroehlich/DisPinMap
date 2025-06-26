@@ -188,16 +188,18 @@ class Database:
             # Filter to only those that have monitoring targets
             configs = []
             for config in active_configs:
-                targets_count = (
+                # Check if this channel has any monitoring targets
+                # Use scalar_one_or_none() for better clarity when checking single column
+                has_targets = (
                     session.execute(
-                        select(MonitoringTarget).where(
-                            MonitoringTarget.channel_id == config.channel_id
-                        )
-                    )
-                    .scalars()
-                    .first()
+                        select(MonitoringTarget.id)
+                        .where(MonitoringTarget.channel_id == config.channel_id)
+                        .limit(1)
+                    ).scalar_one_or_none()
+                    is not None
                 )
-                if targets_count:
+
+                if has_targets:
                     configs.append(config)
 
             # Ensure timezone-aware datetime objects for consistent behavior

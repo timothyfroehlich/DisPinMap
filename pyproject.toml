@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88
-target-version = ['py312']
+target-version = ['py313']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -32,7 +32,7 @@ known_third_party = ["discord", "requests", "sqlalchemy", "pytest", "aiohttp", "
 skip_glob = ["migrations/*"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false
@@ -66,20 +66,3 @@ module = [
     "notifier"
 ]
 ignore_missing_imports = true
-
-[tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203", "W503", "E501"]
-exclude = [
-    ".git",
-    "__pycache__",
-    "build",
-    "dist",
-    ".venv",
-    "venv",
-    "migrations",
-    "node_modules"
-]
-per-file-ignores = [
-    "__init__.py:F401"
-]
