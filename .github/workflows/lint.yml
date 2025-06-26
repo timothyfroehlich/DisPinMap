@@ -27,6 +27,22 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+    - name: Run Black (check formatting)
+      run: |
+        black --check --diff .
+
+    - name: Run isort (check import sorting)
+      run: |
+        isort --check-only --diff .
+
+    - name: Run Flake8 (linting)
+      run: |
+        flake8 .
+
+    - name: Run MyPy (type checking)
+      run: |
+        mypy . --ignore-missing-imports
+
     - name: Run pre-commit hooks
       run: |
         pre-commit install
