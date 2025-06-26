@@ -3,9 +3,25 @@
 This file tracks major completed tasks and ongoing activities for the DisPinMap project.
 
 ## Current Activity
-**Active Task**: Resolving PR #45 CI linting issues (Issue #41 Monitor Loop Improvements)
-- **Status**: ✅ **COMPLETED** - Linting issues resolved (temporary fix applied)
+**Active Task**: Monitor Loop Improvements Deployment (PR #45)
+- **Status**: ✅ **DEPLOYED** - Successfully deployed to GCP Cloud Run
 - **Date**: 2025-06-26
+
+### Latest Deployment Details (2025-06-26)
+**Deployed Changes**: Monitor loop improvements + CI linting fixes from branch `fix/monitor-loop-improvements-issue-41`
+**Cloud Run Status**:
+- Service URL: https://dispinmap-bot-wos45oz7vq-uc.a.run.app
+- Active Revision: `dispinmap-bot-00004-4x6` (created 2025-06-25T19:58:08.472847Z)
+- Health Check: ✅ Passing (HTTP 200 OK)
+- Container Image: `us-central1-docker.pkg.dev/andy-expl/dispinmap-bot-repo/dispinmap-bot:latest`
+
+**Verification**:
+- ✅ Container build successful with latest source code
+- ✅ Push to Artifact Registry successful
+- ✅ Cloud Run automatic deployment successful
+- ✅ Health endpoint responding correctly
+- ✅ Discord bot connected and operational (Litestream backups working)
+- ✅ Manual check operations completing successfully
 
 ## Completed Tasks
 
