@@ -10,15 +10,12 @@ database connection.
 
 from sqlalchemy import (
     BigInteger,
-    Boolean,
-    Column,
     DateTime,
-    ForeignKey,
     Integer,
     String,
 )
 
-from src.models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
+from src.models import MonitoringTarget, SeenSubmission
 
 
 def test_monitoring_target_representation():
@@ -77,8 +74,18 @@ def test_monitoring_target_model_has_expected_columns():
 
 
 def test_add_and_remove_seen_submission():
-    # ... existing code ...
-    pass
+    """Test SeenSubmission model instantiation and basic functionality."""
+    from datetime import datetime
+
+    # Test model can be instantiated with correct fields
+    seen_submission = SeenSubmission(
+        channel_id=12345, submission_id=789, seen_at=datetime.now()
+    )
+
+    # Test basic properties
+    assert seen_submission.channel_id == 12345
+    assert seen_submission.submission_id == 789
+    assert isinstance(seen_submission.seen_at, datetime)
 
 
 def test_model_relationships_are_configured():

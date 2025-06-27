@@ -13,7 +13,8 @@ from unittest.mock import patch
 import pytest
 
 from src.api import geocode_city_name
-from tests.utils.mock_factories import create_api_client_mock
+
+# from tests.utils.mock_factories import create_api_client_mock  # Unused for now
 
 
 def test_parse_location_details():
@@ -104,8 +105,25 @@ async def test_geocode_client_parses_success_response(mock_get):
 
 
 def test_pinball_map_client_handles_api_error():
-    # ... existing code ...
-    pass
+    """Test that API client handles network errors gracefully."""
+    import asyncio
+    from unittest.mock import patch
+
+    from src.api import fetch_location_details
+
+    async def test_async():
+        with patch("src.api.requests.get") as mock_get:
+            # Setup mock to raise an exception
+            mock_get.side_effect = Exception("Network error")
+
+            # Test that function handles the error
+            result = await fetch_location_details(12345)
+
+            # Function returns empty dict on error according to log output
+            assert result == {} or result is None or result.get("status") == "error"
+
+    # Run the async test
+    asyncio.run(test_async())
 
 
 def test_client_handles_empty_response():

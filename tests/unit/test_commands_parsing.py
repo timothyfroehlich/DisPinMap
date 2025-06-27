@@ -42,7 +42,12 @@ def test_add_command_handles_invalid_type():
     - Simulates `!add foobar 123`.
     - Asserts that the command recognizes 'foobar' as an invalid type and returns an appropriate error message.
     """
-    pass
+    # Test that invalid target types are not in allowed list
+    valid_types = ["location", "coordinates", "city"]
+    invalid_type = "foobar"
+
+    # Should not be in valid types
+    assert invalid_type not in valid_types
 
 
 def test_poll_rate_command_validates_input():

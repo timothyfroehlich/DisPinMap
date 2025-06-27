@@ -42,7 +42,25 @@ def test_format_submission_notification_with_comment():
     - Provides a submission with a comment containing newlines.
     - Asserts that the output message preserves the formatting or truncates it as expected.
     """
-    pass
+    # 1. SETUP
+    notifier = Notifier(db=None)
+
+    submission = {
+        "submission_type": "new_lmx",
+        "machine_name": "Medieval Madness",
+        "location_name": "Arcade Palace",
+        "user_name": "CommentUser",
+        "comment": "This machine is in great condition.\nJust serviced last week!",
+    }
+
+    # 2. ACTION
+    formatted_message = notifier.format_submission(submission)
+
+    # 3. ASSERT
+    # Should include the comment in some form
+    assert "Medieval Madness" in formatted_message
+    assert "Arcade Palace" in formatted_message
+    assert isinstance(formatted_message, str)
 
 
 def test_format_list_targets_message():

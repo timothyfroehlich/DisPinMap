@@ -47,7 +47,41 @@ def test_monitoring_respects_poll_rate(db_session):
     - Updates the last_poll_at time to be in the past.
     - Runs the logic again and asserts that the channel IS selected.
     """
-    pass
+    from datetime import datetime, timedelta
+
+    from src.cogs.monitor import (  # Function should be in monitor cog
+        should_poll_channel,
+    )
+    from src.models import ChannelConfig
+
+    session = db_session()
+
+    # Create channel config with recent poll time
+    recent_time = datetime.now() - timedelta(minutes=5)
+    channel_config = ChannelConfig(
+        channel_id=12345,
+        poll_rate_minutes=60,  # 1 hour poll rate
+        last_polled_at=recent_time,
+        is_active=True,
+    )
+
+    session.add(channel_config)
+    session.commit()
+
+    # Should NOT be ready to poll yet (only 5 minutes passed)
+    should_poll_now = should_poll_channel(channel_config)
+    assert should_poll_now is False
+
+    # Update to old poll time
+    old_time = datetime.now() - timedelta(hours=2)
+    channel_config.last_polled_at = old_time
+    session.commit()
+
+    # Should be ready to poll now
+    should_poll_later = should_poll_channel(channel_config)
+    assert should_poll_later is True
+
+    session.close()
 
 
 def test_monitoring_loop_handles_api_errors_gracefully(db_session, api_mocker):

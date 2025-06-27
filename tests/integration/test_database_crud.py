@@ -58,7 +58,37 @@ def test_add_duplicate_target_raises_error(db_session):
     - Attempts to add the exact same target again.
     - Asserts that a `sqlalchemy.exc.IntegrityError` (or similar) is raised.
     """
-    pass
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    session = db_session()
+
+    # Create first target
+    target1 = MonitoringTarget(
+        channel_id=12345,
+        target_type="location",
+        target_name="Test Location",
+        target_data="999",
+    )
+
+    session.add(target1)
+    session.commit()
+
+    # Try to add duplicate target (same channel + type + data should violate constraint)
+    target2 = MonitoringTarget(
+        channel_id=12345,
+        target_type="location",
+        target_name="Different Name",  # Different name but same key fields
+        target_data="999",
+    )
+
+    session.add(target2)
+
+    # Should raise integrity error on commit
+    with pytest.raises(IntegrityError):
+        session.commit()
+
+    session.close()
 
 
 def test_update_channel_config(db_session):
