@@ -15,6 +15,8 @@ from sqlalchemy.orm import sessionmaker
 from src.database import (  # Assuming your models use a declarative base from this module
     Base,
 )
+# Import and re-export the api_mocker fixture
+from tests.utils.api_mocker import api_mocker  # noqa: F401
 
 
 @pytest.fixture(scope="session")
@@ -55,5 +57,4 @@ def db_session(request):
         os.remove(db_path)  # Clean up the temporary database file
 
 
-# We can add the api_mocker fixture here later.
-# For now, the db_session is the priority.
+# This makes api_mocker available to all tests without explicit import

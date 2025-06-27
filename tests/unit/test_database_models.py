@@ -8,17 +8,17 @@ database connection.
 
 # To be migrated from `tests_backup/unit/test_add_target_behavior.py` (logic part)
 
-# from sqlalchemy import (  # Will be needed for actual test implementation
-#     BigInteger,
-#     Boolean,
-#     Column,
-#     DateTime,
-#     ForeignKey,
-#     Integer,
-#     String,
-# )
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+)
 
-# from src.models import Base, ChannelConfig, MonitoringTarget, SeenSubmission  # Will be needed for actual test implementation
+from src.models import Base, ChannelConfig, MonitoringTarget, SeenSubmission
 
 
 def test_monitoring_target_representation():

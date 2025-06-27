@@ -83,8 +83,10 @@ async def test_geocode_client_parses_success_response(mock_get):
         ]
     }
 
-    # Create a properly spec'd mock response object
-    mock_response = create_api_client_mock()
+    # Create a mock response object for requests.get (sync)
+    from unittest.mock import MagicMock
+
+    mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_api_response_data
     mock_get.return_value = mock_response
