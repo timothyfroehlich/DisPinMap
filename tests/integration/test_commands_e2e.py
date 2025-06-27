@@ -6,9 +6,11 @@ input to interacting with the database and sending a response. They run
 against a real, but isolated, database instance provided by the `db_session`
 fixture.
 """
+
 # To be migrated from `tests_backup/func/test_commands.py`,
 # `tests_backup/integration/test_commands_integration.py`,
 # and parts of `tests_backup/unit/test_add_target_behavior.py`.
+
 
 def test_add_location_by_name_e2e(db_session, api_mocker):
     """
@@ -20,6 +22,7 @@ def test_add_location_by_name_e2e(db_session, api_mocker):
     """
     pass
 
+
 def test_add_city_e2e(db_session, api_mocker):
     """
     Tests the full `!add city <name>` flow.
@@ -28,6 +31,7 @@ def test_add_city_e2e(db_session, api_mocker):
     - Verifies that a 'city' target with correct coordinates is added to the database.
     """
     pass
+
 
 def test_remove_target_e2e(db_session):
     """
@@ -39,6 +43,7 @@ def test_remove_target_e2e(db_session):
     """
     pass
 
+
 def test_list_targets_e2e(db_session):
     """
     Tests the full `!list` flow.
@@ -47,6 +52,7 @@ def test_list_targets_e2e(db_session):
     - Verifies that the response message contains the details of all added targets.
     """
     pass
+
 
 def test_check_command_e2e(db_session, api_mocker):
     """

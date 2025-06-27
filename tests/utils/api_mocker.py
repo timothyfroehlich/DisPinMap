@@ -5,6 +5,7 @@ This utility provides a pytest fixture (`api_mocker`) that allows tests
 to easily mock `aiohttp` responses for specific URLs, loading the response
 body from the JSON files stored in `tests/fixtures/api_responses/`.
 """
+
 import asyncio
 import json
 from pathlib import Path
@@ -39,7 +40,9 @@ class APIMocker:
         if self._patcher:
             self._patcher.stop()
 
-    def add_response(self, url_substring: str, json_fixture_path: str, status: int = 200):
+    def add_response(
+        self, url_substring: str, json_fixture_path: str, status: int = 200
+    ):
         """
         Maps a URL substring to a JSON fixture file.
 
@@ -73,7 +76,7 @@ class APIMocker:
                 mock_response.json = MagicMock(return_value=data)
 
                 # To make it awaitable, wrap it in a future
-                future = asyncio.Future()
+                future: asyncio.Future = asyncio.Future()
                 future.set_result(mock_response)
                 return future
 

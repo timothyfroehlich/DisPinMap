@@ -8,6 +8,7 @@ with the database.
 
 # To be migrated from `tests_backup/func/test_commands.py`
 
+
 def test_add_command_parses_location_by_id():
     """
     Tests that the 'add location' command correctly identifies an ID.
@@ -15,6 +16,7 @@ def test_add_command_parses_location_by_id():
     - Asserts that the parsing logic correctly extracts 'location' as the type and '123' as the value.
     """
     pass
+
 
 def test_add_command_parses_location_by_name():
     """
@@ -24,6 +26,7 @@ def test_add_command_parses_location_by_name():
     """
     pass
 
+
 def test_add_command_parses_coordinates():
     """
     Tests that the 'add coordinates' command correctly parses lat, long, and radius.
@@ -32,6 +35,7 @@ def test_add_command_parses_coordinates():
     """
     pass
 
+
 def test_add_command_handles_invalid_type():
     """
     Tests that the add command gracefully handles an invalid target type.
@@ -39,6 +43,7 @@ def test_add_command_handles_invalid_type():
     - Asserts that the command recognizes 'foobar' as an invalid type and returns an appropriate error message.
     """
     pass
+
 
 def test_poll_rate_command_validates_input():
     """

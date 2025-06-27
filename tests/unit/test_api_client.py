@@ -8,6 +8,7 @@ All network requests will be mocked.
 
 # To be migrated from `tests_backup/unit/test_api.py` and `tests_backup/unit/test_geocoding_api.py`
 
+
 def test_parse_location_details():
     """
     Tests the successful parsing of a location details JSON response.
@@ -15,6 +16,7 @@ def test_parse_location_details():
     - Asserts that the function returns a correctly structured dictionary.
     """
     pass
+
 
 def test_search_location_by_name_exact_match():
     """
@@ -24,6 +26,7 @@ def test_search_location_by_name_exact_match():
     """
     pass
 
+
 def test_search_location_by_name_multiple_matches():
     """
     Tests the location search functionality when multiple matches are found.
@@ -32,6 +35,7 @@ def test_search_location_by_name_multiple_matches():
     """
     pass
 
+
 def test_geocode_city_name_success():
     """
     Tests successful geocoding of a city name.
@@ -39,6 +43,7 @@ def test_geocode_city_name_success():
     - Asserts that the function returns the correct latitude and longitude.
     """
     pass
+
 
 def test_geocode_city_name_failure():
     """

@@ -5,12 +5,17 @@ This file contains the foundational fixtures that will be used across unit,
 integration, and simulation tests. The most critical fixture here is
 `db_session`, which provides isolated database sessions for parallel testing.
 """
+
 import os
+
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
-from src.database import Base  # Assuming your models use a declarative base from this module
+from src.database import (  # Assuming your models use a declarative base from this module
+    Base,
+)
+
 
 @pytest.fixture(scope="session")
 def db_session(worker_id):

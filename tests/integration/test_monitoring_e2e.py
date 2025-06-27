@@ -5,9 +5,11 @@ These tests verify the complete functionality of the monitoring task, from
 detecting active channels to fetching data, identifying new submissions,
 and triggering notifications.
 """
+
 # To be migrated from `tests_backup/enhanced/test_integration_background_tasks.py`,
 # `tests_backup/enhanced/test_task_loop_failures.py`, and
 # `tests_backup/func/test_monitor_task_loop_lifecycle.py`.
+
 
 def test_monitoring_loop_finds_new_submission_and_notifies(db_session, api_mocker):
     """
@@ -22,6 +24,7 @@ def test_monitoring_loop_finds_new_submission_and_notifies(db_session, api_mocke
     """
     pass
 
+
 def test_monitoring_loop_ignores_seen_submission(db_session, api_mocker):
     """
     Tests that the monitoring loop correctly ignores previously seen submissions.
@@ -34,6 +37,7 @@ def test_monitoring_loop_ignores_seen_submission(db_session, api_mocker):
     """
     pass
 
+
 def test_monitoring_respects_poll_rate(db_session):
     """
     Tests that the monitoring logic correctly respects the channel's poll rate.
@@ -44,6 +48,7 @@ def test_monitoring_respects_poll_rate(db_session):
     - Runs the logic again and asserts that the channel IS selected.
     """
     pass
+
 
 def test_monitoring_loop_handles_api_errors_gracefully(db_session, api_mocker):
     """

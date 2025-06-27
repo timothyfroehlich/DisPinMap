@@ -10,7 +10,9 @@ database, simplifying common setup and assertion steps in tests.
 # from sqlalchemy.orm import Session
 
 
-async def setup_monitoring_target(db_session, user_id: int, location_id: int, location_name: str):
+async def setup_monitoring_target(
+    db_session, user_id: int, location_id: int, location_name: str
+):
     """
     A helper to create and save a new monitoring target to the database.
 

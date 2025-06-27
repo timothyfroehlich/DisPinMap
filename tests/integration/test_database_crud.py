@@ -8,6 +8,7 @@ provided by the `db_session` fixture.
 
 # To be migrated from `tests_backup/unit/test_database.py` (which was an integration test).
 
+
 def test_add_and_get_monitoring_target(db_session):
     """
     Tests adding a monitoring target and then retrieving it.
@@ -16,6 +17,7 @@ def test_add_and_get_monitoring_target(db_session):
     - Asserts that the retrieved target's data matches the added data.
     """
     pass
+
 
 def test_add_duplicate_target_raises_error(db_session):
     """
@@ -26,6 +28,7 @@ def test_add_duplicate_target_raises_error(db_session):
     """
     pass
 
+
 def test_update_channel_config(db_session):
     """
     Tests updating an existing channel configuration.
@@ -35,6 +38,7 @@ def test_update_channel_config(db_session):
     """
     pass
 
+
 def test_remove_monitoring_target(db_session):
     """
     Tests removing a monitoring target from the database.
@@ -43,6 +47,7 @@ def test_remove_monitoring_target(db_session):
     - Queries the database and asserts that the target no longer exists.
     """
     pass
+
 
 def test_filter_new_submissions(db_session):
     """

@@ -8,6 +8,7 @@ database connection.
 
 # To be migrated from `tests_backup/unit/test_add_target_behavior.py` (logic part)
 
+
 def test_monitoring_target_representation():
     """
     Tests the __repr__ or a similar method on the MonitoringTarget model.
@@ -16,6 +17,7 @@ def test_monitoring_target_representation():
     """
     pass
 
+
 def test_channel_config_is_active_property():
     """
     Tests any custom logic associated with the ChannelConfig model,
@@ -23,6 +25,7 @@ def test_channel_config_is_active_property():
     based on its targets or other settings.
     """
     pass
+
 
 def test_model_initialization_defaults():
     """

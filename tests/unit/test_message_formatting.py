@@ -7,12 +7,14 @@ messages and embeds produce correctly formatted output for various scenarios.
 
 # To be migrated from `tests_backup/enhanced/test_message_formatting_issues.py`
 
+
 def test_format_submission_notification_machine_added():
     """
     Tests the formatting for a 'machine_added' notification.
     - Asserts that the title, color, and fields of the resulting Discord embed are correct.
     """
     pass
+
 
 def test_format_submission_notification_with_comment():
     """
@@ -22,6 +24,7 @@ def test_format_submission_notification_with_comment():
     """
     pass
 
+
 def test_format_list_targets_message():
     """
     Tests the formatting of the `!list` command output.
@@ -30,6 +33,7 @@ def test_format_list_targets_message():
     """
     pass
 
+
 def test_message_truncation_for_long_content():
     """
     Tests that messages exceeding Discord's character limit are truncated gracefully.
@@ -37,6 +41,7 @@ def test_message_truncation_for_long_content():
     - Asserts that the resulting message is split into multiple messages or is truncated with an indicator.
     """
     pass
+
 
 def test_handle_empty_or_null_fields():
     """
