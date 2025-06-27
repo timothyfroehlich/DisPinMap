@@ -1,0 +1,16 @@
+{
+    "locations": [
+        {
+            "id": 1337,
+            "name": "Ground Kontrol",
+            "street": "511 NW Couch St",
+            "city": "Portland",
+            "state": "OR",
+            "zip": "97209",
+            "lat": "45.5237",
+            "lon": "-122.6751",
+            "website": "http://groundkontrol.com",
+            "machine_count": 30
+        }
+    ]
+}

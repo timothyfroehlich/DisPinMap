@@ -9,9 +9,11 @@ body from the JSON files stored in `tests/fixtures/api_responses/`.
 import asyncio
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
+
+from tests.utils.mock_factories import create_api_client_mock
 
 # Path to the directory containing captured API response fixtures.
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "api_responses"
@@ -28,10 +30,11 @@ class APIMocker:
         self.mock_session = None
 
     def start(self):
-        """Starts patching the aiohttp session."""
-        self._patcher = patch("aiohttp.ClientSession", new_callable=MagicMock)
+        """Starts patching the aiohttp session with proper spec'd mocks."""
+        self._patcher = patch("aiohttp.ClientSession")
         mock_client_session_class = self._patcher.start()
-        self.mock_session = mock_client_session_class.return_value
+        self.mock_session = create_api_client_mock()
+        mock_client_session_class.return_value = self.mock_session
         self.mock_session.get.side_effect = self._mock_get_request
         return self
 
@@ -70,10 +73,10 @@ class APIMocker:
                 with open(fixture_file, "r") as f:
                     data = json.load(f)
 
-                # Create a mock response object
-                mock_response = MagicMock()
+                # Create a properly spec'd mock response object
+                mock_response = create_api_client_mock()
                 mock_response.status = status
-                mock_response.json = MagicMock(return_value=data)
+                mock_response.json.return_value = data
 
                 # To make it awaitable, wrap it in a future
                 future: asyncio.Future = asyncio.Future()

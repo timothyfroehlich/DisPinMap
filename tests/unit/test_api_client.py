@@ -8,6 +8,13 @@ All network requests will be mocked.
 
 # To be migrated from `tests_backup/unit/test_api.py` and `tests_backup/unit/test_geocoding_api.py`
 
+from unittest.mock import patch
+
+import pytest
+
+from src.api import geocode_city_name
+from tests.utils.mock_factories import create_api_client_mock
+
 
 def test_parse_location_details():
     """
@@ -51,4 +58,54 @@ def test_geocode_city_name_failure():
     - Mocks the geocoding API with a failure or empty response.
     - Asserts that the function handles the failure gracefully (e.g., returns None or raises an exception).
     """
+    pass
+
+
+@pytest.mark.asyncio
+@patch("src.api.requests.get")
+async def test_geocode_client_parses_success_response(mock_get):
+    """
+    Tests that the geocode client correctly parses a successful response.
+    - Mocks the `requests.get` call to return a mock response.
+    - Asserts that the function returns the expected dictionary of coordinates.
+    """
+    # 1. SETUP
+    # This is the raw JSON data we want the mock response to return.
+    mock_api_response_data = {
+        "results": [
+            {
+                "name": "Portland",
+                "latitude": 45.52345,
+                "longitude": -122.67621,
+                "country_code": "US",
+                "admin1": "Oregon",
+            }
+        ]
+    }
+
+    # Create a properly spec'd mock response object
+    mock_response = create_api_client_mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response_data
+    mock_get.return_value = mock_response
+
+    # 2. ACTION
+    # Call the function we are testing
+    result = await geocode_city_name("portland")
+
+    # 3. ASSERT
+    # Verify that the function returned the correctly parsed data
+    assert result["status"] == "success"
+    assert result["lat"] == 45.52345
+    assert result["lon"] == -122.67621
+    assert result["display_name"] == "Portland, Oregon, US"
+
+
+def test_pinball_map_client_handles_api_error():
+    # ... existing code ...
+    pass
+
+
+def test_client_handles_empty_response():
+    # ... existing code ...
     pass

@@ -9,6 +9,10 @@ data format, these tests will fail, alerting us to the necessary updates.
 # To be migrated from `tests_backup/integration/test_geocoding_api_integration.py`
 # and `tests_backup/integration/test_pinballmap_api.py`
 
+import pytest
+
+from src.api import search_location_by_name
+
 
 def test_handle_geocoding_response_for_seattle(api_mocker):
     """
@@ -45,5 +49,50 @@ def test_handle_api_error_responses(api_mocker):
     Tests that the API clients handle error responses (e.g., 404, 500) gracefully.
     - Mocks an HTTP request to return a non-200 status code.
     - Asserts that the client returns an appropriate error indicator or raises a specific exception.
+    """
+    pass
+
+
+@pytest.mark.asyncio
+async def test_pinballmap_location_search_contract(api_mocker):
+    """
+    Tests that the application can correctly parse a successful response
+    from the PinballMap `locations.json?by_location_name=` endpoint.
+    - Uses the `api_mocker` to simulate the API response.
+    - Asserts that the data is parsed into the expected format.
+    """
+    # 1. SETUP
+    # Configure the API mocker to respond to a specific query.
+    # The substring should be part of the URL the real function calls.
+    search_term = "Ground Kontrol"
+    api_mocker.add_response(
+        url_substring=f"by_location_name={search_term.replace(' ', '%20')}",
+        json_fixture_path="pinballmap_search/search_pin.json",  # Assuming this file exists and is relevant
+    )
+
+    # 2. ACTION
+    # Call the function that makes the API request.
+    result = await search_location_by_name(search_term)
+
+    # 3. ASSERT
+    # Check that the function correctly parsed the data from the fixture.
+    # The 'search_pin.json' fixture returns multiple results, so the status should be 'suggestions'.
+    assert result["status"] == "suggestions"
+    assert len(result["data"]) > 0
+    # A simple check on the first result is sufficient for a contract test.
+    first_suggestion = result["data"][0]
+    assert first_suggestion["name"] == "Ground Kontrol Classic Arcade"
+    assert first_suggestion["id"] == 874
+
+
+def test_geocode_api_contract_for_known_city():
+    pass
+
+
+def test_api_returns_error_for_unknown_location_id():
+    """
+    Tests that the PinballMap client handles a 'not found' error gracefully.
+    - Mocks the API to return an error for a non-existent location ID.
+    - Asserts that the function returns an appropriate error indicator.
     """
     pass

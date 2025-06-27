@@ -47,6 +47,74 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 http_runner = None
 
 
+async def create_bot(db_session_factory=None, notifier=None):
+    """
+    Creates and configures the Discord bot instance.
+    This factory allows creating bot instances for both production and testing.
+
+    Args:
+        db_session_factory: Optional database session factory for dependency injection
+        notifier: Optional notifier instance for dependency injection. If None, creates a new Notifier instance.
+    """
+    # Initialize bot with intents
+    intents = discord.Intents.default()
+    intents.message_content = True
+    bot = commands.Bot(command_prefix="!", intents=intents)
+
+    # Use the provided session factory for tests, or create a new default DB for production
+    database = Database(session_factory=db_session_factory)
+    bot.database = database
+
+    # Use injected notifier or create a new one for production
+    if notifier is None:
+        # Import notifier after other imports
+        try:
+            from .notifier import Notifier
+        except ImportError:
+            from notifier import Notifier
+        notifier = Notifier(database)
+    bot.notifier = notifier
+
+    # Determine the absolute path to the cogs directory
+    cogs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cogs")
+
+    # Load command cogs
+    for filename in os.listdir(cogs_dir):
+        if filename.endswith(".py") and not filename.startswith("__"):
+            try:
+                await bot.load_extension(f"src.cogs.{filename[:-3]}")
+            except Exception as e:
+                logger.error(
+                    f"❌ Failed to load extension {filename}: {e}", exc_info=True
+                )
+
+    @bot.event
+    async def on_ready():
+        """Log when bot is ready"""
+        logger.info(f"Bot is ready! Logged in as {bot.user.name} ({bot.user.id})")
+        if TEST_STARTUP:
+            logger.info(
+                "Test startup flag detected. Shutting down after successful connection."
+            )
+            await bot.close()
+
+    @bot.event
+    async def on_message(message):
+        """Log received messages and handle commands"""
+        if message.author != bot.user:
+            logger.info(
+                f"Received message from {message.author.name} ({message.author.id}) in channel {message.channel.name} ({message.channel.id}): {message.content}"
+            )
+        await bot.process_commands(message)
+
+    @bot.event
+    async def on_command_error(ctx, error):
+        """Handle command errors"""
+        logger.error(f"An error occurred in command '{ctx.command}': {error}")
+
+    return bot
+
+
 def get_secret(secret_name, project_id):
     """Retrieve a secret from Google Cloud Secret Manager."""
     try:
@@ -90,106 +158,37 @@ async def start_http_server():
     return runner
 
 
-@bot.event
-async def on_ready():
-    """Log when bot is ready"""
-    logger.info(f"Bot is ready! Logged in as {bot.user.name} ({bot.user.id})")
-    if TEST_STARTUP:
-        logger.info(
-            "Test startup flag detected. Shutting down after successful connection."
-        )
-        await bot.close()
-
-
-@bot.event
-async def on_message(message):
-    """Log received messages and handle commands"""
-    if message.author != bot.user:
-        logger.info(
-            f"Received message from {message.author.name} ({message.author.id}) in channel {message.channel.name} ({message.channel.id}): {message.content}"
-        )
-    await bot.process_commands(message)
-
-
-@bot.event
-async def on_command_error(ctx, error):
-    """Handle command errors"""
-    logger.error(f"An error occurred in command '{ctx.command}': {error}")
-    # No need to send messages, logging is sufficient
-
-
-async def cleanup():
+async def cleanup(bot_instance):
     """Graceful shutdown"""
     logger.info("Starting graceful shutdown...")
     if http_runner:
         await http_runner.cleanup()
         logger.info("HTTP server cleaned up.")
-    # Note: SQLAlchemy database connections are managed by sessions and don't require explicit cleanup
-    if not bot.is_closed():
-        await bot.close()
+    if not bot_instance.is_closed():
+        await bot_instance.close()
         logger.info("Discord bot client closed.")
     logger.info("Graceful shutdown complete.")
 
 
-def handle_signal(signum, frame):
+def handle_signal(signum, frame, bot_instance):
     """Handle OS signals for graceful shutdown"""
     logger.info(f"Received signal {signum}, initiating shutdown.")
-    asyncio.create_task(cleanup())
+    asyncio.create_task(cleanup(bot_instance))
 
 
 async def main():
     """Async entry point for the bot"""
     global http_runner
 
+    bot = await create_bot()
+
     # Set up signal handlers
-    signal.signal(signal.SIGINT, handle_signal)
-    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGINT, lambda s, f: handle_signal(s, f, bot))
+    signal.signal(signal.SIGTERM, lambda s, f: handle_signal(s, f, bot))
 
     try:
         # Log all environment variables for debugging
         logger.info(f"Environment variables: {os.environ}")
-
-        # Create shared instances (not cogs)
-        database = Database()
-        bot.database = database  # Attach db to bot for cleanup
-
-        # Import notifier after other imports
-        try:
-            from .notifier import Notifier
-        except ImportError:
-            from notifier import Notifier
-
-        notifier = Notifier(database)
-
-        # Store shared instances on bot for cogs to access
-        bot.notifier = notifier
-
-        # Determine the absolute path to the cogs directory
-        cogs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cogs")
-        logger.info(f"Loading cogs from: {cogs_dir}")
-
-        # Load command cogs
-        for filename in os.listdir(cogs_dir):
-            if filename.endswith(".py") and not filename.startswith("__"):
-                try:
-                    logger.info(f"🔄 Loading cog: {filename}")
-                    await bot.load_extension(f"src.cogs.{filename[:-3]}")
-                    logger.info(f"✅ Successfully loaded cog: {filename}")
-
-                    # Special handling for monitor cog
-                    if filename == "monitor.py":
-                        monitor_cog = bot.get_cog("MachineMonitor")
-                        if monitor_cog:
-                            logger.info(
-                                f"🔍 Monitor cog loaded, task loop status: {monitor_cog.monitor_task_loop.is_running()}"
-                            )
-                        else:
-                            logger.warning("⚠️ Monitor cog not found after loading")
-
-                except Exception as e:
-                    logger.error(
-                        f"❌ Failed to load extension {filename}: {e}", exc_info=True
-                    )
 
         # Get Discord token from environment variable or Secret Manager
         token = os.environ.get("DISCORD_TOKEN")
@@ -229,7 +228,7 @@ async def main():
         logger.error(f"An unexpected error occurred in main: {e}", exc_info=True)
     finally:
         if not bot.is_closed():
-            await cleanup()
+            await cleanup(bot)
 
 
 if __name__ == "__main__":

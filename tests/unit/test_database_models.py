@@ -8,6 +8,18 @@ database connection.
 
 # To be migrated from `tests_backup/unit/test_add_target_behavior.py` (logic part)
 
+# from sqlalchemy import (  # Will be needed for actual test implementation
+#     BigInteger,
+#     Boolean,
+#     Column,
+#     DateTime,
+#     ForeignKey,
+#     Integer,
+#     String,
+# )
+
+# from src.models import Base, ChannelConfig, MonitoringTarget, SeenSubmission  # Will be needed for actual test implementation
+
 
 def test_monitoring_target_representation():
     """
@@ -33,4 +45,42 @@ def test_model_initialization_defaults():
     - Instantiates a model without providing all arguments.
     - Asserts that default values are set correctly.
     """
+    pass
+
+
+def test_monitoring_target_model_has_expected_columns():
+    """
+    Tests that the MonitoringTarget model has the columns we expect.
+    This is a basic structural test to catch accidental schema changes.
+    """
+    # 1. SETUP
+    # Get the columns from the SQLAlchemy model's table object
+    columns = MonitoringTarget.__table__.columns
+
+    # 2. ASSERT
+    # Check for the existence and type of key columns
+    assert "id" in columns
+    assert isinstance(columns["id"].type, Integer)
+    assert columns["id"].primary_key
+
+    assert "channel_id" in columns
+    assert isinstance(columns["channel_id"].type, BigInteger)
+
+    assert "target_type" in columns
+    assert isinstance(columns["target_type"].type, String)
+
+    assert "target_name" in columns
+    assert isinstance(columns["target_name"].type, String)
+
+    assert "last_checked_at" in columns
+    assert isinstance(columns["last_checked_at"].type, DateTime)
+
+
+def test_add_and_remove_seen_submission():
+    # ... existing code ...
+    pass
+
+
+def test_model_relationships_are_configured():
+    # ... existing code ...
     pass

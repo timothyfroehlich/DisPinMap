@@ -18,17 +18,23 @@ from src.database import (  # Assuming your models use a declarative base from t
 
 
 @pytest.fixture(scope="session")
-def db_session(worker_id):
+def db_session(request):
     """
     Yields a SQLAlchemy session object that is isolated for each parallel test worker.
 
     This is the core fixture that enables parallel test execution. It achieves
     isolation by creating a separate temporary SQLite database file for each
-    `pytest-xdist` worker.
+    `pytest-xdist` worker. It's safe to use when not running in parallel.
 
     Args:
-        worker_id: The ID of the `pytest-xdist` worker. 'master' if not running in parallel.
+        request: The pytest request object, used to access context.
     """
+    # Check if the 'worker_id' attribute exists, which is provided by pytest-xdist
+    if hasattr(request.config, "workerinput"):
+        worker_id = request.config.workerinput["workerid"]
+    else:
+        worker_id = "master"
+
     if worker_id == "master":
         # If not running in parallel, use a standard in-memory database
         db_url = "sqlite://"

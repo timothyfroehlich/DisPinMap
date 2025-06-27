@@ -11,6 +11,17 @@ fixture.
 # `tests_backup/integration/test_commands_integration.py`,
 # and parts of `tests_backup/unit/test_add_target_behavior.py`.
 
+import pytest
+
+# Assuming the main entrypoint for the bot is here
+from src.main import create_bot
+from src.models import MonitoringTarget
+from tests.utils.mock_factories import (
+    create_async_notifier_mock,
+    create_discord_context_mock,
+    validate_async_mock,
+)
+
 
 def test_add_location_by_name_e2e(db_session, api_mocker):
     """
@@ -62,4 +73,99 @@ def test_check_command_e2e(db_session, api_mocker):
     - Executes the `!check` command.
     - Verifies that a notification message with the new submissions is generated.
     """
+    pass
+
+
+@pytest.mark.asyncio
+async def test_add_location_command_success(db_session, api_mocker):
+    """
+    Tests the full end-to-end flow of the `!add location` command
+    for a successful case where a single location is found.
+    """
+    # 1. SETUP
+    # Configure the API mocker for the location search and subsequent calls
+    search_term = "Ground Kontrol"
+    location_id = 1337
+    api_mocker.add_response(
+        url_substring=f"by_location_name={search_term.replace(' ', '%20')}",
+        json_fixture_path="pinballmap_search/search_ground_kontrol_single_result.json",
+    )
+    api_mocker.add_response(
+        url_substring=f"locations/{location_id}.json",
+        json_fixture_path="pinballmap_locations/location_1337_details.json",
+    )
+    api_mocker.add_response(
+        url_substring=f"user_submissions/location.json?id={location_id}",
+        json_fixture_path="pinballmap_submissions/location_1_recent.json",
+    )
+
+    # Create a properly spec'd mock notifier with validation
+    mock_notifier = create_async_notifier_mock()
+
+    # Validate the mock is properly set up for async usage
+    validate_async_mock(mock_notifier, "log_and_send")
+
+    # Create the bot with mocked notifier and properly spec'd mock context
+    bot = await create_bot(db_session, notifier=mock_notifier)
+    mock_ctx = create_discord_context_mock()
+
+    # Debug: Verify our spec'd mocks are properly assigned
+    print(f"DEBUG: bot.notifier type: {type(bot.notifier)}")
+    print(
+        f"DEBUG: bot.notifier spec: {getattr(bot.notifier, '_spec_class', 'No spec')}"
+    )
+
+    # Check the monitoring cog's notifier
+    monitoring_cog = bot.get_cog("Monitoring")
+    if monitoring_cog:
+        print(f"DEBUG: monitoring_cog.notifier type: {type(monitoring_cog.notifier)}")
+        print(
+            f"DEBUG: monitoring_cog.notifier spec: {getattr(monitoring_cog.notifier, '_spec_class', 'No spec')}"
+        )
+    else:
+        print("DEBUG: No Monitoring cog found")
+
+    # 2. ACTION
+    # Get the monitoring cog and call the add method directly with proper context
+    monitoring_cog = bot.get_cog("Monitoring")
+    assert monitoring_cog is not None, "Monitoring cog not found"
+
+    # Call the add method with the cog instance as self
+    await monitoring_cog.add(mock_ctx, "location", search_term)
+
+    # 3. ASSERT
+    # Assert that the bot sent the correct confirmation message
+    mock_ctx.respond.assert_called_once()
+    response_text = mock_ctx.respond.call_args[0][0]
+    assert "✅" in response_text
+    assert "Monitoring started" in response_text
+    assert search_term in response_text
+
+    # Assert that the target was saved to the database correctly
+    session = db_session()
+    target = (
+        session.query(MonitoringTarget)
+        .filter_by(channel_id=mock_ctx.interaction.channel.id)
+        .first()
+    )
+    assert target is not None
+    assert target.target_type == "location"
+    assert target.target_name == search_term
+    assert target.target_data == str(location_id)
+    session.close()
+
+
+def test_add_location_command_not_found(db_session, api_mocker):
+    pass
+
+
+def test_remove_command_by_index(db_session):
+    pass
+
+
+def test_list_command_empty(db_session):
+    pass
+
+
+def test_list_command_with_targets(db_session):
     pass

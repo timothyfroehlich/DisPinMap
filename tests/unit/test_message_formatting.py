@@ -1,11 +1,12 @@
 """
-Unit tests for message formatting logic in `src/messages.py`.
+Unit tests for message formatting logic in `src/notifier.py`.
 
 These tests will verify that the functions responsible for creating Discord
 messages and embeds produce correctly formatted output for various scenarios.
 """
 
-# To be migrated from `tests_backup/enhanced/test_message_formatting_issues.py`
+# from src.database import Database  # Will be needed for actual test implementation
+from src.notifier import Notifier
 
 
 def test_format_submission_notification_machine_added():
@@ -13,7 +14,26 @@ def test_format_submission_notification_machine_added():
     Tests the formatting for a 'machine_added' notification.
     - Asserts that the title, color, and fields of the resulting Discord embed are correct.
     """
-    pass
+    # 1. SETUP
+    # Instantiate the notifier. The database is not used by this method, so it can be None.
+    notifier = Notifier(db=None)
+
+    # Create a sample submission dictionary that looks like the real data
+    submission = {
+        "submission_type": "new_lmx",
+        "machine_name": "Godzilla (Premium)",
+        "location_name": "Ground Kontrol",
+        "user_name": "TestUser",
+    }
+
+    # 2. ACTION
+    # Call the method being tested
+    formatted_message = notifier.format_submission(submission)
+
+    # 3. ASSERT
+    # Check that the output string is exactly what we expect.
+    expected = "🎮 **Godzilla (Premium)** added at **Ground Kontrol** by TestUser"
+    assert formatted_message == expected
 
 
 def test_format_submission_notification_with_comment():

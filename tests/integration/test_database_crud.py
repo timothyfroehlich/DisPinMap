@@ -8,15 +8,47 @@ provided by the `db_session` fixture.
 
 # To be migrated from `tests_backup/unit/test_database.py` (which was an integration test).
 
+# import pytest  # Will be needed for actual test implementation
+# from sqlalchemy.exc import IntegrityError  # Will be needed for actual test implementation
 
-def test_add_and_get_monitoring_target(db_session):
+from src.models import MonitoringTarget
+
+
+def test_add_and_retrieve_monitoring_target(db_session):
     """
-    Tests adding a monitoring target and then retrieving it.
-    - Uses the `db_session` to add a new MonitoringTarget.
-    - Queries the database to retrieve the target.
-    - Asserts that the retrieved target's data matches the added data.
+    Tests basic CRUD functionality: adding a monitoring target to the database
+    and then retrieving it to ensure it was saved correctly.
     """
-    pass
+    # 1. SETUP
+    # The db_session fixture provides a clean, isolated session for this test.
+    session = db_session()
+
+    # Create a model instance with test data
+    new_target = MonitoringTarget(
+        channel_id=12345,
+        target_type="location",
+        target_name="Ground Kontrol",
+        target_data="1337",  # Represents location_id
+    )
+
+    # 2. ACTION
+    # Add the new object to the session and commit it to the database
+    session.add(new_target)
+    session.commit()
+
+    # 3. ASSERT
+    # Query the database to retrieve the object we just saved.
+    retrieved_target = (
+        session.query(MonitoringTarget).filter_by(channel_id=12345).first()
+    )
+
+    assert retrieved_target is not None
+    assert retrieved_target.channel_id == 12345
+    assert retrieved_target.target_type == "location"
+    assert retrieved_target.target_name == "Ground Kontrol"
+    assert retrieved_target.target_data == "1337"
+
+    session.close()
 
 
 def test_add_duplicate_target_raises_error(db_session):
