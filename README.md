@@ -122,24 +122,24 @@ python bot.py
 ### Configuration Commands
 
 **Target Monitoring:**
-- `!add location <name_or_id>` - Monitor specific locations by ID or name
-- `!add city <name> [radius]` - Monitor city areas with optional radius
-- `!add coordinates <lat> <lon> [radius]` - Monitor coordinate areas with optional radius
-- `!rm <index>` - Remove target by index (use `!list` to see indices)
+- `/add location <name_or_id>` - Monitor specific locations by ID or name
+- `/add city <name> [radius]` - Monitor city areas with optional radius
+- `/add coordinates <lat> <lon> [radius]` - Monitor coordinate areas with optional radius
+- `/rm <index>` - Remove target by index (use `/list` to see indices)
 
 **General Commands:**
-- `!list` or `!ls` - Show all monitored targets with their indices
-- `!export` - Export channel configuration as copy-pasteable commands
-- `!poll_rate <minutes> [target_index]` - Set polling rate for channel or specific target
-- `!notifications <type> [target_index]` - Set notification types (machines, comments, all)
-- `!check` - Immediately check for new submissions across all targets
+- `/list` or `/ls` - Show all monitored targets with their indices
+- `/export` - Export channel configuration as copy-pasteable commands
+- `/poll_rate <minutes> [target_index]` - Set polling rate for channel or specific target
+- `/notifications <type> [target_index]` - Set notification types (machines, comments, all)
+- `/check` - Immediately check for new submissions across all targets
 
 ### Example Setup
 ```
-!add city "Austin"        # Add Austin TX
-!add location "Pinballz Arcade"      # Add a specific location by name
-!poll_rate 30                        # Check every 30 minutes
-!notifications all                   # Get all notifications
+/add city "Austin"        # Add Austin TX
+/add location "Pinballz Arcade"      # Add a specific location by name
+/poll_rate 30                        # Check every 30 minutes
+/notifications all                   # Get all notifications
 ```
 
 ### Finding Location IDs

@@ -41,7 +41,6 @@ TEST_STARTUP = "--test-startup" in sys.argv
 # Initialize bot with intents
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Global for cleanup
 http_runner = None
@@ -59,7 +58,7 @@ async def create_bot(db_session_factory=None, notifier=None):
     # Initialize bot with intents
     intents = discord.Intents.default()
     intents.message_content = True
-    bot = commands.Bot(command_prefix="!", intents=intents)
+    bot = commands.Bot(command_prefix="/", intents=intents)
 
     # Use the provided session factory for tests, or create a new default DB for production
     database = Database(session_factory=db_session_factory)

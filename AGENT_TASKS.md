@@ -3,6 +3,57 @@
 This file tracks major completed tasks and ongoing activities for the DisPinMap project.
 
 ## Current Activity
+**Active Task**: Comprehensive Documentation Review and Updates (2025-01-27)
+- **Status**: ✅ **COMPLETED** - Updated all documentation to reflect command prefix change and ensure consistency
+- **Date**: 2025-01-27
+
+### Documentation Review and Updates (2025-01-27)
+**Scope**: Comprehensive review of all project documentation to ensure consistency with command prefix change
+**Files Reviewed and Updated**:
+- `README.md` - Updated command examples from "!" to "/" prefix
+- `USER_DOCUMENTATION.md` - Updated all command references and examples
+- `src/messages.py` - Updated error messages and usage instructions
+- `src/cogs/monitoring.py` - Updated export command generation
+- `src/cogs/monitor.py` - Updated docstring reference
+
+**Changes Made**:
+1. **Command Prefix Consistency**: All documentation now uses "/" prefix instead of "!" prefix
+2. **User-Facing Messages**: Updated error messages and usage instructions in bot responses
+3. **Export Functionality**: Updated export command generation to use "/" prefix
+4. **Documentation Accuracy**: Ensured all examples and references are consistent
+
+**Impact**:
+- Users will see consistent "/" commands throughout all documentation
+- Bot error messages now reference correct command syntax
+- Export functionality generates correct command syntax for users
+- All existing functionality remains unchanged, only the prefix was updated
+
+**Active Task**: Command Prefix Change (2025-01-27)
+- **Status**: ✅ **COMPLETED** - Changed bot command prefix from "!" to "/"
+- **Date**: 2025-01-27
+
+### Command Prefix Change Details (2025-01-27)
+**Change**: Updated bot to respond to "/command" instead of "!command"
+**Files Modified**: `src/main.py`
+**Changes Made**:
+- Changed `command_prefix="!"` to `command_prefix="/"` in both bot initialization locations
+- All existing commands now use "/" prefix (e.g., `/add`, `/list`, `/monitor_health`, etc.)
+
+**Impact**:
+- Users will need to use "/" instead of "!" for all bot commands
+- No changes needed to command implementations in cogs
+- Maintains backward compatibility with existing command logic
+
+**Commands Affected**:
+- `/poll_rate` (config cog)
+- `/notifications` (config cog)
+- `/add` (monitoring cog)
+- `/rm` (monitoring cog)
+- `/list`, `/ls`, `/status` (monitoring cog)
+- `/export` (monitoring cog)
+- `/monitor_health` (monitoring cog)
+- `/check` (monitoring cog)
+
 **Active Task**: Periodic Check Fix and Deployment (2025-06-28)
 - **Status**: ✅ **COMPLETED** - Successfully identified and fixed periodic check issue
 - **Date**: 2025-06-28

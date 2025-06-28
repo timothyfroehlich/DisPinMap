@@ -69,7 +69,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
 
     @commands.command(name="add")
     async def add(self, ctx, target_type: str, *args):
-        """Add a new monitoring target. Usage: !add <location|coordinates|city> <args>"""
+        """Add a new monitoring target. Usage: /add <location|coordinates|city> <args>"""
         try:
             if target_type == "location":
                 if not args:
@@ -248,25 +248,25 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             return
 
         commands = []
-        commands.append(f"!poll_rate {channel_config['poll_rate_minutes']}")
-        commands.append(f"!notifications {channel_config['notification_types']}")
+        commands.append(f"/poll_rate {channel_config['poll_rate_minutes']}")
+        commands.append(f"/notifications {channel_config['notification_types']}")
         commands.append("")
 
         for i, target in enumerate(targets, 1):
             if target["target_type"] == "latlong":
                 coords = target["target_name"].split(",")
-                cmd = f"!add coordinates {coords[0]} {coords[1]}"
+                cmd = f"/add coordinates {coords[0]} {coords[1]}"
                 if len(coords) > 2:
                     cmd += f" {coords[2]}"
             elif target["target_type"] == "location":
-                cmd = f"!add location {target['target_name']}"
+                cmd = f"/add location {target['target_name']}"
             else:
-                cmd = f"!add city {target['target_name']}"
+                cmd = f"/add city {target['target_name']}"
 
             if target["poll_rate_minutes"] != channel_config["poll_rate_minutes"]:
-                cmd += f"\n!poll_rate {target['poll_rate_minutes']} {i}"
+                cmd += f"\n/poll_rate {target['poll_rate_minutes']} {i}"
             if target["notification_types"] != channel_config["notification_types"]:
-                cmd += f"\n!notifications {target['notification_types']} {i}"
+                cmd += f"\n/notifications {target['notification_types']} {i}"
 
             commands.append(cmd)
 

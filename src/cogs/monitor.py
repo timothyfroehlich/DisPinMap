@@ -224,7 +224,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         Args:
             channel_id: Discord channel ID
             config: Channel configuration
-            is_manual_check: Whether this is a manual check (via !check command)
+            is_manual_check: Whether this is a manual check (via /check command)
 
         Returns:
             bool: True if new submissions were found and posted, False otherwise

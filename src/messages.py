@@ -38,13 +38,13 @@ class Messages:
             - search_term: str - The search term that was used
             """
 
-            SUGGESTIONS = "Location '{search_term}' not found directly. Did you mean one of these?\n{suggestions}\n\nPlease use `!add location <ID>` with the ID of the correct location."
+            SUGGESTIONS = "Location '{search_term}' not found directly. Did you mean one of these?\n{suggestions}\n\nPlease use `/add location <ID>` with the ID of the correct location."
             """Format parameters:
             - search_term: str - The search term that was used
             - suggestions: str - List of suggested locations
             """
 
-            LOCATION_SUGGESTIONS = "Location '{search_term}' not found directly. Did you mean one of these?\n{suggestions}\n\nPlease use `!add location <ID>` with the ID of the correct location."
+            LOCATION_SUGGESTIONS = "Location '{search_term}' not found directly. Did you mean one of these?\n{suggestions}\n\nPlease use `/add location <ID>` with the ID of the correct location."
             """Format parameters:
             - search_term: str - The search term that was used
             - suggestions: str - List of suggested locations
@@ -62,13 +62,13 @@ class Messages:
             INVALID_RADIUS = "❌ Radius must be between 1 and 100 miles"
             """No format parameters."""
 
-            MISSING_LOCATION = "❌ Please provide a location name or ID. Usage: `!add location <name_or_id>`"
-            MISSING_COORDS = "❌ Please provide latitude and longitude. Usage: `!add coordinates <lat> <lon> [radius]`"
+            MISSING_LOCATION = "❌ Please provide a location name or ID. Usage: `/add location <name_or_id>`"
+            MISSING_COORDS = "❌ Please provide latitude and longitude. Usage: `/add coordinates <lat> <lon> [radius]`"
             INVALID_COORDS_FORMAT = (
                 "❌ Invalid coordinates. Please provide valid numbers."
             )
             MISSING_CITY = (
-                "❌ Please provide a city name. Usage: `!add city <name> [radius]`"
+                "❌ Please provide a city name. Usage: `/add city <name> [radius]`"
             )
 
             LOCATION_NOT_FOUND = "❌ Location ID {location_id} not found. Please check the ID on PinballMap.com."
@@ -113,7 +113,7 @@ class Messages:
             - error_message: str - Error message to display
             """
 
-            NO_TARGETS = "❌ No targets to remove. Use `!list` to see current targets."
+            NO_TARGETS = "❌ No targets to remove. Use `/list` to see current targets."
             """No format parameters."""
 
             INVALID_INDEX = (
@@ -132,10 +132,10 @@ class Messages:
         class TargetList:
             """Messages for the list command."""
 
-            NO_TARGETS = "No targets being monitored. Use `!add` to add some."
+            NO_TARGETS = "No targets being monitored. Use `/add` to add some."
             """No format parameters."""
 
-            HEADER = "**Monitored Targets:**\n{targets}\n\n**Channel Defaults:**\nPoll Rate: {poll_rate} minutes\nNotifications: {notification_types}\n\nUse `!rm <index>` to remove a target"
+            HEADER = "**Monitored Targets:**\n{targets}\n\n**Channel Defaults:**\nPoll Rate: {poll_rate} minutes\nNotifications: {notification_types}\n\nUse `/rm <index>` to remove a target"
             """Format parameters:
             - targets: str - List of monitored targets
             - poll_rate: int - Channel's poll rate in minutes
@@ -145,7 +145,7 @@ class Messages:
         class Export:
             """Messages for the export command."""
 
-            NO_TARGETS = "No targets to export. Use `!add` to add some first."
+            NO_TARGETS = "No targets to export. Use `/add` to add some first."
             """No format parameters."""
 
             HEADER = "**Export Commands:**\n```\n{commands}\n```"
@@ -203,7 +203,7 @@ class Messages:
         class Error:
             """Error messages."""
 
-            COMMAND = "❌ An unexpected error occurred while running `!{command}`. Please check the logs or contact the admin."
+            COMMAND = "❌ An unexpected error occurred while running `/{command}`. Please check the logs or contact the admin."
             """Format parameters:
             - command: str - Name of the command that failed
             """
@@ -216,10 +216,10 @@ class Messages:
         class Status:
             """Status command messages."""
 
-            NO_TARGETS = "No monitoring targets configured for this channel. Use `!add` to add a target."
+            NO_TARGETS = "No monitoring targets configured for this channel. Use `/add` to add a target."
             """No format parameters."""
 
-            NO_TARGETS_TO_CHECK = "No targets to check for this channel. Use `!add` to add some targets first."
+            NO_TARGETS_TO_CHECK = "No targets to check for this channel. Use `/add` to add some targets first."
             """No format parameters."""
 
     class Notification:

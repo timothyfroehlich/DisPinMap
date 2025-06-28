@@ -8,7 +8,7 @@ To begin, add a monitoring target to your channel. The simplest way is to add a 
 
 **Example:**
 ```
-!add location "Ground Kontrol Classic Arcade"
+/add location "Ground Kontrol Classic Arcade"
 ```
 
 The bot will find the location and start monitoring it for changes. After adding the target, the bot will immediately display the 5 most recent submissions for that location to confirm it's working. By default, it will check for new submissions every 60 minutes and notify you about new machine additions or removals.
@@ -17,29 +17,29 @@ The bot will find the location and start monitoring it for changes. After adding
 
 ## Command Reference
 
-All commands are prefixed with `!`.
+All commands are prefixed with `/`.
 
-#### `!add`
+#### `/add`
 Adds a new target to monitor. This command has three variations:
 
-1.  **`!add location <name_or_id>`**: Monitor a specific location by its name or its Pinball Map ID.
-    *   **By Name**: `!add location "My Favorite Arcade"`
-    *   **By ID**: `!add location 123`
+1.  **`/add location <name_or_id>`**: Monitor a specific location by its name or its Pinball Map ID.
+    *   **By Name**: `/add location "My Favorite Arcade"`
+    *   **By ID**: `/add location 123`
 
-2.  **`!add city <name> [radius]`**: Monitor a city. You can optionally provide a radius in miles.
-    *   **Without Radius**: `!add city "Portland, OR"` (uses PinballMap's default radius, 100Mi)
-    *   **With Radius**: `!add city "Seattle, WA" 15`
+2.  **`/add city <name> [radius]`**: Monitor a city. You can optionally provide a radius in miles.
+    *   **Without Radius**: `/add city "Portland, OR"` (uses PinballMap's default radius, 100Mi)
+    *   **With Radius**: `/add city "Seattle, WA" 15`
 
-3.  **`!add coordinates <latitude> <longitude> [radius]`**: Monitor a specific geographic point with a radius in miles.
-    *   **Without Radius**: `!add coordinates 45.5231 -122.6765` (uses PinballMap's default radius of 100 miles)
-    *   **With Radius**: `!add coordinates 47.6062 -122.3321 5`
+3.  **`/add coordinates <latitude> <longitude> [radius]`**: Monitor a specific geographic point with a radius in miles.
+    *   **Without Radius**: `/add coordinates 45.5231 -122.6765` (uses PinballMap's default radius of 100 miles)
+    *   **With Radius**: `/add coordinates 47.6062 -122.3321 5`
 
-#### `!list` (or `!ls`, `!status`)
-Displays a detailed table of all active monitoring targets in the current channel. The table includes each target's index, poll rate, notification type, and the last time it was checked. The index numbers are used for commands like `!rm`.
+#### `/list` (or `/ls`, `/status`)
+Displays a detailed table of all active monitoring targets in the current channel. The table includes each target's index, poll rate, notification type, and the last time it was checked. The index numbers are used for commands like `/rm`.
 
 **Example:**
 ```
-!list
+/list
 ```
 *Output:*
 ```
@@ -52,56 +52,56 @@ Displays a detailed table of all active monitoring targets in the current channe
 └───────┴──────────────────────────┴────────────┴───────────────┴────────────────┘
 ```
 
-#### `!check`
+#### `/check`
 Manually triggers an immediate check for new submissions across all active targets in the channel. The bot will report all new submissions since the last check, and if there are fewer than 5 total, it will also show older submissions to reach a total of 5 (helping you see recent activity even during quiet periods).
 
 **Example:**
 ```
-!check
+/check
 ```
 
-#### `!notifications <type> [target_index]`
+#### `/notifications <type> [target_index]`
 Sets the type of notifications you want to receive. The available types are:
 *   `machines`: Only notifies about machine additions or removals.
 *   `comments`: Only notifies about new comments or condition reports on existing machines.
 *   `all`: Notifies for all submission types.
 
-*   **Set for the whole channel**: `!notifications all`
-*   **Set for a specific target**: `!notifications comments 2` (Target #2 will only send comment notifications.)
+*   **Set for the whole channel**: `/notifications all`
+*   **Set for a specific target**: `/notifications comments 2` (Target #2 will only send comment notifications.)
 
-#### `!poll_rate <minutes> [target_index]`
+#### `/poll_rate <minutes> [target_index]`
 Sets how frequently (in minutes) the bot checks for updates.
 
-*   **Set for the whole channel**: `!poll_rate 30` (All targets will be checked every 30 minutes, unless they have a custom poll rate.)
-*   **Set for a specific target**: `!poll_rate 10 1` (Target #1 will be checked every 10 minutes, ignoring the channel default.)
+*   **Set for the whole channel**: `/poll_rate 30` (All targets will be checked every 30 minutes, unless they have a custom poll rate.)
+*   **Set for a specific target**: `/poll_rate 10 1` (Target #1 will be checked every 10 minutes, ignoring the channel default.)
 
-#### `!rm <index>`
-Removes a monitoring target. The `index` corresponds to the number shown in the `!list` command.
+#### `/rm <index>`
+Removes a monitoring target. The `index` corresponds to the number shown in the `/list` command.
 
 **Example:**
 ```
-!rm 2
+/rm 2
 ```
 
-#### `!export`
+#### `/export`
 Generates a copy-pasteable list of commands that can be used to replicate the channel's entire monitoring configuration in another channel or server.
 
 **Example:**
 ```
-!export
+/export
 ```
 *Output:*
 ```
 Here is the configuration for this channel:
 
-!poll_rate 30
-!notifications all
+/poll_rate 30
+/notifications all
 
-!add location "Ground Kontrol Classic Arcade"
-!poll_rate 15 1
-!notifications machines 1
+/add location "Ground Kontrol Classic Arcade"
+/poll_rate 15 1
+/notifications machines 1
 
-!add city "Portland, OR" 10
+/add city "Portland, OR" 10
 ```
 
 ---
@@ -110,13 +110,13 @@ Here is the configuration for this channel:
 
 ### Channel Defaults vs. Per-Target Settings
 
-*   When you use `!poll_rate` or `!notifications` without specifying a `target_index`, you are setting the **default** for the entire channel. All existing and future targets will use this setting.
+*   When you use `/poll_rate` or `/notifications` without specifying a `target_index`, you are setting the **default** for the entire channel. All existing and future targets will use this setting.
 *   When you specify a `target_index`, you are creating a **custom override** for that specific target only. It will ignore the channel's default setting.
 
 ### Example Scenario
 
-1.  You set a channel's poll rate: `!poll_rate 60`.
-2.  You add two targets: `!add location "Arcade A"` and `!add location "Arcade B"`. Both will be polled every 60 minutes.
-3.  You decide you want faster updates for "Arcade A": `!poll_rate 10 1`.
+1.  You set a channel's poll rate: `/poll_rate 60`.
+2.  You add two targets: `/add location "Arcade A"` and `/add location "Arcade B"`. Both will be polled every 60 minutes.
+3.  You decide you want faster updates for "Arcade A": `/poll_rate 10 1`.
 4.  Now, "Arcade A" is polled every 10 minutes, while "Arcade B" continues to be polled every 60 minutes.
-5.  If you change the channel default again (`!poll_rate 45`), "Arcade B" will be updated to 45 minutes, but "Arcade A" will remain at 10 minutes because it has a custom setting.
+5.  If you change the channel default again (`/poll_rate 45`), "Arcade B" will be updated to 45 minutes, but "Arcade A" will remain at 10 minutes because it has a custom setting.

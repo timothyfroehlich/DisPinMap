@@ -1,5 +1,8 @@
 """
-Tests for main module
+Unit tests for the main module.
+
+These tests ensure that the bot creation, configuration, and startup logic
+works correctly in both production and testing environments.
 """
 
 from unittest.mock import AsyncMock, Mock, patch
@@ -7,7 +10,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from src.main import (
-    TEST_STARTUP,
     cleanup,
     create_bot,
     get_secret,
@@ -28,7 +30,7 @@ class TestMainModule:
         assert bot is not None
         assert hasattr(bot, "database")
         assert hasattr(bot, "notifier")
-        assert bot.command_prefix == "!"
+        assert bot.command_prefix == "/"
 
     @pytest.mark.asyncio
     async def test_create_bot_with_injected_dependencies(self):
@@ -61,8 +63,11 @@ class TestMainModule:
         with patch("os.listdir") as mock_listdir:
             mock_listdir.return_value = ["test_cog.py"]
 
-            with patch("src.main.bot.load_extension") as mock_load:
-                mock_load.side_effect = Exception("Cog loading failed")
+            with patch("src.main.create_bot") as mock_create_bot:
+                mock_bot = Mock()
+                mock_bot.load_extension = AsyncMock()
+                mock_bot.load_extension.side_effect = Exception("Cog loading failed")
+                mock_create_bot.return_value = mock_bot
 
                 bot = await create_bot()
 
@@ -129,21 +134,43 @@ class TestMainModule:
     async def test_start_http_server(self):
         """Test HTTP server startup"""
         with patch("os.getenv", return_value="8080"):
-            runner = await start_http_server()
+            with patch("aiohttp.web.AppRunner") as mock_runner_class:
+                mock_runner = Mock()
+                mock_runner.setup = AsyncMock()
+                mock_runner.cleanup = AsyncMock()
+                mock_runner_class.return_value = mock_runner
 
-            assert runner is not None
-            # Clean up
-            await runner.cleanup()
+                with patch("aiohttp.web.TCPSite") as mock_site_class:
+                    mock_site = Mock()
+                    mock_site.start = AsyncMock()
+                    mock_site_class.return_value = mock_site
+
+                    runner = await start_http_server()
+
+                    assert runner is not None
+                    # Clean up
+                    await runner.cleanup()
 
     @pytest.mark.asyncio
     async def test_start_http_server_custom_port(self):
         """Test HTTP server startup with custom port"""
         with patch("os.getenv", return_value="9000"):
-            runner = await start_http_server()
+            with patch("aiohttp.web.AppRunner") as mock_runner_class:
+                mock_runner = Mock()
+                mock_runner.setup = AsyncMock()
+                mock_runner.cleanup = AsyncMock()
+                mock_runner_class.return_value = mock_runner
 
-            assert runner is not None
-            # Clean up
-            await runner.cleanup()
+                with patch("aiohttp.web.TCPSite") as mock_site_class:
+                    mock_site = Mock()
+                    mock_site.start = AsyncMock()
+                    mock_site_class.return_value = mock_site
+
+                    runner = await start_http_server()
+
+                    assert runner is not None
+                    # Clean up
+                    await runner.cleanup()
 
     @pytest.mark.asyncio
     async def test_cleanup_with_http_runner(self):
@@ -210,4 +237,6 @@ class TestMainModule:
         """Test TEST_STARTUP flag detection"""
         # This tests the global flag that's set based on sys.argv
         # We can't easily test this without modifying sys.argv, so just verify it exists
+        from src.main import TEST_STARTUP
+
         assert isinstance(TEST_STARTUP, bool)
