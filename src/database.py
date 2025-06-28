@@ -346,7 +346,7 @@ class Database:
                     "channel_id": target.channel_id,
                     "target_type": target.target_type,
                     "target_name": target.target_name,
-                    "target_data": target.target_data,
+                    "location_id": target.location_id,
                     "poll_rate_minutes": target.poll_rate_minutes,
                     "notification_types": target.notification_types,
                     "last_checked_at": target.last_checked_at,
