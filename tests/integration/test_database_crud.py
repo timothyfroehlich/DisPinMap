@@ -26,9 +26,9 @@ def test_add_and_retrieve_monitoring_target(db_session):
     # Create a model instance with test data
     new_target = MonitoringTarget(
         channel_id=12345,
-        target_type="location",
-        target_name="Ground Kontrol",
-        location_id=1337,  # Using location_id instead of target_data
+        target_type="latlong",
+        target_name="45.523,-122.676",
+        target_data="45.523,-122.676",
     )
 
     # 2. ACTION
@@ -44,9 +44,9 @@ def test_add_and_retrieve_monitoring_target(db_session):
 
     assert retrieved_target is not None
     assert retrieved_target.channel_id == 12345
-    assert retrieved_target.target_type == "location"
-    assert retrieved_target.target_name == "Ground Kontrol"
-    assert retrieved_target.location_id == 1337
+    assert retrieved_target.target_type == "latlong"
+    assert retrieved_target.target_name == "45.523,-122.676"
+    assert retrieved_target.target_data == "45.523,-122.676"
 
     session.close()
 

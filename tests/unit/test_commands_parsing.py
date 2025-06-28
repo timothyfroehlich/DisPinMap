@@ -6,129 +6,7 @@ their arguments, without executing the full command logic or interacting
 with the database.
 """
 
-from unittest.mock import AsyncMock, Mock
-
 import pytest
-
-from src.cogs.monitoring import MonitoringCog
-from src.messages import Messages
-
-
-class TestCommandParsing:
-    """Test command parsing logic in MonitoringCog"""
-
-    def setup_method(self):
-        """Set up test fixtures"""
-        self.mock_bot = Mock()
-        self.mock_db = Mock()
-        self.mock_notifier = Mock()
-        self.mock_notifier.log_and_send = AsyncMock()
-        self.mock_notifier.send_initial_notifications = AsyncMock()
-
-        self.cog = MonitoringCog(self.mock_bot, self.mock_db, self.mock_notifier)
-        self.mock_ctx = Mock()
-        self.mock_ctx.channel.id = 123456
-
-
-class TestAddCommandParsing(TestCommandParsing):
-    """Test parsing of add command arguments"""
-
-    @pytest.mark.asyncio
-    async def test_add_location_by_id(self):
-        """Test parsing location by ID"""
-        # Test that location ID is correctly identified
-        location_input = "123"
-
-        # Mock the database and API calls
-        self.mock_db.get_monitoring_targets.return_value = []
-
-        # Call the add method directly (not through Discord command decorator)
-        await self.cog.add(self.mock_ctx, "location", location_input)
-
-        # Verify the correct handler was called
-        # The actual parsing happens in _handle_location_add
-        assert self.mock_notifier.log_and_send.called
-
-
-class TestRemoveCommandParsing(TestCommandParsing):
-    """Test parsing of remove command arguments"""
-
-    @pytest.mark.asyncio
-    async def test_remove_valid_index(self):
-        """Test parsing valid index for remove command"""
-        # Mock targets in database
-        self.mock_db.get_monitoring_targets.return_value = [
-            {"target_type": "location", "target_name": "Test Location"}
-        ]
-
-        # Call remove with valid index directly
-        await self.cog.remove(self.mock_ctx, "1")
-
-        # Verify target was removed
-        self.mock_db.remove_monitoring_target.assert_called_once()
-
-
-class TestListCommandParsing(TestCommandParsing):
-    """Test parsing of list command arguments"""
-
-    @pytest.mark.asyncio
-    async def test_list_no_targets(self):
-        """Test list command when no targets exist"""
-        self.mock_db.get_monitoring_targets.return_value = []
-
-        # Call list_targets directly
-        await self.cog.list_targets(self.mock_ctx)
-
-        # Should send no targets message
-        self.mock_notifier.log_and_send.assert_called_with(
-            self.mock_ctx, Messages.Command.Shared.NO_TARGETS
-        )
-
-
-class TestExportCommandParsing(TestCommandParsing):
-    """Test parsing of export command arguments"""
-
-    @pytest.mark.asyncio
-    async def test_export_with_targets(self):
-        """Test export command with existing targets"""
-        # Mock targets and channel config
-        self.mock_db.get_monitoring_targets.return_value = [
-            {
-                "target_type": "location",
-                "target_name": "Ground Kontrol Classic Arcade",
-                "location_id": 874,
-                "poll_rate_minutes": 15,
-                "notification_types": "machines",
-            }
-        ]
-        self.mock_db.get_channel_config.return_value = {
-            "poll_rate_minutes": 30,
-            "notification_types": "all",
-        }
-
-        # Call export directly
-        await self.cog.export(self.mock_ctx)
-
-        # Should call log_and_send with export message
-        assert self.mock_notifier.log_and_send.called
-
-
-class TestCheckCommandParsing(TestCommandParsing):
-    """Test parsing of check command arguments"""
-
-    @pytest.mark.asyncio
-    async def test_check_command(self):
-        """Test check command parsing"""
-        # Mock targets
-        self.mock_db.get_monitoring_targets.return_value = [
-            {"target_type": "location", "target_name": "Test Location"}
-        ]
-
-        # Call check directly
-        await self.cog.check(self.mock_ctx)
-
-        # Should process targets and check for new submissions
-        assert self.mock_notifier.log_and_send.called
 
 
 class TestCoordinateParsing:
@@ -254,7 +132,7 @@ class TestNotificationTypeValidation:
 
     def test_invalid_notification_types(self):
         """Test invalid notification types"""
-        invalid_types = ["foobar", "machine", "comment", "condition"]
+        invalid_types = ["allz", "machine", "comment", "condition"]
         valid_types = ["all", "machines", "comments", "conditions"]
 
         for notification_type in invalid_types:

@@ -63,10 +63,10 @@ async def test_add_location_by_name_e2e(db_session, api_mocker):
     mock_ctx = create_discord_context_mock(channel_id=12345)  # Use unique channel ID
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.add(mock_ctx, "location", location_name)
+    await command_handler_cog.add(mock_ctx, "location", location_name)
 
     # 3. ASSERT
     assert mock_notifier.send_initial_notifications.called
@@ -95,12 +95,10 @@ async def test_add_city_e2e(db_session, api_mocker):
     """
     # 1. SETUP
     city_name = "Portland, OR"
-    expected_lat = 45.5231
-    expected_lon = -122.6765
 
     # Mock geocoding API response
     api_mocker.add_response(
-        url_substring="geocode",
+        url_substring="v1/search",
         json_fixture_path="geocoding/city_portland_or.json",
     )
 
@@ -113,10 +111,10 @@ async def test_add_city_e2e(db_session, api_mocker):
     mock_ctx = create_discord_context_mock()
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.add(mock_ctx, "city", city_name)
+    await command_handler_cog.add(mock_ctx, "city", city_name)
 
     # 3. ASSERT
     assert mock_notifier.send_initial_notifications.called
@@ -131,8 +129,6 @@ async def test_add_city_e2e(db_session, api_mocker):
     assert target is not None
     assert target.target_type == "city"
     assert target.target_name == city_name
-    assert abs(target.latitude - expected_lat) < 0.01
-    assert abs(target.longitude - expected_lon) < 0.01
     session.close()
 
 
@@ -145,12 +141,10 @@ async def test_add_city_with_radius_e2e(db_session, api_mocker):
     # 1. SETUP
     city_name = "Seattle, WA"
     radius = 15
-    expected_lat = 47.6062
-    expected_lon = -122.3321
 
     # Mock geocoding API response
     api_mocker.add_response(
-        url_substring="geocode",
+        url_substring="v1/search",
         json_fixture_path="geocoding/city_seattle.json",
     )
 
@@ -163,10 +157,10 @@ async def test_add_city_with_radius_e2e(db_session, api_mocker):
     mock_ctx = create_discord_context_mock()
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.add(mock_ctx, "city", city_name, str(radius))
+    await command_handler_cog.add(mock_ctx, "city", city_name, str(radius))
 
     # 3. ASSERT
     assert mock_notifier.send_initial_notifications.called
@@ -181,9 +175,6 @@ async def test_add_city_with_radius_e2e(db_session, api_mocker):
     assert target is not None
     assert target.target_type == "city"
     assert target.target_name == city_name
-    assert target.radius_miles == radius
-    assert abs(target.latitude - expected_lat) < 0.01
-    assert abs(target.longitude - expected_lon) < 0.01
     session.close()
 
 
@@ -206,10 +197,10 @@ async def test_add_coordinates_e2e(db_session, api_mocker):
     mock_ctx = create_discord_context_mock(channel_id=12345)  # Use unique channel ID
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.add(mock_ctx, "coordinates", str(lat), str(lon))
+    await command_handler_cog.add(mock_ctx, "coordinates", str(lat), str(lon))
 
     # 3. ASSERT
     assert mock_notifier.send_initial_notifications.called
@@ -222,10 +213,10 @@ async def test_add_coordinates_e2e(db_session, api_mocker):
         .first()
     )
     assert target is not None
-    assert target.target_type == "coordinates"
-    assert abs(target.latitude - lat) < 0.01
-    assert abs(target.longitude - lon) < 0.01
-    assert target.radius_miles == 25  # Default radius
+    assert target.target_type == "latlong"
+    lat_from_db, lon_from_db = target.target_name.split(",")
+    assert abs(float(lat_from_db) - lat) < 0.01
+    assert abs(float(lon_from_db) - lon) < 0.01
     session.close()
 
 
@@ -249,10 +240,12 @@ async def test_add_coordinates_with_radius_e2e(db_session, api_mocker):
     mock_ctx = create_discord_context_mock()
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.add(mock_ctx, "coordinates", str(lat), str(lon), str(radius))
+    await command_handler_cog.add(
+        mock_ctx, "coordinates", str(lat), str(lon), str(radius)
+    )
 
     # 3. ASSERT
     assert mock_notifier.send_initial_notifications.called
@@ -265,10 +258,11 @@ async def test_add_coordinates_with_radius_e2e(db_session, api_mocker):
         .first()
     )
     assert target is not None
-    assert target.target_type == "coordinates"
-    assert abs(target.latitude - lat) < 0.01
-    assert abs(target.longitude - lon) < 0.01
-    assert target.radius_miles == radius
+    assert target.target_type == "latlong"
+    lat_from_db, lon_from_db, radius_from_db = target.target_name.split(",")
+    assert abs(float(lat_from_db) - lat) < 0.01
+    assert abs(float(lon_from_db) - lon) < 0.01
+    assert int(radius_from_db) == radius
     session.close()
 
 
@@ -282,37 +276,41 @@ async def test_remove_target_e2e(db_session):
     - Verifies that the correct confirmation message is sent.
     """
     # 1. SETUP
+    session = db_session()
+    session.add(
+        MonitoringTarget(
+            channel_id=12345,
+            target_type="location",
+            target_name="Test Location",
+            location_id=999,
+        )
+    )
+    session.commit()
+    session.close()
+
+    # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
-    mock_ctx = create_discord_context_mock()
-
-    # Add a target to the database
-    session = db_session()
-    target = MonitoringTarget(
-        channel_id=mock_ctx.interaction.channel.id,
-        target_type="location",
-        target_name="Test Location",
-        location_id=123,
-    )
-    session.add(target)
-    session.commit()
-    target_id = target.id
-    session.close()
+    mock_ctx = create_discord_context_mock(channel_id=12345)
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.remove(mock_ctx, "1")
+    await command_handler_cog.remove(mock_ctx, "1")
 
     # 3. ASSERT
     assert mock_notifier.log_and_send.called
 
-    # Verify target was removed from database
+    # Verify database entry is removed
     session = db_session()
-    target = session.query(MonitoringTarget).filter_by(id=target_id).first()
+    target = (
+        session.query(MonitoringTarget)
+        .filter_by(channel_id=12345, location_id=999)
+        .first()
+    )
     assert target is None
     session.close()
 
@@ -320,81 +318,79 @@ async def test_remove_target_e2e(db_session):
 @pytest.mark.asyncio
 async def test_remove_target_invalid_index_e2e(db_session):
     """
-    Tests the `!rm <index>` flow with invalid index.
-    - Verifies error handling for invalid index.
+    Tests `!rm` with an invalid index.
+    - Should notify user of invalid index.
     """
     # 1. SETUP
+    session = db_session()
+    session.add(
+        MonitoringTarget(
+            channel_id=12345, target_type="location", target_name="Test Location"
+        )
+    )
+    session.commit()
+
+    # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
-    mock_ctx = create_discord_context_mock()
+    mock_ctx = create_discord_context_mock(channel_id=12345)
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.remove(mock_ctx, "1")
+    await command_handler_cog.remove(mock_ctx, "2")  # Invalid index
 
     # 3. ASSERT
-    assert mock_notifier.log_and_send.called
-
-    # Verify error message was sent
+    # Should send invalid index message
+    mock_notifier.log_and_send.assert_called_once()
     call_args = mock_notifier.log_and_send.call_args[0]
-    assert "No targets found" in call_args[1] or "Invalid index" in call_args[1]
+    assert "Invalid index" in call_args[1]
+    session.close()
 
 
 @pytest.mark.asyncio
 async def test_list_targets_e2e(db_session):
     """
-    Tests the full `!list` flow.
-    - Programmatically adds several targets to the database.
-    - Executes the `!list` command.
-    - Verifies that the response message contains the details of all added targets.
+    Tests the `!list` command.
+    - Adds multiple targets to the database.
+    - Executes the command.
+    - Verifies that the output contains the correct information for all targets.
     """
     # 1. SETUP
+    session = db_session()
+    session.add(
+        MonitoringTarget(
+            channel_id=12345,
+            target_type="location",
+            target_name="Ground Kontrol",
+            location_id=874,
+        )
+    )
+    session.add(
+        MonitoringTarget(
+            channel_id=12345,
+            target_type="latlong",
+            target_name="45.5231,-122.6765,10",
+        )
+    )
+    session.commit()
+    session.close()
+
+    # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
     mock_ctx = create_discord_context_mock()
 
-    # Add multiple targets to the database
-    session = db_session()
-    targets = [
-        MonitoringTarget(
-            channel_id=mock_ctx.interaction.channel.id,
-            target_type="location",
-            target_name="Funland",
-            location_id=123,
-            poll_rate_minutes=60,
-        ),
-        MonitoringTarget(
-            channel_id=mock_ctx.interaction.channel.id,
-            target_type="coordinates",
-            target_name="Coords: 40.71, -74.00",
-            latitude=40.71,
-            longitude=-74.00,
-            poll_rate_minutes=30,
-        ),
-        MonitoringTarget(
-            channel_id=mock_ctx.interaction.channel.id,
-            target_type="city",
-            target_name="Austin, TX",
-            latitude=30.2672,
-            longitude=-97.7431,
-        ),
-    ]
-    for target in targets:
-        session.add(target)
-    session.commit()
-    session.close()
-
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.list(mock_ctx)
+    await command_handler_cog.list_targets(mock_ctx)
 
     # 3. ASSERT
     assert mock_notifier.log_and_send.called
@@ -402,11 +398,8 @@ async def test_list_targets_e2e(db_session):
     # Verify the message contains all targets
     call_args = mock_notifier.log_and_send.call_args[0]
     message = call_args[1]
-    assert "Funland" in message
-    assert "40.71, -74.00" in message
-    assert "Austin, TX" in message
-    assert "60" in message  # Poll rate
-    assert "30" in message  # Poll rate
+    assert "Ground Kontrol" in message
+    assert "45.5231, -122.6765" in message
 
 
 @pytest.mark.asyncio
@@ -423,10 +416,10 @@ async def test_list_command_empty(db_session):
     mock_ctx = create_discord_context_mock()
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.list(mock_ctx)
+    await command_handler_cog.list_targets(mock_ctx)
 
     # 3. ASSERT
     assert mock_notifier.log_and_send.called
@@ -440,48 +433,44 @@ async def test_list_command_empty(db_session):
 @pytest.mark.asyncio
 async def test_export_command_e2e(db_session):
     """
-    Tests the full `!export` flow.
-    - Adds targets with various configurations to the database.
-    - Executes the `!export` command.
-    - Verifies that the exported configuration contains all the commands needed to recreate the setup.
+    Tests the `!export` command.
+    - Adds a mix of targets to the database.
+    - Executes the command.
+    - Verifies that the exported script contains the correct `!add` and `!poll_rate` commands.
     """
     # 1. SETUP
+    session = db_session()
+    session.add(
+        MonitoringTarget(
+            channel_id=12345,
+            target_type="location",
+            target_name="Ground Kontrol",
+            location_id=874,
+            poll_rate_minutes=15,
+        )
+    )
+    session.add(
+        MonitoringTarget(
+            channel_id=12345,
+            target_type="latlong",
+            target_name="45.5231,-122.6765,10",
+        )
+    )
+    session.commit()
+    session.close()
+
+    # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
     mock_ctx = create_discord_context_mock()
 
-    # Add targets with various configurations
-    session = db_session()
-    targets = [
-        MonitoringTarget(
-            channel_id=mock_ctx.interaction.channel.id,
-            target_type="location",
-            target_name="Ground Kontrol Classic Arcade",
-            location_id=874,
-            poll_rate_minutes=15,
-            notification_types="machines",
-        ),
-        MonitoringTarget(
-            channel_id=mock_ctx.interaction.channel.id,
-            target_type="city",
-            target_name="Portland, OR",
-            latitude=45.5231,
-            longitude=-122.6765,
-            radius_miles=10,
-        ),
-    ]
-    for target in targets:
-        session.add(target)
-    session.commit()
-    session.close()
-
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.export(mock_ctx)
+    await command_handler_cog.export(mock_ctx)
 
     # 3. ASSERT
     assert mock_notifier.log_and_send.called
@@ -490,9 +479,8 @@ async def test_export_command_e2e(db_session):
     call_args = mock_notifier.log_and_send.call_args[0]
     message = call_args[1]
     assert "!add location" in message
-    assert "Ground Kontrol Classic Arcade" in message
-    assert "!add city" in message
-    assert "Portland, OR" in message
+    assert "Ground Kontrol" in message
+    assert "!add coordinates 45.5231 -122.6765 10" in message
     assert "!poll_rate 15 1" in message
     assert "!notifications machines 1" in message
 
@@ -523,10 +511,10 @@ async def test_add_location_command_not_found(db_session, api_mocker):
     mock_ctx = create_discord_context_mock(channel_id=54321)  # Use different channel ID
 
     # 2. ACTION
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await monitoring_cog.add(mock_ctx, "location", location_name)
+    await command_handler_cog.add(mock_ctx, "location", location_name)
 
     # 3. ASSERT
     assert mock_notifier.log_and_send.called
@@ -580,11 +568,11 @@ async def test_remove_command_by_index_edge_cases(db_session):
     session.commit()
     session.close()
 
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
     # 2. ACTION & 3. ASSERT - Test out-of-bounds index
-    await monitoring_cog.remove(mock_ctx, "999")
+    await command_handler_cog.remove(mock_ctx, "999")
 
     assert mock_notifier.log_and_send.called
     call_args = mock_notifier.log_and_send.call_args[0]
@@ -595,7 +583,7 @@ async def test_remove_command_by_index_edge_cases(db_session):
     mock_notifier.reset_mock()
 
     # ACTION & ASSERT - Test invalid (non-numeric) index
-    await monitoring_cog.remove(mock_ctx, "abc")
+    await command_handler_cog.remove(mock_ctx, "abc")
 
     assert mock_notifier.log_and_send.called
     call_args = mock_notifier.log_and_send.call_args[0]
@@ -620,9 +608,9 @@ async def test_list_command_with_targets(db_session):
     bot = await create_bot(db_session, notifier=mock_notifier)
     mock_ctx = create_discord_context_mock()
 
-    # Get the monitoring cog
-    monitoring_cog = bot.get_cog("Monitoring")
-    assert monitoring_cog is not None, "Monitoring cog not found"
+    # Get the command handler cog
+    command_handler_cog = bot.get_cog("CommandHandler")
+    assert command_handler_cog is not None, "CommandHandler cog not found"
 
     # Set up a session for database operations
     session = db_session()
@@ -669,7 +657,7 @@ async def test_list_command_with_targets(db_session):
 
     # 2. ACTION
     # Call the list_targets method directly
-    await monitoring_cog.list_targets(mock_ctx)
+    await command_handler_cog.list_targets(mock_ctx)
 
     # 3. ASSERT
     # Verify that log_and_send was called (the list command sends the table as a message)

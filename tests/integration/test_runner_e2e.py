@@ -52,7 +52,7 @@ async def test_monitoring_respects_poll_rate(db_session):
     """
     from datetime import datetime, timedelta, timezone
 
-    from src.cogs.monitor import MachineMonitor
+    from src.cogs.runner import Runner
     from src.models import ChannelConfig
     from tests.utils.mock_factories import (
         create_async_notifier_mock,
@@ -62,13 +62,13 @@ async def test_monitoring_respects_poll_rate(db_session):
 
     session = db_session()
 
-    # Create mock dependencies for MachineMonitor using spec-based factories
+    # Create mock dependencies for Runner using spec-based factories
     mock_bot = create_bot_mock()
     mock_database = create_database_mock()
     mock_notifier = create_async_notifier_mock()
 
     # Create monitor instance
-    monitor = MachineMonitor(mock_bot, mock_database, mock_notifier)
+    runner = Runner(mock_bot, mock_database, mock_notifier)
 
     # Create channel config with recent poll time (using UTC timezone)
     recent_time = datetime.now(timezone.utc) - timedelta(minutes=5)
@@ -91,7 +91,7 @@ async def test_monitoring_respects_poll_rate(db_session):
     }
 
     # Should NOT be ready to poll yet (only 5 minutes passed)
-    should_poll_now = await monitor._should_poll_channel(config_dict)
+    should_poll_now = await runner._should_poll_channel(config_dict)
     assert should_poll_now is False
 
     # Update to old poll time
@@ -103,9 +103,12 @@ async def test_monitoring_respects_poll_rate(db_session):
     config_dict["last_poll_at"] = old_time
 
     # Should be ready to poll now
-    should_poll_later = await monitor._should_poll_channel(config_dict)
+    should_poll_later = await runner._should_poll_channel(config_dict)
     assert should_poll_later is True
 
+    # CLEANUP
+    session.delete(channel_config)
+    session.commit()
     session.close()
 
 

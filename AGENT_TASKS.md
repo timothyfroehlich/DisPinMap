@@ -34,6 +34,28 @@ This file tracks major completed tasks and ongoing activities for the DisPinMap 
 - Initial notification logic is more self-contained and reliable.
 - All tests and documentation are consistent with the current codebase.
 
+### Confirmed `src` Logic Bugs (To be addressed after test migration)
+
+-   **`add` Command Failures**:
+    -   **Problem**: The `add` command in `src/cogs/command_handler.py` is failing to trigger initial notifications for any target type (location, city, coordinates). Additionally, when adding coordinates with a radius, the radius is not correctly stored in the `target_name`, causing a `ValueError` in tests.
+    -   **Evidence**: Failures in `test_add_location_by_name_e2e`, `test_add_city_e2e`, `test_add_city_with_radius_e2e`, `test_add_coordinates_with_radius_e2e`, and `TestAddCommand::test_add_location_by_id`.
+
+-   **`remove` Command Failures**:
+    -   **Problem**: The `remove` command in `src/cogs/command_handler.py` is not correctly removing targets from the database or handling invalid index errors as expected.
+    -   **Evidence**: Failures in `test_remove_target_e2e` and `test_remove_target_invalid_index_e2e`.
+
+-   **`list` Command Failures**:
+    -   **Problem**: The `list` command in `src/cogs/command_handler.py` is producing incorrect output, causing assertion failures in tests expecting specific target information or an empty state.
+    -   **Evidence**: Failures in `test_list_targets_e2e`, `test_list_command_empty`, and `test_list_command_with_targets`.
+
+-   **`export` Command Failures**:
+    -   **Problem**: The `export` command in `src/cogs/command_handler.py` fails with a `KeyError: 'target_data'` because it tries to access a field that does not exist on the `MonitoringTarget` model. It is using an outdated schema.
+    -   **Evidence**: Failure in `TestExportCommand::test_export_with_targets`.
+
+-   **Standardize Coordinate Target Type**:
+    -   **Problem**: The codebase inconsistently uses `'latlong'` to identify coordinate-based targets. The plan is to standardize this to `'coordinates'`.
+    -   **Proposed Fix**: Systematically replace all instances of `'latlong'` with `'coordinates'` in `src/cogs/command_handler.py`, `src/cogs/runner.py`, and `src/models.py` after the above logic bugs are fixed.
+
 ---
 
 ## Previous Activity
