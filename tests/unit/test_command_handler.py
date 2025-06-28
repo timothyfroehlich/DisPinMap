@@ -373,6 +373,9 @@ class TestExportCommand(TestCommandHandler):
         # Should contain the location ID, not the name
         assert "!add location 874" in call_args[1]
 
+        # Should contain channel default poll rate
+        assert "!poll_rate 30" in call_args[1]
+
         # Should contain per-target overrides
         assert "!poll_rate 15 1" in call_args[1]
 
