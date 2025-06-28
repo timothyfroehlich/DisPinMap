@@ -164,9 +164,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 )
 
         except ValueError:
-            await self.notifier.log_and_send(
-                ctx, Messages.Command.Remove.INVALID_INDEX_NUMBER
-            )
+            await self.notifier.log_and_send(ctx, Messages.Command.Remove.INVALID_INDEX)
 
     @commands.command(name="list", aliases=["ls", "status"])
     async def list_targets(self, ctx):
@@ -248,25 +246,28 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             return
 
         commands = []
-        commands.append(f"/poll_rate {channel_config['poll_rate_minutes']}")
-        commands.append(f"/notifications {channel_config['notification_types']}")
+        commands.append(f"!poll_rate {channel_config['poll_rate_minutes']}")
+        commands.append(f"!notifications {channel_config['notification_types']}")
         commands.append("")
 
         for i, target in enumerate(targets, 1):
             if target["target_type"] == "latlong":
                 coords = target["target_name"].split(",")
-                cmd = f"/add coordinates {coords[0]} {coords[1]}"
-                if len(coords) > 2:
-                    cmd += f" {coords[2]}"
+                cmd = f"!add coordinates {coords[0]} {coords[1]}"
             elif target["target_type"] == "location":
-                cmd = f"/add location {target['target_name']}"
-            else:
-                cmd = f"/add city {target['target_name']}"
+                cmd = f"!add location {target['target_name']}"
+            elif target["target_type"] == "city":
+                cmd = f"!add city {target['target_name']}"
 
-            if target["poll_rate_minutes"] != channel_config["poll_rate_minutes"]:
-                cmd += f"\n/poll_rate {target['poll_rate_minutes']} {i}"
-            if target["notification_types"] != channel_config["notification_types"]:
-                cmd += f"\n/notifications {target['notification_types']} {i}"
+            # Add per-target overrides if they differ from channel defaults
+            if target["poll_rate_minutes"] != channel_config.get(
+                "poll_rate_minutes", 60
+            ):
+                cmd += f"\n!poll_rate {target['poll_rate_minutes']} {i}"
+            if target["notification_types"] != channel_config.get(
+                "notification_types", "machines"
+            ):
+                cmd += f"\n!notifications {target['notification_types']} {i}"
 
             commands.append(cmd)
 

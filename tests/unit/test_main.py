@@ -30,7 +30,7 @@ class TestMainModule:
         assert bot is not None
         assert hasattr(bot, "database")
         assert hasattr(bot, "notifier")
-        assert bot.command_prefix == "/"
+        assert bot.command_prefix == "!"
 
     @pytest.mark.asyncio
     async def test_create_bot_with_injected_dependencies(self):
