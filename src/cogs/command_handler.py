@@ -1,5 +1,5 @@
 """
-Cog for monitoring-related commands
+Cog for all user-facing commands
 """
 
 import logging
@@ -7,12 +7,11 @@ import traceback
 from datetime import datetime, timezone
 from typing import List, Optional
 
+import discord
 from discord.ext import commands
 
 from src.api import (
     fetch_location_details,
-    fetch_submissions_for_coordinates,
-    fetch_submissions_for_location,
     geocode_city_name,
     search_location_by_name,
 )
@@ -23,50 +22,44 @@ from src.notifier import Notifier
 logger = logging.getLogger(__name__)
 
 
-class MonitoringCog(commands.Cog, name="Monitoring"):
+class CommandHandler(commands.Cog, name="CommandHandler"):
     def __init__(self, bot, db: Database, notifier: Notifier):
         self.bot = bot
         self.db = db
         self.notifier = notifier
 
-    def _sort_submissions(self, submissions: list) -> list:
-        """Sorts submissions by date and returns the most recent ones."""
-        if not submissions:
-            return []
-
-        # Sort by 'created_at' descending (newest first)
-        # Handles potential parsing errors gracefully
-        def sort_key(s):
-            try:
-                return datetime.fromisoformat(s["created_at"].replace("Z", "+00:00"))
-            except (ValueError, TypeError, KeyError):
-                return datetime.min
-
-        sorted_submissions = sorted(submissions, key=sort_key, reverse=True)
-        return sorted_submissions
-
-    def _format_relative_time(self, dt: datetime) -> str:
-        """Format a datetime as a human-readable relative time string."""
-        now = datetime.now(timezone.utc)
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-
-        diff = now - dt
-
-        if diff.total_seconds() < 60:
-            return "Just now"
-        elif diff.total_seconds() < 3600:  # Less than 1 hour
-            minutes = int(diff.total_seconds() / 60)
-            return f"{minutes}m ago"
-        elif diff.total_seconds() < 86400:  # Less than 1 day
-            hours = int(diff.total_seconds() / 3600)
-            return f"{hours}h ago"
-        elif diff.total_seconds() < 604800:  # Less than 1 week
-            days = int(diff.total_seconds() / 86400)
-            return f"{days}d ago"
+    # Help Command
+    @commands.command(
+        name="help",
+        help="!help [command] - Shows this help message.",
+        aliases=["h"],
+    )
+    async def help_command(self, ctx, *, command_name: Optional[str] = None):
+        """Shows a list of all commands or help for a specific command."""
+        if command_name:
+            command = self.bot.get_command(command_name)
+            if command and command.help:
+                await ctx.send(f"```\n{command.help}\n```")
+            else:
+                await ctx.send(f"❌ Command `{command_name}` not found.")
         else:
-            return dt.strftime("%b %d")  # e.g., "Dec 17"
+            embed = discord.Embed(
+                title="DisPinMap Bot Help",
+                description="I monitor pinball locations from PinballMap.com. Here are my commands:",
+                color=discord.Color.blue(),
+            )
+            cogs = self.bot.cogs.values()
+            all_commands = []
+            for cog in cogs:
+                all_commands.extend(cog.get_commands())
 
+            for command in sorted(all_commands, key=lambda c: c.name):
+                if command.name != "help" and command.help and not command.hidden:
+                    summary = command.help.splitlines()[0]
+                    embed.add_field(name=command.name, value=summary, inline=False)
+            await ctx.send(embed=embed)
+
+    # Monitoring Commands
     @commands.command(
         name="add",
         help='!add <location|city|coordinates> ... - Adds a new target to monitor.\\n\\nMonitors a specific location, city, or geographic area for new machine or condition submissions on PinballMap.com.\\n\\n**Usage:**\\n• `!add location "My Favorite Arcade"`\\n• `!add city "Portland, OR" [radius]`\\n• `!add coordinates 45.52 -122.67 [radius]`',
@@ -197,7 +190,6 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         rows = []
 
         for i, target in enumerate(targets, 1):
-            # Target Name
             if target["target_type"] == "latlong":
                 coords = target["target_name"].split(",")
                 target_name = f"Coords: {coords[0]}, {coords[1]}"
@@ -208,19 +200,14 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     f"{target['target_type'].title()}: {target['target_name']}"
                 )
 
-            # Poll Rate
             poll_rate = target.get(
                 "poll_rate_minutes",
                 channel_config.get("poll_rate_minutes") if channel_config else 60,
             )
-
-            # Notifications
             notifications = target.get(
                 "notification_types",
                 channel_config.get("notification_types") if channel_config else "all",
             )
-
-            # Last Checked
             last_checked = "Never"
             if target.get("last_checked_at"):
                 last_checked_dt = target["last_checked_at"]
@@ -232,14 +219,12 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 [str(i), target_name, str(poll_rate), notifications, last_checked]
             )
 
-        # Calculate column widths
         widths = [len(h) for h in headers]
         for row in rows:
             for i, cell in enumerate(row):
                 if len(cell) > widths[i]:
                     widths[i] = len(cell)
 
-        # Build table
         header_line = " | ".join(
             headers[i].ljust(widths[i]) for i in range(len(headers))
         )
@@ -256,10 +241,6 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             "Use `!rm <index>` to remove a target"
         )
         await self.notifier.log_and_send(ctx, message)
-
-    async def list(self, ctx):
-        """Alias for list_targets to maintain compatibility."""
-        await self.list_targets(ctx)
 
     @commands.command(
         name="export",
@@ -311,76 +292,176 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         )
         await self.notifier.log_and_send(ctx, message)
 
-    @commands.command(name="monitor_health")
-    async def monitor_health(self, ctx):
-        """Send a health check message to the channel."""
-        await ctx.send("Monitoring service is up and running!")
-
     @commands.command(
         name="check",
         help="!check - Manually checks for new submissions.\\n\\nTriggers an immediate check for new submissions across all active targets in the channel.",
     )
     async def check(self, ctx):
         """Manually check for new submissions across all targets."""
-        targets = self.db.get_monitoring_targets(ctx.channel.id)
-        if not targets:
-            await self.notifier.log_and_send(ctx, Messages.Command.Shared.NO_TARGETS)
-            return
-
-        all_new_submissions = []
-        for target in targets:
-            try:
-                last_checked_at = target.get("last_checked_at")
-                submissions = []
-                if target["target_type"] == "location":
-                    target_id = int(target["target_data"])
-                    submissions = await fetch_submissions_for_location(
-                        target_id, use_min_date=True, last_check_time=last_checked_at
-                    )
-                elif target["target_type"] == "latlong":
-                    lat, lon, *rest = target["target_name"].split(",")
-                    radius = rest[0] if rest else None
-                    submissions = await fetch_submissions_for_coordinates(
-                        lat,
-                        lon,
-                        radius,
-                        use_min_date=True,
-                        last_check_time=last_checked_at,
-                    )
-                else:  # city
-                    continue
-
-                if submissions:
-                    all_new_submissions.extend(submissions)
-
-            except Exception as e:
-                logger.error(
-                    f"Error checking target {target['target_name']}: {e}", exc_info=True
-                )
-
-        if not all_new_submissions:
-            # NOTE: Reverted to old message temporarily, pending new implementation.
+        runner_cog = self.bot.get_cog("Runner")
+        if not runner_cog:
             await self.notifier.log_and_send(
-                ctx, "No new submissions found. All targets are up to date."
+                ctx, "❌ Monitoring service is not available. Please try again later."
             )
             return
 
-        # Sort and format submissions for display
-        sorted_submissions = self._sort_submissions(all_new_submissions)
-        formatted_submissions = await self.notifier.format_submissions(
-            sorted_submissions
+        channel_config = self.db.get_channel_config(ctx.channel.id)
+        if not channel_config:
+            await self.notifier.log_and_send(ctx, Messages.Command.Shared.NO_TARGETS)
+            return
+
+        await self.notifier.log_and_send(ctx, "Manual check initiated...")
+        await runner_cog.run_checks_for_channel(
+            ctx.channel.id, channel_config, is_manual_check=True
         )
 
-        # NOTE: Reverted to old message temporarily, pending new implementation.
-        await self.notifier.log_and_send(
-            ctx,
-            f"Found {len(sorted_submissions)} new submissions:\\n{formatted_submissions}",
-        )
+    @commands.command(name="monitor_health")
+    async def monitor_health(self, ctx):
+        """Get health status of the monitoring service."""
+        runner_cog = self.bot.get_cog("Runner")
+        if runner_cog:
+            health_status = await runner_cog.manual_health_check()
+            await self.notifier.log_and_send(ctx, health_status)
+        else:
+            await self.notifier.log_and_send(
+                ctx, "❌ Monitoring service is not running."
+            )
 
-        # Update last checked timestamp for all targets
-        self.db.update_channel_last_poll_time(
-            ctx.channel.id, datetime.now(timezone.utc)
-        )
+    # Config Commands
+    @commands.command(
+        name="poll_rate",
+        help="!poll_rate <minutes> [index] - Sets the poll rate.\n\nSets how frequently (in minutes) the bot checks for updates.\nCan be set for the whole channel or for a specific target by its index.",
+    )
+    async def poll_rate(self, ctx, minutes: str, target_selector: Optional[str] = None):
+        """Set poll rate for channel or specific target."""
+        try:
+            minutes_int = int(minutes)
+            if minutes_int < 1:
+                await self.notifier.log_and_send(
+                    ctx, Messages.Command.PollRate.INVALID_RATE
+                )
+                return
+
+            if target_selector:
+                try:
+                    target_id = int(target_selector)
+                    targets = self.db.get_monitoring_targets(ctx.channel.id)
+                    if not 1 <= target_id <= len(targets):
+                        await self.notifier.log_and_send(
+                            ctx,
+                            Messages.Command.Shared.INVALID_INDEX.format(
+                                max_index=len(targets)
+                            ),
+                        )
+                        return
+                    target = targets[target_id - 1]
+                    self.db.update_monitoring_target(
+                        ctx.channel.id,
+                        target["target_type"],
+                        target["target_name"],
+                        poll_rate_minutes=minutes_int,
+                    )
+                    await self.notifier.log_and_send(
+                        ctx,
+                        Messages.Command.PollRate.SUCCESS_TARGET.format(
+                            minutes=minutes_int, target_id=target_id
+                        ),
+                    )
+                except ValueError:
+                    await self.notifier.log_and_send(
+                        ctx, Messages.Command.Shared.INVALID_INDEX_NUMBER
+                    )
+            else:
+                self.db.update_channel_config(
+                    ctx.channel.id, ctx.guild.id, poll_rate_minutes=minutes_int
+                )
+                await self.notifier.log_and_send(
+                    ctx,
+                    Messages.Command.PollRate.SUCCESS_CHANNEL.format(
+                        minutes=minutes_int
+                    ),
+                )
+        except ValueError:
+            await self.notifier.log_and_send(ctx, Messages.Command.PollRate.ERROR)
+
+    @commands.command(
+        name="notifications",
+        help="!notifications <type> [index] - Sets notification types.\n\nSets the type of notifications (machines, comments, all).\nCan be set for the whole channel or for a specific target by its index.",
+    )
+    async def notifications(
+        self, ctx, notification_type: str, target_selector: Optional[str] = None
+    ):
+        """Set notification type for channel or specific target."""
+        valid_types = ["machines", "comments", "all"]
+        if notification_type not in valid_types:
+            await self.notifier.log_and_send(
+                ctx,
+                Messages.Command.Notifications.ERROR.format(
+                    valid_types=", ".join(valid_types)
+                ),
+            )
+            return
+
+        if target_selector:
+            try:
+                target_id = int(target_selector)
+                targets = self.db.get_monitoring_targets(ctx.channel.id)
+                if not 1 <= target_id <= len(targets):
+                    await self.notifier.log_and_send(
+                        ctx,
+                        Messages.Command.Shared.INVALID_INDEX.format(
+                            max_index=len(targets)
+                        ),
+                    )
+                    return
+                target = targets[target_id - 1]
+                self.db.update_monitoring_target(
+                    ctx.channel.id,
+                    target["target_type"],
+                    target["target_name"],
+                    notification_types=notification_type,
+                )
+                await self.notifier.log_and_send(
+                    ctx,
+                    Messages.Command.Notifications.SUCCESS_TARGET.format(
+                        notification_type=notification_type, target_id=target_id
+                    ),
+                )
+            except ValueError:
+                await self.notifier.log_and_send(
+                    ctx, Messages.Command.Shared.INVALID_INDEX_NUMBER
+                )
+        else:
+            self.db.update_channel_config(
+                ctx.channel.id, ctx.guild.id, notification_types=notification_type
+            )
+            await self.notifier.log_and_send(
+                ctx,
+                Messages.Command.Notifications.SUCCESS_CHANNEL.format(
+                    notification_type=notification_type
+                ),
+            )
+
+    # Helper methods
+    def _format_relative_time(self, dt: datetime) -> str:
+        """Format a datetime as a human-readable relative time string."""
+        now = datetime.now(timezone.utc)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        diff = now - dt
+        if diff.total_seconds() < 60:
+            return "Just now"
+        elif diff.total_seconds() < 3600:
+            minutes = int(diff.total_seconds() / 60)
+            return f"{minutes}m ago"
+        elif diff.total_seconds() < 86400:
+            hours = int(diff.total_seconds() / 3600)
+            return f"{hours}h ago"
+        elif diff.total_seconds() < 604800:
+            days = int(diff.total_seconds() / 86400)
+            return f"{days}d ago"
+        else:
+            return dt.strftime("%b %d")
 
     async def _add_target_and_notify(
         self,
@@ -395,12 +476,9 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             ctx.channel.id, target_type, target_name, target_data
         )
         self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
-
         await self.notifier.send_initial_notifications(
             ctx, target_name, target_data, target_type, target_details
         )
-
-        # Update timestamp to reflect successful add target check
         self.db.update_channel_last_poll_time(
             ctx.channel.id, datetime.now(timezone.utc)
         )
@@ -476,14 +554,12 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
     ):
         """Handle adding a coordinate-based monitoring target."""
         try:
-            # Validate coordinates
             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
                 await self.notifier.log_and_send(
                     ctx, Messages.Command.Shared.INVALID_COORDS
                 )
                 return
 
-            # Validate radius if provided
             if radius is not None and not 1 <= radius <= 100:
                 await self.notifier.log_and_send(
                     ctx, Messages.Command.Shared.INVALID_RADIUS
@@ -533,7 +609,7 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                     city_name=city_name, suggestions="\\n".join(suggestions)
                 ),
             )
-        else:  # error
+        else:
             await self.notifier.log_and_send(
                 ctx, Messages.Command.Add.CITY_NOT_FOUND.format(city_name=city_name)
             )
@@ -541,7 +617,6 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
 
 async def setup(bot):
     """Setup function for Discord.py extension loading"""
-    # Get shared instances from bot
     database = getattr(bot, "database", None)
     notifier = getattr(bot, "notifier", None)
 
@@ -550,4 +625,4 @@ async def setup(bot):
             "Database and Notifier must be initialized on bot before loading cogs"
         )
 
-    await bot.add_cog(MonitoringCog(bot, database, notifier))
+    await bot.add_cog(CommandHandler(bot, database, notifier))

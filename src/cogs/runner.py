@@ -1,6 +1,6 @@
 """
-Monitor module for Discord Pinball Map Bot
-Handles background polling and notification sending using the new submission-based approach
+Runner module for Discord Pinball Map Bot
+Handles background polling and notification sending. This cog runs the task loop.
 """
 
 import logging
@@ -26,7 +26,7 @@ except ImportError:
     from src.notifier import Notifier
 
 
-class MachineMonitor(commands.Cog, name="MachineMonitor"):
+class Runner(commands.Cog, name="Runner"):
     def __init__(self, bot, database: Database, notifier: Notifier):
         self.bot = bot
         self.db = database
@@ -41,17 +41,15 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
 
     async def cog_load(self):
         """Prepare the monitoring task when the cog is loaded (task will start when bot is ready)."""
-        logger.info("🔄 Preparing MachineMonitor task loop")
+        logger.info("🔄 Preparing Runner task loop")
         self.monitor_start_time = datetime.now(timezone.utc)
         # Start the task loop - it will wait for bot to be ready via before_loop
         self.monitor_task_loop.start()
-        logger.info(
-            "✅ MachineMonitor cog loaded, task loop will start when bot is ready"
-        )
+        logger.info("✅ Runner cog loaded, task loop will start when bot is ready")
 
     async def cog_unload(self):
         """Cancels the monitoring task when the cog is unloaded."""
-        logger.info("⏹️ Stopping MachineMonitor task loop")
+        logger.info("⏹️ Stopping Runner task loop")
         uptime = None
         if self.monitor_start_time:
             uptime = datetime.now(timezone.utc) - self.monitor_start_time
@@ -60,7 +58,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             )
         if self.monitor_task_loop.is_running():
             self.monitor_task_loop.cancel()
-            logger.info("✅ MachineMonitor task loop cancelled")
+            logger.info("✅ Runner task loop cancelled")
 
     @tasks.loop(minutes=1)
     async def monitor_task_loop(self):
@@ -353,7 +351,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
             channel = self.bot.get_channel(channel_id)
             if channel:
                 await self.notifier.log_and_send(
-                    channel, Messages.Command.Status.NO_TARGETS_TO_CHECK
+                    channel, Messages.Command.Shared.NO_TARGETS
                 )
         return False
 
@@ -593,7 +591,7 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
 
 async def setup(bot):
     """Setup function for Discord.py extension loading"""
-    logger.info("🔧 Setting up MachineMonitor cog...")
+    logger.info("🔧 Setting up Runner cog...")
 
     # Get shared instances from bot
     database = getattr(bot, "database", None)
@@ -606,12 +604,12 @@ async def setup(bot):
         logger.error(f"❌ {error_msg}")
         raise RuntimeError(error_msg)
 
-    logger.info("✅ Database and Notifier instances found, creating MachineMonitor cog")
-    monitor_cog = MachineMonitor(bot, database, notifier)
+    logger.info("✅ Database and Notifier instances found, creating Runner cog")
+    cog = Runner(bot, database, notifier)
 
     try:
-        await bot.add_cog(monitor_cog)
-        logger.info("✅ MachineMonitor cog added to bot successfully")
+        await bot.add_cog(cog)
+        logger.info("✅ Runner cog added to bot successfully")
     except Exception as e:
-        logger.error(f"❌ Failed to add MachineMonitor cog to bot: {e}")
+        logger.error(f"❌ Failed to add Runner cog to bot: {e}")
         raise
