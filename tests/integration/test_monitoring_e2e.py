@@ -51,17 +51,21 @@ async def test_monitoring_respects_poll_rate(db_session):
     - Runs the logic again and asserts that the channel IS selected.
     """
     from datetime import datetime, timedelta, timezone
-    from unittest.mock import Mock
 
     from src.cogs.monitor import MachineMonitor
     from src.models import ChannelConfig
+    from tests.utils.mock_factories import (
+        create_async_notifier_mock,
+        create_bot_mock,
+        create_database_mock,
+    )
 
     session = db_session()
 
-    # Create mock dependencies for MachineMonitor
-    mock_bot = Mock()
-    mock_database = Mock()
-    mock_notifier = Mock()
+    # Create mock dependencies for MachineMonitor using spec-based factories
+    mock_bot = create_bot_mock()
+    mock_database = create_database_mock()
+    mock_notifier = create_async_notifier_mock()
 
     # Create monitor instance
     monitor = MachineMonitor(mock_bot, mock_database, mock_notifier)

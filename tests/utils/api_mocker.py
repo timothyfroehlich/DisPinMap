@@ -8,9 +8,11 @@ body from the JSON files stored in `tests/fixtures/api_responses/`.
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
+
+from tests.utils.mock_factories import create_requests_response_mock
 
 # Path to the directory containing captured API response fixtures.
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "api_responses"
@@ -67,12 +69,9 @@ class APIMocker:
                 with open(fixture_file, "r") as f:
                     data = json.load(f)
 
-                # Create a mock response object that behaves like requests.Response
-                mock_response = MagicMock()
-                mock_response.status_code = status
-                mock_response.json.return_value = data
-                mock_response.raise_for_status.return_value = (
-                    None  # No exception for successful responses
+                # Create a spec-based mock response object that behaves like requests.Response
+                mock_response = create_requests_response_mock(
+                    status_code=status, json_data=data
                 )
 
                 return mock_response

@@ -30,8 +30,8 @@ def mock_discord_context(user_id=12345, channel_id=67890):
         A mock context object.
     """
     warnings.warn(
-        "mock_discord_context is deprecated. Use create_discord_context_mock() "
-        "from tests.utils.mock_factories for new tests.",
+        "mock_discord_context() is deprecated. Use create_discord_context_mock() "
+        "from mock_factories.py for proper spec validation.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -58,7 +58,16 @@ def assert_message_sent(mock_discord_channel, expected_content):
     """
     A helper to assert that a specific message was sent to a mocked
     Discord channel.
+
+    DEPRECATED: This function is no longer maintained. Use direct
+    assertion patterns with spec-based mocks from mock_factories.py.
     """
+    warnings.warn(
+        "assert_message_sent() is deprecated. Use direct assertions with "
+        "spec-based mocks from mock_factories.py.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     # mock_discord_channel.send.assert_called_once()
     # call_args = mock_discord_channel.send.call_args[0][0]
     # assert expected_content in call_args

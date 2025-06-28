@@ -134,16 +134,18 @@ async def test_add_location_command_success(db_session, api_mocker):
     await monitoring_cog.add(mock_ctx, "location", search_term)
 
     # 3. ASSERT
-    # Assert that the notifier's log_and_send was called with the correct message
-    assert mock_notifier.log_and_send.called, "log_and_send should have been called"
+    # Verify that post_initial_submissions was called (which is the correct call for this flow)
+    assert (
+        mock_notifier.post_initial_submissions.called
+    ), "post_initial_submissions should have been called"
 
-    # Get the last call (which should be the initial submissions message)
-    args, kwargs = mock_notifier.log_and_send.call_args
-    ctx_arg, message_arg = args
+    # Get the call arguments to post_initial_submissions
+    args, kwargs = mock_notifier.post_initial_submissions.call_args
+    ctx_arg, submissions_arg, target_type_arg = args
 
-    # Verify the message content matches expected pattern
-    assert "No recent submissions found for location" in message_arg
-    assert search_term in message_arg
+    # Verify the arguments match expected pattern
+    assert submissions_arg == [], "Should be empty submissions list"
+    assert "location **Ground Kontrol Classic Arcade** (ID: 874)" in target_type_arg
 
     # Assert that the target was saved to the database correctly
     session = db_session()

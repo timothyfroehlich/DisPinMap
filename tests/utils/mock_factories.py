@@ -7,9 +7,10 @@ All mocks use the `spec` parameter to ensure they match real interfaces.
 """
 
 import asyncio
-from typing import Any
+from typing import Any, Dict, Optional
 from unittest.mock import AsyncMock, MagicMock
 
+import requests
 from discord import Guild, Member, TextChannel
 from discord.ext.commands import Context
 
@@ -150,6 +151,33 @@ def validate_async_mock(mock: AsyncMock, method_name: str) -> None:
     assert asyncio.iscoroutinefunction(
         method
     ), f"{method_name} is not recognized as a coroutine function"
+
+
+def create_requests_response_mock(
+    status_code: int = 200, json_data: Optional[Dict] = None
+) -> MagicMock:
+    """
+    Create a properly spec'd mock for requests.Response objects.
+
+    Args:
+        status_code: HTTP status code to return
+        json_data: JSON data to return from .json() method
+
+    Returns:
+        MagicMock with requests.Response spec that enforces interface compliance
+    """
+    mock_response = MagicMock(spec=requests.Response)
+    mock_response.status_code = status_code
+    mock_response.json.return_value = json_data or {}
+    mock_response.raise_for_status.return_value = (
+        None  # No exception for successful responses
+    )
+    mock_response.text = str(json_data) if json_data else ""
+    mock_response.content = b""
+    mock_response.headers = {}
+    mock_response.url = "http://example.com"
+
+    return mock_response
 
 
 def validate_mock_spec(mock: Any, expected_spec: type) -> None:

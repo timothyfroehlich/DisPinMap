@@ -63,7 +63,7 @@ def test_geocode_city_name_failure():
 
 
 @pytest.mark.asyncio
-@patch("src.api.requests.get")
+@patch("src.api.requests.get", autospec=True)
 async def test_geocode_client_parses_success_response(mock_get):
     """
     Tests that the geocode client correctly parses a successful response.
@@ -84,12 +84,12 @@ async def test_geocode_client_parses_success_response(mock_get):
         ]
     }
 
-    # Create a mock response object for requests.get (sync)
-    from unittest.mock import MagicMock
+    # Create a spec-based mock response object for requests.get (sync)
+    from tests.utils.mock_factories import create_requests_response_mock
 
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = mock_api_response_data
+    mock_response = create_requests_response_mock(
+        status_code=200, json_data=mock_api_response_data
+    )
     mock_get.return_value = mock_response
 
     # 2. ACTION
@@ -112,7 +112,7 @@ def test_pinball_map_client_handles_api_error():
     from src.api import fetch_location_details
 
     async def test_async():
-        with patch("src.api.requests.get") as mock_get:
+        with patch("src.api.requests.get", autospec=True) as mock_get:
             # Setup mock to raise an exception
             mock_get.side_effect = Exception("Network error")
 
