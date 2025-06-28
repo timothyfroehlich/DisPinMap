@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from src.database import (  # Assuming your models use a declarative base from this module
     Base,
 )
+
 # Import and re-export the api_mocker fixture
 from tests.utils.api_mocker import api_mocker  # noqa: F401
 
