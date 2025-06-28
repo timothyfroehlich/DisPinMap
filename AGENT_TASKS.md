@@ -3,9 +3,88 @@
 This file tracks major completed tasks and ongoing activities for the DisPinMap project.
 
 ## Current Activity
-**Active Task**: Custom Help Command and Notifier Refactor (YYYY-MM-DD)
+**Active Task**: Consolidated Fixture Management and Automation (2025-06-28)
 - **Status**: ✅ **COMPLETED**
-- **Date**: (I'll let you fill in the date)
+- **Date**: 2025-06-28
+
+### Consolidated Fixture Management and Automation Details
+**Scope**: Created a unified fixture management system that consolidates capture and validation functionality, plus added automation to prevent future breakage.
+**Files Created**:
+- `scripts/run_all_validations.py` - Comprehensive fixture management script with all functionality
+- `scripts/ci_fixture_validation.yml` - GitHub Actions workflow template for CI integration
+
+**Files Deleted**:
+- `scripts/manage_fixtures.py` - Replaced by run_all_validations.py
+- `scripts/capture_api_responses.py` - Replaced by run_all_validations.py
+- `scripts/validate_fixtures.py` - Replaced by run_all_validations.py
+- `scripts/validate_imports.py` - Functionality moved to run_all_validations.py
+
+**Changes Made**:
+1. **Complete Consolidation**: Merged all fixture scripts into single `run_all_validations.py` with commands: `validate`, `capture`, `check`, `all`
+2. **CI-Safe Design**: Added `--ci` flag that prevents API calls in automated environments to avoid spamming external servers
+3. **Enhanced Validation Logic**: Fixed API structure expectations to handle all response formats correctly
+4. **Import Validation**: Built-in validation that scripts can import from `src/` to catch breakage early
+5. **Auto-Fix Capability**: Added `--fix` flag to attempt automatic issue resolution
+6. **GitHub Actions Integration**: Complete CI workflow template for automated validation
+
+**Final Command Interface**:
+```bash
+# Validate existing fixtures (CI-safe)
+python scripts/run_all_validations.py validate --ci
+
+# Refresh fixtures from APIs (manual only)
+python scripts/run_all_validations.py capture
+
+# Check API availability (manual only)
+python scripts/run_all_validations.py check
+
+# Run complete cycle (manual only)
+python scripts/run_all_validations.py all
+
+# Auto-fix issues
+python scripts/run_all_validations.py validate --fix
+```
+
+**Impact**:
+- Single unified script replaces 4 separate scripts
+- CI-safe operation prevents external API spam
+- Proactive breakage detection through import validation
+- Automated GitHub Actions workflow ready for integration
+- Comprehensive validation with auto-fix capability
+- Significant reduction in maintenance overhead
+
+---
+
+## Previous Activity
+**Active Task**: Bug Fixes for Command Handler Issues (2025-01-30)
+- **Status**: 🔄 **IN PROGRESS** - 3 PRs created, 1 resolved, 2 awaiting review
+- **Date**: 2025-01-30
+
+### Bug Fix Progress Summary (2025-01-30)
+**Scope**: Systematic resolution of command handler logic bugs identified during test migration
+**Pull Requests Created**:
+- [PR #57](https://github.com/timothyfroehlich/DisPinMap/pull/57): Export command `KeyError: 'target_data'` fix
+- [PR #58](https://github.com/timothyfroehlich/DisPinMap/pull/58): Add command coordinates radius storage and location search improvements
+- [PR #59](https://github.com/timothyfroehlich/DisPinMap/pull/59): List command channel ID alignment fix
+
+**Status Summary**:
+- ✅ **Export command**: Fixed `target_data` KeyError by using `location_id` field
+- ✅ **Remove command**: Resolved by database session scope fix during test migration
+- ✅ **List command**: Fixed channel ID mismatch in integration tests
+- ✅ **Add command (coordinates)**: Fixed radius storage in `target_name`
+- 🔄 **Add command (location search)**: Enhanced status handling, fixture format issues remain
+
+**Impact**:
+- Resolved 4 out of 5 major command handler bugs
+- Improved test reliability and data consistency
+- Enhanced API response compatibility
+
+---
+
+## Previous Activity
+**Active Task**: Custom Help Command and Notifier Refactor Details
+- **Status**: ✅ **COMPLETED**
+- **Date**: 2025-01-27
 
 ### Custom Help Command and Notifier Refactor Details
 **Scope**: Implemented a custom help command, refactored the notifier logic, and updated all related documentation and tests.
@@ -34,22 +113,26 @@ This file tracks major completed tasks and ongoing activities for the DisPinMap 
 - Initial notification logic is more self-contained and reliable.
 - All tests and documentation are consistent with the current codebase.
 
-### Confirmed `src` Logic Bugs (To be addressed after test migration)
+### Bug Fixes in Progress
 
--   **`add` Command Failures**:
+-   **`add` Command Failures** - **🔄 IN PROGRESS ([PR #58](https://github.com/timothyfroehlich/DisPinMap/pull/58))**:
     -   **Problem**: The `add` command in `src/cogs/command_handler.py` is failing to trigger initial notifications for any target type (location, city, coordinates). Additionally, when adding coordinates with a radius, the radius is not correctly stored in the `target_name`, causing a `ValueError` in tests.
+    -   **Status**: ✅ Coordinates radius fix completed, 🔄 Location search status handling in progress
     -   **Evidence**: Failures in `test_add_location_by_name_e2e`, `test_add_city_e2e`, `test_add_city_with_radius_e2e`, `test_add_coordinates_with_radius_e2e`, and `TestAddCommand::test_add_location_by_id`.
 
--   **`remove` Command Failures**:
+-   **`remove` Command Failures** - **✅ RESOLVED**:
     -   **Problem**: The `remove` command in `src/cogs/command_handler.py` is not correctly removing targets from the database or handling invalid index errors as expected.
-    -   **Evidence**: Failures in `test_remove_target_e2e` and `test_remove_target_invalid_index_e2e`.
+    -   **Status**: ✅ Fixed by database session scope change in test migration
+    -   **Evidence**: Previously failing `test_remove_target_e2e` and `test_remove_target_invalid_index_e2e` now pass.
 
--   **`list` Command Failures**:
-    -   **Problem**: The `list` command in `src/cogs/command_handler.py` is producing incorrect output, causing assertion failures in tests expecting specific target information or an empty state.
-    -   **Evidence**: Failures in `test_list_targets_e2e`, `test_list_command_empty`, and `test_list_command_with_targets`.
+-   **`list` Command Failures** - **🔄 IN PROGRESS ([PR #59](https://github.com/timothyfroehlich/DisPinMap/pull/59))**:
+    -   **Problem**: The `list` command integration tests were failing due to channel ID mismatch between test setup and command execution context.
+    -   **Status**: ✅ Channel ID alignment fix completed
+    -   **Evidence**: `test_list_targets_e2e` now passes after fixing channel ID consistency.
 
--   **`export` Command Failures**:
+-   **`export` Command Failures** - **🔄 IN PROGRESS ([PR #57](https://github.com/timothyfroehlich/DisPinMap/pull/57))**:
     -   **Problem**: The `export` command in `src/cogs/command_handler.py` fails with a `KeyError: 'target_data'` because it tries to access a field that does not exist on the `MonitoringTarget` model. It is using an outdated schema.
+    -   **Status**: ✅ Fix completed, awaiting review and merge
     -   **Evidence**: Failure in `TestExportCommand::test_export_with_targets`.
 
 -   **Standardize Coordinate Target Type**:
