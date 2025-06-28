@@ -27,6 +27,7 @@ extend-exclude = '''
 profile = "black"
 multi_line_output = 3
 line_length = 88
+combine_as_imports = true
 known_first_party = ["src"]
 known_third_party = ["discord", "requests", "sqlalchemy", "pytest", "aiohttp", "colorama"]
 skip_glob = ["migrations/*"]
@@ -51,7 +52,8 @@ exclude = [
     "migrations/.*",
     ".venv/.*",
     "build/.*",
-    "dist/.*"
+    "dist/.*",
+    "alembic/.*"
 ]
 
 [[tool.mypy.overrides]]
