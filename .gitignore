@@ -187,6 +187,7 @@ terraform/.terraform/
 # Project specific files
 bot.log
 pinball_bot.db
+*.lz4
 .cursor/
 cloud_sql_proxy
 CLAUDE.md
