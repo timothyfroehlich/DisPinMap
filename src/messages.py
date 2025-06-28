@@ -23,7 +23,17 @@ class Messages:
         class Shared:
             """Messages shared across multiple commands."""
 
+            INVALID_INDEX = "❌ Invalid index. Must be between 1 and {max_index}."
+            """Format parameters:
+            - max_index: int - The maximum valid index
+            """
+
             INVALID_TARGET_INDEX = "❌ Invalid target index. Please provide a number."
+            """No format parameters."""
+
+            INVALID_INDEX_NUMBER = (
+                "❌ Invalid index. Please provide a number, not text."
+            )
             """No format parameters."""
 
             NO_TARGETS = "No monitoring targets have been added to this channel. Use `!add` to begin."

@@ -58,7 +58,7 @@ async def create_bot(db_session_factory=None, notifier=None):
     # Initialize bot with intents
     intents = discord.Intents.default()
     intents.message_content = True
-    bot = commands.Bot(command_prefix="!", intents=intents)
+    bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
     # Use the provided session factory for tests, or create a new default DB for production
     database = Database(session_factory=db_session_factory)

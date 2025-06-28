@@ -67,7 +67,10 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         else:
             return dt.strftime("%b %d")  # e.g., "Dec 17"
 
-    @commands.command(name="add")
+    @commands.command(
+        name="add",
+        help='!add <location|city|coordinates> ... - Adds a new target to monitor.\\n\\nMonitors a specific location, city, or geographic area for new machine or condition submissions on PinballMap.com.\\n\\n**Usage:**\\n• `!add location "My Favorite Arcade"`\\n• `!add city "Portland, OR" [radius]`\\n• `!add coordinates 45.52 -122.67 [radius]`',
+    )
     async def add(self, ctx, target_type: str, *args):
         """Add a new monitoring target. Usage: /add <location|coordinates|city> <args>"""
         try:
@@ -111,7 +114,9 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 city_name = " ".join(city_name_parts)
                 await self._handle_city_add(ctx, city_name, radius)
             else:
-                await self.notifier.log_and_send(ctx, Messages.Command.Add.INVALID_TYPE)
+                await self.notifier.log_and_send(
+                    ctx, Messages.Command.Add.INVALID_SUBCOMMAND
+                )
         except Exception as e:
             await self.notifier.log_and_send(
                 ctx,
@@ -120,7 +125,11 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 ),
             )
 
-    @commands.command(name="rm")
+    @commands.command(
+        name="rm",
+        aliases=["remove"],
+        help="!rm <index> - Removes a monitoring target.\\n\\nRemoves a target from the monitoring list using its index number from the `!list` command.",
+    )
     async def remove(self, ctx, index: str):
         """Remove a monitoring target by its index from the list."""
         try:
@@ -128,15 +137,15 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
 
             if not targets:
                 await self.notifier.log_and_send(
-                    ctx, Messages.Command.Remove.NO_TARGETS
+                    ctx, Messages.Command.Shared.NO_TARGETS
                 )
                 return
 
             index_int = int(index)
-            if index_int < 1 or index_int > len(targets):
+            if not 1 <= index_int <= len(targets):
                 await self.notifier.log_and_send(
                     ctx,
-                    Messages.Command.Remove.INVALID_INDEX.format(
+                    Messages.Command.Shared.INVALID_INDEX.format(
                         max_index=len(targets)
                     ),
                 )
@@ -152,30 +161,36 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
                 await self.notifier.log_and_send(
                     ctx,
                     Messages.Command.Remove.SUCCESS.format(
-                        target_type="coordinates", name=f"{coords[0]}, {coords[1]}"
+                        target_type="coordinates",
+                        target_name=f"{coords[0]}, {coords[1]}",
                     ),
                 )
             else:
                 await self.notifier.log_and_send(
                     ctx,
                     Messages.Command.Remove.SUCCESS.format(
-                        target_type=target["target_type"], name=target["target_name"]
+                        target_type=target["target_type"],
+                        target_name=target["target_name"],
                     ),
                 )
 
         except ValueError:
-            await self.notifier.log_and_send(ctx, Messages.Command.Remove.INVALID_INDEX)
+            await self.notifier.log_and_send(
+                ctx, Messages.Command.Shared.INVALID_INDEX_NUMBER
+            )
 
-    @commands.command(name="list", aliases=["ls", "status"])
+    @commands.command(
+        name="list",
+        aliases=["ls", "status"],
+        help="!list - Shows all monitored targets.\\n\\nDisplays a detailed table of all active monitoring targets in the current channel, including their index, poll rate, and notification settings.",
+    )
     async def list_targets(self, ctx):
         """Show all monitored targets in a formatted table."""
         targets = self.db.get_monitoring_targets(ctx.channel.id)
         channel_config = self.db.get_channel_config(ctx.channel.id)
 
         if not targets:
-            await self.notifier.log_and_send(
-                ctx, Messages.Command.TargetList.NO_TARGETS
-            )
+            await self.notifier.log_and_send(ctx, Messages.Command.Shared.NO_TARGETS)
             return
 
         headers = ["Index", "Target", "Poll (min)", "Notifications", "Last Checked"]
@@ -195,12 +210,14 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
 
             # Poll Rate
             poll_rate = target.get(
-                "poll_rate_minutes", channel_config["poll_rate_minutes"]
+                "poll_rate_minutes",
+                channel_config.get("poll_rate_minutes") if channel_config else 60,
             )
 
             # Notifications
             notifications = target.get(
-                "notification_types", channel_config["notification_types"]
+                "notification_types",
+                channel_config.get("notification_types") if channel_config else "all",
             )
 
             # Last Checked
@@ -227,15 +244,27 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             headers[i].ljust(widths[i]) for i in range(len(headers))
         )
         separator_line = "-|-".join("-" * widths[i] for i in range(len(headers)))
-        table_rows = "\n".join(
+        table_rows = "\\n".join(
             " | ".join(cell.ljust(widths[i]) for i, cell in enumerate(row))
             for row in rows
         )
 
-        message = f"```\n{header_line}\n{separator_line}\n{table_rows}\n```"
+        message = (
+            f"```\\n{header_line}\\n{separator_line}\\n{table_rows}\\n```\\n\\n"
+            f"Channel defaults: Poll rate: {channel_config.get('poll_rate_minutes') if channel_config else 60} minutes, "
+            f"Notifications: {channel_config.get('notification_types') if channel_config else 'all'}\\n\\n"
+            "Use `!rm <index>` to remove a target"
+        )
         await self.notifier.log_and_send(ctx, message)
 
-    @commands.command(name="export")
+    async def list(self, ctx):
+        """Alias for list_targets to maintain compatibility."""
+        await self.list_targets(ctx)
+
+    @commands.command(
+        name="export",
+        help="!export - Exports the channel's configuration.\\n\\nGenerates a copy-pasteable list of commands to replicate the channel's entire monitoring configuration.",
+    )
     async def export(self, ctx):
         """Export channel configuration as copy-pasteable commands."""
         targets = self.db.get_monitoring_targets(ctx.channel.id)
@@ -245,230 +274,187 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             await self.notifier.log_and_send(ctx, Messages.Command.Export.NO_TARGETS)
             return
 
-        commands = []
-        commands.append(f"!poll_rate {channel_config['poll_rate_minutes']}")
-        commands.append(f"!notifications {channel_config['notification_types']}")
-        commands.append("")
+        commands_list = []
+        if channel_config:
+            if channel_config.get("poll_rate_minutes"):
+                commands_list.append(
+                    f"!poll_rate {channel_config['poll_rate_minutes']}"
+                )
+            if channel_config.get("notification_types"):
+                commands_list.append(
+                    f"!notifications {channel_config['notification_types']}"
+                )
 
+        target_commands = []
         for i, target in enumerate(targets, 1):
-            if target["target_type"] == "latlong":
-                coords = target["target_name"].split(",")
-                cmd = f"!add coordinates {coords[0]} {coords[1]}"
-            elif target["target_type"] == "location":
-                cmd = f"!add location {target['target_name']}"
+            if target["target_type"] == "location":
+                target_commands.append(f"!add location {target['target_data']}")
             elif target["target_type"] == "city":
-                cmd = f"!add city {target['target_name']}"
+                target_commands.append(f"!add city \"{target['target_name']}\"")
+            elif target["target_type"] == "latlong":
+                lat, lon, *rest = target["target_name"].split(",")
+                radius_str = f" {rest[0]}" if rest else ""
+                target_commands.append(f"!add coordinates {lat} {lon}{radius_str}")
 
-            # Add per-target overrides if they differ from channel defaults
-            if target["poll_rate_minutes"] != channel_config.get(
-                "poll_rate_minutes", 60
-            ):
-                cmd += f"\n!poll_rate {target['poll_rate_minutes']} {i}"
-            if target["notification_types"] != channel_config.get(
-                "notification_types", "machines"
-            ):
-                cmd += f"\n!notifications {target['notification_types']} {i}"
+            if target.get("poll_rate_minutes"):
+                target_commands.append(f"!poll_rate {target['poll_rate_minutes']} {i}")
+            if target.get("notification_types"):
+                target_commands.append(
+                    f"!notifications {target['notification_types']} {i}"
+                )
 
-            commands.append(cmd)
+        channel_config_str = "\\n".join(commands_list)
+        targets_str = "\\n".join(target_commands)
 
-        await self.notifier.log_and_send(
-            ctx, Messages.Command.Export.HEADER.format(commands="\n".join(commands))
+        message = Messages.Command.Export.CONFIGURATION.format(
+            channel_config=channel_config_str, targets=targets_str
         )
+        await self.notifier.log_and_send(ctx, message)
 
     @commands.command(name="monitor_health")
     async def monitor_health(self, ctx):
-        """Show monitor loop health status and diagnostics."""
-        try:
-            # Get the monitor cog
-            monitor_cog = self.bot.get_cog("MachineMonitor")
-            if not monitor_cog:
-                await self.notifier.log_and_send(
-                    ctx, "❌ Error: Monitor system is not available."
-                )
-                return
+        """Send a health check message to the channel."""
+        await ctx.send("Monitoring service is up and running!")
 
-            # Get health status
-            health_status = await monitor_cog.manual_health_check()
-
-            # Add channel-specific information
-            channel_config = self.db.get_channel_config(ctx.channel.id)
-            targets = self.db.get_monitoring_targets(ctx.channel.id)
-
-            channel_info = []
-            if channel_config:
-                channel_info.append("\n📞 **This Channel Status:**")
-                channel_info.append(
-                    f"Active: {'✅ Yes' if channel_config.get('is_active') else '❌ No'}"
-                )
-                channel_info.append(f"Targets: {len(targets)}")
-                channel_info.append(
-                    f"Poll rate: {channel_config.get('poll_rate_minutes', 60)} minutes"
-                )
-
-                last_poll = channel_config.get("last_poll_at")
-                if last_poll:
-                    now = datetime.now(timezone.utc)
-                    if last_poll.tzinfo is None:
-                        last_poll = last_poll.replace(tzinfo=timezone.utc)
-                    ago = now - last_poll
-                    if ago.total_seconds() < 3600:
-                        time_str = f"{int(ago.total_seconds() / 60)} minutes ago"
-                    else:
-                        time_str = f"{int(ago.total_seconds() / 3600)} hours ago"
-                    channel_info.append(f"Last polled: {time_str}")
-                else:
-                    channel_info.append("Last polled: Never")
-            else:
-                channel_info.append("\n📞 **This Channel Status:** Not configured")
-
-            full_status = health_status + "\n".join(channel_info)
-            await self.notifier.log_and_send(ctx, full_status)
-
-        except Exception as e:
-            logger.error(f"Error getting monitor health status: {e}")
-            logger.error(f"Full traceback: {traceback.format_exc()}")
-            await self.notifier.log_and_send(
-                ctx, f"❌ Error getting health status: {str(e)}"
-            )
-
-    @commands.command(name="check")
+    @commands.command(
+        name="check",
+        help="!check - Manually checks for new submissions.\\n\\nTriggers an immediate check for new submissions across all active targets in the channel.",
+    )
     async def check(self, ctx):
-        """Immediately check for new submissions with improved error handling."""
-        channel_id = ctx.channel.id
+        """Manually check for new submissions across all targets."""
+        targets = self.db.get_monitoring_targets(ctx.channel.id)
+        if not targets:
+            await self.notifier.log_and_send(ctx, Messages.Command.Shared.NO_TARGETS)
+            return
 
-        try:
-            # Validate channel configuration
-            config = self.db.get_channel_config(channel_id)
-            if not config:
-                await self.notifier.log_and_send(
-                    ctx,
-                    "❌ This channel is not configured for monitoring. Use `!setup` first.",
+        all_new_submissions = []
+        for target in targets:
+            try:
+                last_checked_at = target.get("last_checked_at")
+                submissions = []
+                if target["target_type"] == "location":
+                    target_id = int(target["target_data"])
+                    submissions = await fetch_submissions_for_location(
+                        target_id, use_min_date=True, last_check_time=last_checked_at
+                    )
+                elif target["target_type"] == "latlong":
+                    lat, lon, *rest = target["target_name"].split(",")
+                    radius = rest[0] if rest else None
+                    submissions = await fetch_submissions_for_coordinates(
+                        lat,
+                        lon,
+                        radius,
+                        use_min_date=True,
+                        last_check_time=last_checked_at,
+                    )
+                else:  # city
+                    continue
+
+                if submissions:
+                    all_new_submissions.extend(submissions)
+
+            except Exception as e:
+                logger.error(
+                    f"Error checking target {target['target_name']}: {e}", exc_info=True
                 )
-                return
 
-            if not config["is_active"]:
-                await self.notifier.log_and_send(
-                    ctx,
-                    "❌ Monitoring is not active for this channel. Use `!start` first.",
-                )
-                return
-
-            # Get the monitor cog
-            monitor_cog = self.bot.get_cog("MachineMonitor")
-            if not monitor_cog:
-                await self.notifier.log_and_send(
-                    ctx, "❌ Error: Monitor system is not available."
-                )
-                return
-
-            logger.info(
-                f"🔍 Manual check requested by {getattr(ctx, 'author', 'unknown')} in channel {channel_id}"
+        if not all_new_submissions:
+            # NOTE: Reverted to old message temporarily, pending new implementation.
+            await self.notifier.log_and_send(
+                ctx, "No new submissions found. All targets are up to date."
             )
+            return
 
-            # Perform the check with timing
-            start_time = datetime.now(timezone.utc)
-            result = await monitor_cog.run_checks_for_channel(
-                channel_id, config, is_manual_check=True
-            )
-            duration = (datetime.now(timezone.utc) - start_time).total_seconds()
+        # Sort and format submissions for display
+        sorted_submissions = self._sort_submissions(all_new_submissions)
+        formatted_submissions = await self.notifier.format_submissions(
+            sorted_submissions
+        )
 
-            logger.info(
-                f"✅ Manual check completed for channel {channel_id} in {duration:.2f}s, result: {result}"
-            )
+        # NOTE: Reverted to old message temporarily, pending new implementation.
+        await self.notifier.log_and_send(
+            ctx,
+            f"Found {len(sorted_submissions)} new submissions:\\n{formatted_submissions}",
+        )
 
-        except Exception as e:
-            logger.error(f"❌ Manual check failed for channel {channel_id}: {e}")
-            logger.error(f"Full traceback: {traceback.format_exc()}")
-            await self.notifier.log_and_send(ctx, f"❌ Manual check failed: {str(e)}")
+        # Update last checked timestamp for all targets
+        self.db.update_channel_last_poll_time(
+            ctx.channel.id, datetime.now(timezone.utc)
+        )
+
+    async def _add_target_and_notify(
+        self,
+        ctx,
+        target_type: str,
+        target_name: str,
+        target_data: str,
+        target_details: Optional[dict] = None,
+    ):
+        """Helper to add a target to DB and send initial notifications."""
+        self.db.add_monitoring_target(
+            ctx.channel.id, target_type, target_name, target_data
+        )
+        self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
+
+        await self.notifier.send_initial_notifications(
+            ctx, target_name, target_data, target_type, target_details
+        )
+
+        # Update timestamp to reflect successful add target check
+        self.db.update_channel_last_poll_time(
+            ctx.channel.id, datetime.now(timezone.utc)
+        )
 
     async def _handle_location_add(self, ctx, location_input: str):
+        """Handle adding a location, including searching and selection."""
         try:
             location_input_stripped = location_input.strip()
             if location_input_stripped.isdigit():
                 location_id = int(location_input_stripped)
                 location_details = await fetch_location_details(location_id)
 
-                if location_details and location_details.get("id"):
-                    location_name = location_details.get(
-                        "name", f"Location {location_id}"
-                    )
-                    self.db.add_monitoring_target(
-                        ctx.channel.id, "location", location_name, str(location_id)
-                    )
-                    self.db.update_channel_config(
-                        ctx.channel.id, ctx.guild.id, is_active=True
-                    )
-
-                    submissions = await fetch_submissions_for_location(
-                        location_id, use_min_date=False
-                    )
-                    sorted_submissions = self._sort_submissions(submissions)
-                    await self.notifier.post_initial_submissions(
-                        ctx,
-                        sorted_submissions,
-                        f"location **{location_name}** (ID: {location_id})",
-                    )
-
-                    # Update timestamp to reflect successful add target check
-                    from datetime import datetime, timezone
-
-                    self.db.update_channel_last_poll_time(
-                        ctx.channel.id, datetime.now(timezone.utc)
-                    )
-                else:
+                if not location_details:
                     await self.notifier.log_and_send(
                         ctx,
                         Messages.Command.Add.LOCATION_NOT_FOUND.format(
                             location_id=location_id
                         ),
                     )
+                    return
+
+                await self._add_target_and_notify(
+                    ctx,
+                    "location",
+                    location_details["name"],
+                    str(location_id),
+                    location_details,
+                )
             else:
                 search_result = await search_location_by_name(location_input_stripped)
                 status = search_result.get("status")
                 data = search_result.get("data")
 
-                if status == "exact" and data:
-                    location_details = data
-                    location_id = location_details["id"]
-                    location_name = location_details["name"]
-
-                    self.db.add_monitoring_target(
-                        ctx.channel.id, "location", location_name, str(location_id)
-                    )
-                    self.db.update_channel_config(
-                        ctx.channel.id, ctx.guild.id, is_active=True
-                    )
-
-                    submissions = await fetch_submissions_for_location(
-                        location_id, use_min_date=False
-                    )
-                    sorted_submissions = self._sort_submissions(submissions)
-                    await self.notifier.post_initial_submissions(
-                        ctx,
-                        sorted_submissions,
-                        f"location **{location_name}** (ID: {location_id})",
-                    )
-
-                    # Update timestamp to reflect successful add target check
-                    from datetime import datetime, timezone
-
-                    self.db.update_channel_last_poll_time(
-                        ctx.channel.id, datetime.now(timezone.utc)
-                    )
-                elif status == "suggestions":
-                    await self.notifier.log_and_send(
-                        ctx,
-                        Messages.Command.Add.LOCATION_SUGGESTIONS.format(
-                            search_term=location_input_stripped,
-                            suggestions="\n".join(
-                                [
-                                    f"• {loc['name']} (ID: {loc['id']})"
-                                    for loc in (data or [])
-                                ]
+                if status == "success" and data and len(data) > 0:
+                    if len(data) == 1:
+                        location_id = data[0]["id"]
+                        location_details = await fetch_location_details(location_id)
+                        await self._add_target_and_notify(
+                            ctx,
+                            "location",
+                            location_details["name"],
+                            str(location_id),
+                            location_details,
+                        )
+                    else:
+                        suggestions = [f"`{loc['id']}` - {loc['name']}" for loc in data]
+                        await self.notifier.log_and_send(
+                            ctx,
+                            Messages.Command.Add.SUGGESTIONS.format(
+                                search_term=location_input_stripped,
+                                suggestions="\\n".join(suggestions),
                             ),
-                        ),
-                    )
-                else:  # not_found or error
+                        )
+                else:
                     await self.notifier.log_and_send(
                         ctx,
                         Messages.Command.Add.NO_LOCATIONS.format(
@@ -493,47 +479,27 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
             # Validate coordinates
             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
                 await self.notifier.log_and_send(
-                    ctx, Messages.Command.Add.INVALID_COORDS
+                    ctx, Messages.Command.Shared.INVALID_COORDS
                 )
                 return
 
             # Validate radius if provided
-            if radius is not None and (radius < 1 or radius > 100):
+            if radius is not None and not 1 <= radius <= 100:
                 await self.notifier.log_and_send(
-                    ctx, Messages.Command.Add.INVALID_RADIUS
+                    ctx, Messages.Command.Shared.INVALID_RADIUS
                 )
                 return
+
             target_name = f"{lat},{lon}"
+            target_data = target_name
             if radius:
-                target_name += f",{radius}"
+                target_data += f",{radius}"
 
-            self.db.add_monitoring_target(ctx.channel.id, "latlong", target_name)
-            self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
-
-            submissions = await fetch_submissions_for_coordinates(
-                lat, lon, radius, use_min_date=False
-            )
-            sorted_submissions = self._sort_submissions(submissions)
-            await self.notifier.post_initial_submissions(
-                ctx, sorted_submissions, f"coordinates **{lat}, {lon}**"
-            )
-
-            # Update timestamp to reflect successful add target check
-            from datetime import datetime, timezone
-
-            self.db.update_channel_last_poll_time(
-                ctx.channel.id, datetime.now(timezone.utc)
-            )
-
-            radius_info = f" with a {radius} mile radius" if radius else ""
-            await self.notifier.log_and_send(
-                ctx,
-                Messages.Command.Add.SUCCESS.format(
-                    target_type="coordinates", name=f"{lat}, {lon}{radius_info}"
-                ),
-            )
+            await self._add_target_and_notify(ctx, "latlong", target_name, target_data)
         except Exception as e:
-            logger.error(f"Error handling coordinates add for '{lat}, {lon}': {e}")
+            logger.error(
+                f"Error handling coordinates add for '{lat}, {lon}, {radius}': {e}"
+            )
             logger.error(f"Full traceback: {traceback.format_exc()}")
             await self.notifier.log_and_send(
                 ctx,
@@ -548,53 +514,23 @@ class MonitoringCog(commands.Cog, name="Monitoring"):
         status = result.get("status")
 
         if status == "success":
-            lat = result["lat"]
-            lon = result["lon"]
-            display_name = result["display_name"]
+            location = result["data"][0]
+            lat = location["lat"]
+            lon = location["lon"]
 
-            target_name = display_name
+            target_name = f"{city_name}"
             target_data = f"{lat},{lon}"
             if radius:
-                target_name += f" ({radius} miles)"
                 target_data += f",{radius}"
 
-            self.db.add_monitoring_target(
-                ctx.channel.id, "city", target_name, target_data
-            )
-            self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
-
-            submissions = await fetch_submissions_for_coordinates(
-                lat, lon, radius, use_min_date=False
-            )
-            sorted_submissions = self._sort_submissions(submissions)
-            await self.notifier.post_initial_submissions(
-                ctx, sorted_submissions, f"city **{display_name}**"
-            )
-
-            # Update timestamp to reflect successful add target check
-            from datetime import datetime, timezone
-
-            self.db.update_channel_last_poll_time(
-                ctx.channel.id, datetime.now(timezone.utc)
-            )
-
-            # Send success message
-            radius_info = f" with a {radius} mile radius" if radius else ""
-            await self.notifier.log_and_send(
-                ctx,
-                Messages.Command.Add.SUCCESS.format(
-                    target_type="city", name=f"{display_name}{radius_info}"
-                ),
-            )
+            await self._add_target_and_notify(ctx, "city", target_name, target_data)
 
         elif status == "multiple":
+            suggestions = [loc["display_name"] for loc in result["data"]]
             await self.notifier.log_and_send(
                 ctx,
                 Messages.Command.Add.CITY_SUGGESTIONS.format(
-                    city_name=city_name,
-                    suggestions="\n".join(
-                        [f"• {name}" for name in result["suggestions"]]
-                    ),
+                    city_name=city_name, suggestions="\\n".join(suggestions)
                 ),
             )
         else:  # error
