@@ -360,10 +360,11 @@ async def test_list_targets_e2e(db_session):
     - Verifies that the output contains the correct information for all targets.
     """
     # 1. SETUP
+    channel_id = 67890  # Match the default from create_discord_context_mock
     session = db_session()
     session.add(
         MonitoringTarget(
-            channel_id=12345,
+            channel_id=channel_id,
             target_type="location",
             target_name="Ground Kontrol",
             location_id=874,
@@ -371,7 +372,7 @@ async def test_list_targets_e2e(db_session):
     )
     session.add(
         MonitoringTarget(
-            channel_id=12345,
+            channel_id=channel_id,
             target_type="latlong",
             target_name="45.5231,-122.6765,10",
         )
@@ -439,10 +440,11 @@ async def test_export_command_e2e(db_session):
     - Verifies that the exported script contains the correct `!add` and `!poll_rate` commands.
     """
     # 1. SETUP
+    channel_id = 67890  # Match the default from create_discord_context_mock
     session = db_session()
     session.add(
         MonitoringTarget(
-            channel_id=12345,
+            channel_id=channel_id,
             target_type="location",
             target_name="Ground Kontrol",
             location_id=874,
@@ -451,7 +453,7 @@ async def test_export_command_e2e(db_session):
     )
     session.add(
         MonitoringTarget(
-            channel_id=12345,
+            channel_id=channel_id,
             target_type="latlong",
             target_name="45.5231,-122.6765,10",
         )
