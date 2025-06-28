@@ -1,5 +1,9 @@
 # Discord Pinball Map Bot
 
+[![codecov](https://codecov.io/gh/timothyfroehlich/DisPinMap/branch/main/graph/badge.svg)](https://codecov.io/gh/timothyfroehlich/DisPinMap)
+[![Tests](https://github.com/timothyfroehlich/DisPinMap/workflows/Python%20Tests/badge.svg)](https://github.com/timothyfroehlich/DisPinMap/actions/workflows/python-tests.yml)
+[![Lint](https://github.com/timothyfroehlich/DisPinMap/workflows/Lint%20and%20Format/badge.svg)](https://github.com/timothyfroehlich/DisPinMap/actions/workflows/lint.yml)
+
 A Python Discord bot that continuously monitors the [pinballmap.com](https://pinballmap.com) API for changes in pinball machine locations and posts updates to Discord channels.
 
 The project is deployed on Google Cloud Platform using Terraform and Docker.

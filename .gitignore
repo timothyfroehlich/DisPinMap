@@ -269,3 +269,9 @@ tmp/
 
 # Git worktrees directory
 worktrees/
+
+# Coverage reports
+coverage.xml
+htmlcov/
+.coverage
+.coverage.*

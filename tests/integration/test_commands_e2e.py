@@ -84,19 +84,19 @@ async def test_add_location_command_success(db_session, api_mocker):
     """
     # 1. SETUP
     # Configure the API mocker for the location search and subsequent calls
-    search_term = "Ground Kontrol"
-    location_id = 1337
+    search_term = "Ground Kontrol Classic Arcade"
+    location_id = 874
     api_mocker.add_response(
-        url_substring=f"by_location_name={search_term.replace(' ', '%20')}",
+        url_substring="by_location_name=Ground%20Kontrol%20Classic%20Arcade",
         json_fixture_path="pinballmap_search/search_ground_kontrol_single_result.json",
     )
     api_mocker.add_response(
         url_substring=f"locations/{location_id}.json",
-        json_fixture_path="pinballmap_locations/location_1337_details.json",
+        json_fixture_path="pinballmap_locations/location_874_details.json",
     )
     api_mocker.add_response(
         url_substring=f"user_submissions/location.json?id={location_id}",
-        json_fixture_path="pinballmap_submissions/location_1_recent.json",
+        json_fixture_path="pinballmap_submissions/location_874_empty.json",
     )
 
     # Create a properly spec'd mock notifier with validation
@@ -136,11 +136,11 @@ async def test_add_location_command_success(db_session, api_mocker):
     # 3. ASSERT
     # Assert that the notifier's log_and_send was called with the correct message
     assert mock_notifier.log_and_send.called, "log_and_send should have been called"
-    
+
     # Get the last call (which should be the initial submissions message)
     args, kwargs = mock_notifier.log_and_send.call_args
     ctx_arg, message_arg = args
-    
+
     # Verify the message content matches expected pattern
     assert "No recent submissions found for location" in message_arg
     assert search_term in message_arg
@@ -154,8 +154,8 @@ async def test_add_location_command_success(db_session, api_mocker):
     )
     assert target is not None
     assert target.target_type == "location"
-    assert target.target_name == search_term
-    assert target.target_data == str(location_id)
+    assert target.target_name == "Ground Kontrol Classic Arcade"
+    assert target.location_id == location_id
     session.close()
 
 

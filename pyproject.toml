@@ -109,3 +109,38 @@ module = [
     "notifier"
 ]
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "src/__init__.py",
+    "tests/*",
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    ".venv/*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+skip_covered = false
+sort = "Cover"
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"

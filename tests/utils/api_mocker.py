@@ -2,40 +2,34 @@
 A simplified, fixture-based API mocker for tests.
 
 This utility provides a pytest fixture (`api_mocker`) that allows tests
-to easily mock `aiohttp` responses for specific URLs, loading the response
+to easily mock `requests.get` responses for specific URLs, loading the response
 body from the JSON files stored in `tests/fixtures/api_responses/`.
 """
 
-import asyncio
 import json
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-
-from tests.utils.mock_factories import create_api_client_mock
 
 # Path to the directory containing captured API response fixtures.
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "api_responses"
 
 
 class APIMocker:
-    """A simple class to manage mocking for aiohttp client sessions."""
+    """A simple class to manage mocking for requests HTTP client."""
 
     def __init__(self):
         # Maps a URL (or a substring) to the JSON file that should be returned.
         self.url_map = {}
-        # The actual patcher for the aiohttp session object.
+        # The actual patcher for the requests.get function.
         self._patcher = None
-        self.mock_session = None
 
     def start(self):
-        """Starts patching the aiohttp session with proper spec'd mocks."""
-        self._patcher = patch("aiohttp.ClientSession")
-        mock_client_session_class = self._patcher.start()
-        self.mock_session = create_api_client_mock()
-        mock_client_session_class.return_value = self.mock_session
-        self.mock_session.get.side_effect = self._mock_get_request
+        """Starts patching requests.get with our mock implementation."""
+        self._patcher = patch("requests.get")
+        mock_get = self._patcher.start()
+        mock_get.side_effect = self._mock_get_request
         return self
 
     def stop(self):
@@ -61,9 +55,9 @@ class APIMocker:
 
         self.url_map[url_substring] = (fixture_file, status)
 
-    async def _mock_get_request(self, url: str, **kwargs):
+    def _mock_get_request(self, url: str, **kwargs):
         """
-        The side effect function for the mocked session.get().
+        The side effect function for the mocked requests.get().
 
         It finds a matching URL from the map and returns a mock response
         with the content of the corresponding fixture file.
@@ -73,15 +67,15 @@ class APIMocker:
                 with open(fixture_file, "r") as f:
                     data = json.load(f)
 
-                # Create a properly spec'd mock response object
-                mock_response = create_api_client_mock()
-                mock_response.status = status
+                # Create a mock response object that behaves like requests.Response
+                mock_response = MagicMock()
+                mock_response.status_code = status
                 mock_response.json.return_value = data
+                mock_response.raise_for_status.return_value = (
+                    None  # No exception for successful responses
+                )
 
-                # To make it awaitable, wrap it in a future
-                future: asyncio.Future = asyncio.Future()
-                future.set_result(mock_response)
-                return future
+                return mock_response
 
         # If no match is found, raise an error to fail the test clearly.
         raise NotImplementedError(

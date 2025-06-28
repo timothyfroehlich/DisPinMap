@@ -1,11 +1,3 @@
 {
-  "captured_at": "2025-06-20T15:40:01.660866",
-  "name": "search_dave_and_busters",
-  "metadata": {
-    "search_term": "Dave and Busters"
-  },
-  "data": {
-    "status": "not_found",
-    "data": null
-  }
+    "locations": []
 }

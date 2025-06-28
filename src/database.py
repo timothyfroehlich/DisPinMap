@@ -279,7 +279,11 @@ class Database:
                 channel_id=channel_id,
                 target_type=target_type,
                 target_name=target_name,
-                target_data=target_data,
+                location_id=(
+                    int(target_data)
+                    if target_type == "location" and target_data
+                    else None
+                ),
                 poll_rate_minutes=poll_rate_minutes,
                 notification_types=notification_types,
             )

@@ -1,0 +1,2211 @@
+{
+    "id": 874,
+    "name": "Ground Kontrol Classic Arcade",
+    "street": "115 NW 5th Ave",
+    "city": "Portland",
+    "state": "OR",
+    "zip": "97209",
+    "phone": "503-796-9364",
+    "lat": "45.5240826",
+    "lon": "-122.675826",
+    "website": "https://groundkontrol.com",
+    "created_at": "2010-12-31T16:30:00.000-08:00",
+    "updated_at": "2025-06-04T09:59:00.756-07:00",
+    "zone_id": 4,
+    "region_id": 1,
+    "location_type_id": 3,
+    "description": "Amazing arcade. Must visit. Machines are in top shape. Games use tap-to-scan gamecards. Price per play is incredibly reasonable. Roughly 60-90 cents in points per play. Half off weekdays noon to 5pm",
+    "operator_id": 173,
+    "date_last_updated": "2025-06-04",
+    "last_updated_by_user_id": 21919,
+    "is_stern_army": true,
+    "country": "US",
+    "ic_active": true,
+    "machine_count": 42,
+    "last_updated_by_username": "groundkontroltech",
+    "num_machines": 42,
+    "location_machine_xrefs": [
+        {
+            "id": 175582,
+            "created_at": "2025-02-19T10:17:41.643-08:00",
+            "updated_at": "2025-03-18T10:05:52.317-07:00",
+            "location_id": 874,
+            "machine_id": 2083,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 124665,
+                    "comment": "It's now working, knock on wood.",
+                    "location_machine_xref_id": 175582,
+                    "created_at": "2025-03-18T10:05:52.307-07:00",
+                    "updated_at": "2025-03-18T10:05:52.307-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 123199,
+                    "comment": "Yeah, this machine has a lot of issues, many bugs to work out still.",
+                    "location_machine_xref_id": 175582,
+                    "created_at": "2025-02-21T08:27:44.225-08:00",
+                    "updated_at": "2025-02-21T08:27:44.225-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 123162,
+                    "comment": "Almost ready",
+                    "location_machine_xref_id": 175582,
+                    "created_at": "2025-02-20T14:41:52.597-08:00",
+                    "updated_at": "2025-02-20T14:41:52.597-08:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 110495,
+            "created_at": "2022-05-16T11:38:50.333-07:00",
+            "updated_at": "2023-06-05T08:39:17.625-07:00",
+            "location_id": 874,
+            "machine_id": 3415,
+            "user_id": 13,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": true,
+            "last_updated_by_username": "pbm",
+            "machine_conditions": [
+                {
+                    "id": 88794,
+                    "comment": "mre - mellow out, this isn't a whitewashing comment. When GZ is set with the bubble in the middle, it is generally very floaty. Almost all Godzillas are set steeper than what the bubble suggests (bad bubble design?). The tech stated below that they use their own level for this machine. If it's too steep for your liking, ok, but maybe take it offline?",
+                    "location_machine_xref_id": 110495,
+                    "created_at": "2023-06-05T08:39:17.623-07:00",
+                    "updated_at": "2023-06-05T08:39:17.623-07:00",
+                    "user_id": 13,
+                    "username": "pbm"
+                },
+                {
+                    "id": 88479,
+                    "comment": "Operator is white washing comments, which is against pinball maps guidelines.\n\nJust played a Godzilla Premium in Milwaukee's Blackbird Bar that is level and plays like butter.\n\n\"Tournament standard...\" \ud83d\ude02",
+                    "location_machine_xref_id": 110495,
+                    "created_at": "2023-05-30T21:07:23.002-07:00",
+                    "updated_at": "2023-05-30T21:07:23.002-07:00",
+                    "user_id": 23919,
+                    "username": "mre"
+                },
+                {
+                    "id": 88411,
+                    "comment": "Our machines are set up to a tournament standard.",
+                    "location_machine_xref_id": 110495,
+                    "created_at": "2023-05-29T14:53:55.001-07:00",
+                    "updated_at": "2023-05-29T14:53:55.001-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 88309,
+                    "comment": "This machine, like all games I played there last night, was so far angled down on the front legs that playable was greatly affected. Hitting the left and right ramps was very difficult due to the extreme angle on the playfield, as verified by the built in level and experience playing at least 8 other Godzilla machines.",
+                    "location_machine_xref_id": 110495,
+                    "created_at": "2023-05-28T10:23:07.390-07:00",
+                    "updated_at": "2023-05-28T10:23:07.390-07:00",
+                    "user_id": 23919,
+                    "username": "mre"
+                },
+                {
+                    "id": 76724,
+                    "comment": "It's level, we use a much better level to check and make sure.",
+                    "location_machine_xref_id": 110495,
+                    "created_at": "2022-10-17T15:48:15.461-07:00",
+                    "updated_at": "2022-10-17T15:48:15.461-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 76617,
+                    "comment": "Bubble level suggested angle of playfield was slightly out of alignment.",
+                    "location_machine_xref_id": 110495,
+                    "created_at": "2022-10-16T08:32:27.241-07:00",
+                    "updated_at": "2022-10-16T08:32:27.241-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                },
+                {
+                    "id": 76607,
+                    "comment": "Mint.",
+                    "location_machine_xref_id": 110495,
+                    "created_at": "2022-10-16T08:20:31.889-07:00",
+                    "updated_at": "2022-10-16T08:20:31.889-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 11905,
+                    "location_machine_xref_id": 110495,
+                    "score": 672187970,
+                    "created_at": "2022-11-08T09:15:51.553-08:00",
+                    "updated_at": "2022-11-08T09:15:51.561-08:00",
+                    "user_id": 12399,
+                    "rank": null,
+                    "username": "reunitedagain"
+                }
+            ]
+        },
+        {
+            "id": 173359,
+            "created_at": "2025-01-23T11:41:21.931-08:00",
+            "updated_at": "2025-03-27T22:33:33.971-07:00",
+            "location_id": 874,
+            "machine_id": 1457,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": [
+                {
+                    "id": 20519,
+                    "location_machine_xref_id": 173359,
+                    "score": 84439,
+                    "created_at": "2025-03-27T22:33:33.961-07:00",
+                    "updated_at": "2025-03-27T22:33:33.968-07:00",
+                    "user_id": 536,
+                    "rank": null,
+                    "username": "creid00"
+                }
+            ]
+        },
+        {
+            "id": 182721,
+            "created_at": "2025-05-27T08:32:39.733-07:00",
+            "updated_at": "2025-05-27T08:32:39.733-07:00",
+            "location_id": 874,
+            "machine_id": 688,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 173850,
+            "created_at": "2025-01-27T12:06:59.123-08:00",
+            "updated_at": "2025-03-27T16:21:36.198-07:00",
+            "location_id": 874,
+            "machine_id": 701,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": [
+                {
+                    "id": 20464,
+                    "location_machine_xref_id": 173850,
+                    "score": 11369590,
+                    "created_at": "2025-03-27T16:21:36.188-07:00",
+                    "updated_at": "2025-03-27T16:21:36.195-07:00",
+                    "user_id": 536,
+                    "rank": null,
+                    "username": "creid00"
+                }
+            ]
+        },
+        {
+            "id": 175036,
+            "created_at": "2025-02-12T15:04:11.847-08:00",
+            "updated_at": "2025-02-12T15:04:11.847-08:00",
+            "location_id": 874,
+            "machine_id": 4516,
+            "user_id": 307,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "AnimeDude892",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 177643,
+            "created_at": "2025-03-19T10:19:33.494-07:00",
+            "updated_at": "2025-03-19T10:19:33.494-07:00",
+            "location_id": 874,
+            "machine_id": 2441,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 183572,
+            "created_at": "2025-06-04T09:59:00.764-07:00",
+            "updated_at": "2025-06-04T09:59:00.764-07:00",
+            "location_id": 874,
+            "machine_id": 4533,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 151938,
+            "created_at": "2024-03-26T08:46:57.386-07:00",
+            "updated_at": "2024-09-22T15:39:34.055-07:00",
+            "location_id": 874,
+            "machine_id": 3800,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": true,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": [
+                {
+                    "id": 18088,
+                    "location_machine_xref_id": 151938,
+                    "score": 79291120,
+                    "created_at": "2024-09-22T15:39:34.046-07:00",
+                    "updated_at": "2024-09-22T15:39:34.053-07:00",
+                    "user_id": 15718,
+                    "rank": null,
+                    "username": "noiselab"
+                }
+            ]
+        },
+        {
+            "id": 106973,
+            "created_at": "2022-03-04T19:33:40.602-08:00",
+            "updated_at": "2025-03-27T21:34:18.170-07:00",
+            "location_id": 874,
+            "machine_id": 695,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 106128,
+                    "comment": "They're normal LED flashers in normal flasher domes, the same parts we use on all our Bally/Williams machines.",
+                    "location_machine_xref_id": 106973,
+                    "created_at": "2024-04-17T08:48:48.457-07:00",
+                    "updated_at": "2024-04-17T08:48:48.457-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 105926,
+                    "comment": "The strobe lights in the back are so blindingly bright\u2026 my eyes!",
+                    "location_machine_xref_id": 106973,
+                    "created_at": "2024-04-13T14:31:16.091-07:00",
+                    "updated_at": "2024-04-13T14:31:16.091-07:00",
+                    "user_id": 30544,
+                    "username": "pinballslut"
+                },
+                {
+                    "id": 67630,
+                    "comment": "Since been fixed. I played it last Saturday and it was fine.",
+                    "location_machine_xref_id": 106973,
+                    "created_at": "2022-03-23T17:55:33.070-07:00",
+                    "updated_at": "2022-03-23T17:55:33.070-07:00",
+                    "user_id": 14395,
+                    "username": "meow_mix"
+                },
+                {
+                    "id": 67005,
+                    "comment": "Tilts if you breathe too hard to the point of being unplayable. So annoying!!!!!! This is my favorite game of all time and I couldn\u2019t even enjoy playing it. \ud83d\udca9\ud83e\udd2c\ud83d\udd95",
+                    "location_machine_xref_id": 106973,
+                    "created_at": "2022-03-07T21:57:23.869-08:00",
+                    "updated_at": "2022-03-07T21:57:23.869-08:00",
+                    "user_id": 14395,
+                    "username": "meow_mix"
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 20517,
+                    "location_machine_xref_id": 106973,
+                    "score": 6471290,
+                    "created_at": "2025-03-27T21:34:18.156-07:00",
+                    "updated_at": "2025-03-27T21:34:18.165-07:00",
+                    "user_id": 536,
+                    "rank": null,
+                    "username": "creid00"
+                }
+            ]
+        },
+        {
+            "id": 129503,
+            "created_at": "2023-04-28T13:49:16.737-07:00",
+            "updated_at": "2023-04-28T13:49:16.737-07:00",
+            "location_id": 874,
+            "machine_id": 689,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 129505,
+            "created_at": "2023-04-28T13:49:42.148-07:00",
+            "updated_at": "2025-02-20T10:38:54.039-08:00",
+            "location_id": 874,
+            "machine_id": 650,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 123138,
+                    "comment": "Fixed",
+                    "location_machine_xref_id": 129505,
+                    "created_at": "2025-02-20T10:38:54.027-08:00",
+                    "updated_at": "2025-02-20T10:38:54.027-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 123119,
+                    "comment": "Two ball multiball?",
+                    "location_machine_xref_id": 129505,
+                    "created_at": "2025-02-19T20:26:06.947-08:00",
+                    "updated_at": "2025-02-19T20:26:06.947-08:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 137579,
+            "created_at": "2023-08-27T20:20:08.422-07:00",
+            "updated_at": "2025-03-27T21:19:19.257-07:00",
+            "location_id": 874,
+            "machine_id": 655,
+            "user_id": 1532,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": null,
+            "last_updated_by_username": "collasta",
+            "machine_conditions": [],
+            "machine_score_xrefs": [
+                {
+                    "id": 20516,
+                    "location_machine_xref_id": 137579,
+                    "score": 2109030,
+                    "created_at": "2025-03-27T21:19:19.248-07:00",
+                    "updated_at": "2025-03-27T21:19:19.255-07:00",
+                    "user_id": 536,
+                    "rank": null,
+                    "username": "creid00"
+                }
+            ]
+        },
+        {
+            "id": 163269,
+            "created_at": "2024-08-27T09:05:41.682-07:00",
+            "updated_at": "2024-08-27T09:05:41.682-07:00",
+            "location_id": 874,
+            "machine_id": 1129,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 122670,
+            "created_at": "2023-01-09T17:56:22.775-08:00",
+            "updated_at": "2024-12-26T08:56:15.110-08:00",
+            "location_id": 874,
+            "machine_id": 3288,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": true,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 119622,
+                    "comment": "Fixed.",
+                    "location_machine_xref_id": 122670,
+                    "created_at": "2024-12-26T08:56:15.102-08:00",
+                    "updated_at": "2024-12-26T08:56:15.102-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 119543,
+                    "comment": "Center ramp target is sticking up intermittently when you hit it and the tilt is tight enough that you can easily tilt out trying to free it.",
+                    "location_machine_xref_id": 122670,
+                    "created_at": "2024-12-23T19:01:19.309-08:00",
+                    "updated_at": "2024-12-23T19:01:19.309-08:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 17549,
+                    "location_machine_xref_id": 122670,
+                    "score": 12364650,
+                    "created_at": "2024-08-11T18:52:03.825-07:00",
+                    "updated_at": "2024-08-11T18:52:03.835-07:00",
+                    "user_id": 24716,
+                    "rank": null,
+                    "username": "wiggletech"
+                }
+            ]
+        },
+        {
+            "id": 46584,
+            "created_at": "2017-11-18T20:43:57.543-08:00",
+            "updated_at": "2025-03-27T21:41:22.736-07:00",
+            "location_id": 874,
+            "machine_id": 1591,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 106760,
+                    "comment": "Switch replaced.",
+                    "location_machine_xref_id": 46584,
+                    "created_at": "2024-04-29T14:51:15.874-07:00",
+                    "updated_at": "2024-04-29T14:51:15.874-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 106632,
+                    "comment": "Left loop doesn't seem to be registering correctly",
+                    "location_machine_xref_id": 46584,
+                    "created_at": "2024-04-27T19:20:54.747-07:00",
+                    "updated_at": "2024-04-27T19:20:54.747-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 70410,
+                    "comment": "Chair opto fixed, now working!",
+                    "location_machine_xref_id": 46584,
+                    "created_at": "2022-05-30T10:18:12.975-07:00",
+                    "updated_at": "2022-05-30T10:18:12.975-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 53915,
+                    "comment": "Electric chair opto not working, only hits to the stand up target register",
+                    "location_machine_xref_id": 46584,
+                    "created_at": "2020-03-05T19:23:02.917-08:00",
+                    "updated_at": "2020-03-05T19:23:02.917-08:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                },
+                {
+                    "id": 46427,
+                    "comment": "Right flipper sticking.",
+                    "location_machine_xref_id": 46584,
+                    "created_at": "2019-08-13T21:48:54.993-07:00",
+                    "updated_at": "2019-08-13T21:48:54.993-07:00",
+                    "user_id": 781,
+                    "username": "Jakekpgh"
+                },
+                {
+                    "id": 27866,
+                    "comment": "Small room over by the kitchen",
+                    "location_machine_xref_id": 46584,
+                    "created_at": "2017-11-19T08:36:23.080-08:00",
+                    "updated_at": "2017-11-19T08:36:23.080-08:00",
+                    "user_id": 317,
+                    "username": "alambert"
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 20518,
+                    "location_machine_xref_id": 46584,
+                    "score": 5910190,
+                    "created_at": "2025-03-27T21:41:22.729-07:00",
+                    "updated_at": "2025-03-27T21:41:22.734-07:00",
+                    "user_id": 536,
+                    "rank": null,
+                    "username": "creid00"
+                }
+            ]
+        },
+        {
+            "id": 46583,
+            "created_at": "2017-11-18T20:43:44.163-08:00",
+            "updated_at": "2025-03-20T09:28:37.402-07:00",
+            "location_id": 874,
+            "machine_id": 1219,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 124758,
+                    "comment": "Sorry, moved it today and it must not have gotten checked. Tilt adjusted.",
+                    "location_machine_xref_id": 46583,
+                    "created_at": "2025-03-20T09:28:37.375-07:00",
+                    "updated_at": "2025-03-20T09:28:37.375-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 124748,
+                    "comment": "Tilt is... excessively tight.",
+                    "location_machine_xref_id": 46583,
+                    "created_at": "2025-03-19T19:45:15.127-07:00",
+                    "updated_at": "2025-03-19T19:45:15.127-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 103331,
+                    "comment": "Pop bumper repaired.",
+                    "location_machine_xref_id": 46583,
+                    "created_at": "2024-02-26T09:12:51.190-08:00",
+                    "updated_at": "2024-02-26T09:12:51.190-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 103245,
+                    "comment": "The bottom pop bumper wasn\u2019t popping.",
+                    "location_machine_xref_id": 46583,
+                    "created_at": "2024-02-24T20:08:59.091-08:00",
+                    "updated_at": "2024-02-24T20:08:59.091-08:00",
+                    "user_id": 687,
+                    "username": "vulpyfox"
+                },
+                {
+                    "id": 76612,
+                    "comment": "Plays great.",
+                    "location_machine_xref_id": 46583,
+                    "created_at": "2022-10-16T08:24:10.922-07:00",
+                    "updated_at": "2022-10-16T08:24:10.922-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                },
+                {
+                    "id": 27865,
+                    "comment": "Small room over by kitchen",
+                    "location_machine_xref_id": 46583,
+                    "created_at": "2017-11-19T08:36:04.633-08:00",
+                    "updated_at": "2017-11-19T08:36:04.633-08:00",
+                    "user_id": 317,
+                    "username": "alambert"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 118203,
+            "created_at": "2022-10-16T11:34:49.709-07:00",
+            "updated_at": "2024-10-04T11:02:34.035-07:00",
+            "location_id": 874,
+            "machine_id": 3167,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": true,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 76722,
+                    "comment": "Fixed, back on",
+                    "location_machine_xref_id": 118203,
+                    "created_at": "2022-10-17T15:45:08.745-07:00",
+                    "updated_at": "2022-10-17T15:45:08.745-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 76624,
+                    "comment": "Turned off.",
+                    "location_machine_xref_id": 118203,
+                    "created_at": "2022-10-16T11:35:03.648-07:00",
+                    "updated_at": "2022-10-16T11:35:03.648-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 17541,
+                    "location_machine_xref_id": 118203,
+                    "score": 41471780,
+                    "created_at": "2024-08-11T18:48:10.457-07:00",
+                    "updated_at": "2024-08-11T18:48:10.465-07:00",
+                    "user_id": 24716,
+                    "rank": null,
+                    "username": "wiggletech"
+                }
+            ]
+        },
+        {
+            "id": 46585,
+            "created_at": "2017-11-18T20:44:09.940-08:00",
+            "updated_at": "2019-07-07T21:37:19.351-07:00",
+            "location_id": 874,
+            "machine_id": 2353,
+            "user_id": 7508,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "worthwhilepanda",
+            "machine_conditions": [
+                {
+                    "id": 45041,
+                    "comment": "Flipper buttons cleaned and playing well!",
+                    "location_machine_xref_id": 46585,
+                    "created_at": "2019-07-07T21:37:19.357-07:00",
+                    "updated_at": "2019-07-07T21:37:19.357-07:00",
+                    "user_id": 7508,
+                    "username": "worthwhilepanda"
+                },
+                {
+                    "id": 43468,
+                    "comment": "Left flipper button sticky - otherwise playing just fine",
+                    "location_machine_xref_id": 46585,
+                    "created_at": "2019-05-31T09:59:22.958-07:00",
+                    "updated_at": "2019-05-31T09:59:22.958-07:00",
+                    "user_id": 7508,
+                    "username": "worthwhilepanda"
+                },
+                {
+                    "id": 37841,
+                    "comment": "Playing fine",
+                    "location_machine_xref_id": 46585,
+                    "created_at": "2018-11-29T13:58:41.793-08:00",
+                    "updated_at": "2018-11-29T13:58:41.793-08:00",
+                    "user_id": 938,
+                    "username": "jka"
+                },
+                {
+                    "id": 33237,
+                    "comment": "Launch is broken. Can\u2019t even make it up into the violets upon launch",
+                    "location_machine_xref_id": 46585,
+                    "created_at": "2018-06-13T01:13:50.156-07:00",
+                    "updated_at": "2018-06-13T01:13:50.156-07:00",
+                    "user_id": 4316,
+                    "username": "dtrobare"
+                },
+                {
+                    "id": 30439,
+                    "comment": "This machine has been moved to the highlight spot next to the bar at the time of this post.",
+                    "location_machine_xref_id": 46585,
+                    "created_at": "2018-03-11T22:24:32.573-07:00",
+                    "updated_at": "2018-03-11T22:24:32.573-07:00",
+                    "user_id": 687,
+                    "username": "vulpyfox"
+                },
+                {
+                    "id": 27864,
+                    "comment": "Small room over by kitchen",
+                    "location_machine_xref_id": 46585,
+                    "created_at": "2017-11-19T08:35:51.966-08:00",
+                    "updated_at": "2017-11-19T08:35:51.966-08:00",
+                    "user_id": 317,
+                    "username": "alambert"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 35777,
+            "created_at": "2016-11-07T17:47:32.307-08:00",
+            "updated_at": "2024-11-15T09:54:04.156-08:00",
+            "location_id": 874,
+            "machine_id": 641,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 3,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 117814,
+                    "comment": "Drac is repaired.",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2024-11-15T09:54:04.149-08:00",
+                    "updated_at": "2024-11-15T09:54:04.149-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 117761,
+                    "comment": "Drac is currently disabled, hit the drac targets during drac attack to score hits",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2024-11-13T20:35:47.592-08:00",
+                    "updated_at": "2024-11-13T20:35:47.592-08:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                },
+                {
+                    "id": 117760,
+                    "comment": "Dracula toy not moving",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2024-11-13T20:25:29.641-08:00",
+                    "updated_at": "2024-11-13T20:25:29.641-08:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 103333,
+                    "comment": "Pop bumper repaired, tested, working again.",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2024-02-26T10:00:33.488-08:00",
+                    "updated_at": "2024-02-26T10:00:33.488-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 103310,
+                    "comment": "Bottom pop bumper is not popping.",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2024-02-25T17:59:36.321-08:00",
+                    "updated_at": "2024-02-25T17:59:36.321-08:00",
+                    "user_id": 687,
+                    "username": "vulpyfox"
+                },
+                {
+                    "id": 70425,
+                    "comment": "Flippers adjusted, playing well",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2022-05-30T11:51:26.932-07:00",
+                    "updated_at": "2022-05-30T11:51:26.932-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 64483,
+                    "comment": "Right flipper feels a little floppy.\ufffc",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2021-12-22T00:08:15.028-08:00",
+                    "updated_at": "2021-12-22T00:08:15.028-08:00",
+                    "user_id": 16805,
+                    "username": "roosterroo"
+                },
+                {
+                    "id": 42843,
+                    "comment": "Playing great",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2019-05-10T12:06:46.414-07:00",
+                    "updated_at": "2019-05-10T12:06:46.414-07:00",
+                    "user_id": 6051,
+                    "username": "starzipan"
+                },
+                {
+                    "id": 40633,
+                    "comment": "Frankenstein ramp doesnt start multiball.",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2019-03-01T19:13:24.710-08:00",
+                    "updated_at": "2019-03-01T19:13:24.710-08:00",
+                    "user_id": 985,
+                    "username": "gfunk"
+                },
+                {
+                    "id": 23876,
+                    "comment": "Plays great. Only complaint is that there's a light directly above the machine so you can't tell which monsters you have lit,",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2017-05-18T21:01:29.476-07:00",
+                    "updated_at": "2017-05-18T21:01:29.476-07:00",
+                    "user_id": 985,
+                    "username": "gfunk"
+                },
+                {
+                    "id": 23386,
+                    "comment": "Frank targets fixed",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2017-04-21T18:36:31.468-07:00",
+                    "updated_at": "2017-04-21T18:36:31.468-07:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                },
+                {
+                    "id": 23272,
+                    "comment": "Frank stand up targets are down so no frank multiball",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2017-04-17T23:24:28.998-07:00",
+                    "updated_at": "2017-04-17T23:24:28.998-07:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                },
+                {
+                    "id": 19405,
+                    "comment": "No issues, table is flying.",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2016-11-15T17:01:40.193-08:00",
+                    "updated_at": "2016-11-15T17:01:40.193-08:00",
+                    "user_id": null,
+                    "username": ""
+                },
+                {
+                    "id": 19199,
+                    "comment": "The bride's loop is at an improper angle- the ball can get stuck up there",
+                    "location_machine_xref_id": 35777,
+                    "created_at": "2016-11-07T17:48:05.243-08:00",
+                    "updated_at": "2016-11-07T17:48:05.243-08:00",
+                    "user_id": null,
+                    "username": ""
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 15152,
+                    "location_machine_xref_id": 35777,
+                    "score": 62292090,
+                    "created_at": "2024-01-06T15:49:48.744-08:00",
+                    "updated_at": "2024-01-06T15:49:48.752-08:00",
+                    "user_id": 7849,
+                    "rank": null,
+                    "username": "zachvbuck"
+                },
+                {
+                    "id": 17547,
+                    "location_machine_xref_id": 35777,
+                    "score": 15665100,
+                    "created_at": "2024-08-11T18:51:28.994-07:00",
+                    "updated_at": "2024-08-11T18:51:29.002-07:00",
+                    "user_id": 24716,
+                    "rank": null,
+                    "username": "wiggletech"
+                },
+                {
+                    "id": 17548,
+                    "location_machine_xref_id": 35777,
+                    "score": 16764420,
+                    "created_at": "2024-08-11T18:51:43.747-07:00",
+                    "updated_at": "2024-08-11T18:51:43.754-07:00",
+                    "user_id": 24716,
+                    "rank": null,
+                    "username": "wiggletech"
+                }
+            ]
+        },
+        {
+            "id": 98500,
+            "created_at": "2021-08-25T19:05:22.332-07:00",
+            "updated_at": "2025-06-19T16:08:06.308-07:00",
+            "location_id": 874,
+            "machine_id": 3127,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": false,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 76720,
+                    "comment": "Fixed, back on.",
+                    "location_machine_xref_id": 98500,
+                    "created_at": "2022-10-17T15:42:06.104-07:00",
+                    "updated_at": "2022-10-17T15:42:06.104-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 76605,
+                    "comment": "Turned off.",
+                    "location_machine_xref_id": 98500,
+                    "created_at": "2022-10-16T08:19:29.134-07:00",
+                    "updated_at": "2022-10-16T08:19:29.134-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                },
+                {
+                    "id": 70409,
+                    "comment": "Now working",
+                    "location_machine_xref_id": 98500,
+                    "created_at": "2022-05-30T10:17:20.961-07:00",
+                    "updated_at": "2022-05-30T10:17:20.961-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 63739,
+                    "comment": "Right flipper button is sticking a lot",
+                    "location_machine_xref_id": 98500,
+                    "created_at": "2021-11-24T22:47:32.028-08:00",
+                    "updated_at": "2021-11-24T22:47:32.028-08:00",
+                    "user_id": 15982,
+                    "username": "victorb"
+                },
+                {
+                    "id": 62118,
+                    "comment": "Shield is fucked up",
+                    "location_machine_xref_id": 98500,
+                    "created_at": "2021-09-28T23:00:20.311-07:00",
+                    "updated_at": "2021-09-28T23:00:20.311-07:00",
+                    "user_id": 2741,
+                    "username": "jds"
+                },
+                {
+                    "id": 61506,
+                    "comment": "The shield drops itself or doesn\u2019t open all the way when it should be open. The volume is set way too lol and the tilt way too high.",
+                    "location_machine_xref_id": 98500,
+                    "created_at": "2021-09-11T14:00:29.093-07:00",
+                    "updated_at": "2021-09-11T14:00:29.093-07:00",
+                    "user_id": 12399,
+                    "username": "reunitedagain"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 98495,
+            "created_at": "2021-08-25T19:04:34.278-07:00",
+            "updated_at": "2024-10-14T12:11:57.136-07:00",
+            "location_id": 874,
+            "machine_id": 782,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 116220,
+                    "comment": "Left saucer repaired, working again.",
+                    "location_machine_xref_id": 98495,
+                    "created_at": "2024-10-14T12:11:57.126-07:00",
+                    "updated_at": "2024-10-14T12:11:57.126-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 115980,
+                    "comment": "Left saucer hinky",
+                    "location_machine_xref_id": 98495,
+                    "created_at": "2024-10-09T21:52:28.305-07:00",
+                    "updated_at": "2024-10-09T21:52:28.305-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 100445,
+                    "comment": "Loose wire, machine back up and running.",
+                    "location_machine_xref_id": 98495,
+                    "created_at": "2024-01-02T11:39:31.027-08:00",
+                    "updated_at": "2024-01-02T11:39:31.027-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 100438,
+                    "comment": "Out of order",
+                    "location_machine_xref_id": 98495,
+                    "created_at": "2024-01-01T20:49:12.833-08:00",
+                    "updated_at": "2024-01-01T20:49:12.833-08:00",
+                    "user_id": 22420,
+                    "username": "charlower"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 43735,
+            "created_at": "2017-08-15T16:05:33.076-07:00",
+            "updated_at": "2024-10-04T11:02:16.575-07:00",
+            "location_id": 874,
+            "machine_id": 2843,
+            "user_id": 21471,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": true,
+            "last_updated_by_username": "gadgetman007",
+            "machine_conditions": [
+                {
+                    "id": 76616,
+                    "comment": "Plays great.",
+                    "location_machine_xref_id": 43735,
+                    "created_at": "2022-10-16T08:30:46.514-07:00",
+                    "updated_at": "2022-10-16T08:30:46.514-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                },
+                {
+                    "id": 70760,
+                    "comment": "Playfield light issues fixed, now working normally",
+                    "location_machine_xref_id": 43735,
+                    "created_at": "2022-06-07T16:09:26.628-07:00",
+                    "updated_at": "2022-06-07T16:09:26.628-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 70433,
+                    "comment": "FORCE target, lightsaber duel, endor, and super jackpot playfield lights not functioning (waiting on parts)",
+                    "location_machine_xref_id": 43735,
+                    "created_at": "2022-05-30T12:21:23.013-07:00",
+                    "updated_at": "2022-05-30T12:21:23.013-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 67487,
+                    "comment": "Playfield lights are not functioning properly, tattooine scoop goes STDM, but ball save is not on.",
+                    "location_machine_xref_id": 43735,
+                    "created_at": "2022-03-19T19:47:30.120-07:00",
+                    "updated_at": "2022-03-19T19:47:30.120-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 98507,
+            "created_at": "2021-08-25T19:08:00.395-07:00",
+            "updated_at": "2025-03-27T20:56:39.936-07:00",
+            "location_id": 874,
+            "machine_id": 703,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 79079,
+                    "comment": "Ramp replaced, machine back on.",
+                    "location_machine_xref_id": 98507,
+                    "created_at": "2022-12-09T09:29:00.427-08:00",
+                    "updated_at": "2022-12-09T09:29:00.427-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 67385,
+                    "comment": "Now working",
+                    "location_machine_xref_id": 98507,
+                    "created_at": "2022-03-16T20:00:57.760-07:00",
+                    "updated_at": "2022-03-16T20:00:57.760-07:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                },
+                {
+                    "id": 61621,
+                    "comment": "Upper flipper sticks up until the ball knocks it down",
+                    "location_machine_xref_id": 98507,
+                    "created_at": "2021-09-15T23:13:59.969-07:00",
+                    "updated_at": "2021-09-15T23:13:59.969-07:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 20515,
+                    "location_machine_xref_id": 98507,
+                    "score": 2135030,
+                    "created_at": "2025-03-27T20:56:39.930-07:00",
+                    "updated_at": "2025-03-27T20:56:39.933-07:00",
+                    "user_id": 536,
+                    "rank": null,
+                    "username": "creid00"
+                }
+            ]
+        },
+        {
+            "id": 98512,
+            "created_at": "2021-08-25T19:09:32.729-07:00",
+            "updated_at": "2021-08-25T19:09:32.729-07:00",
+            "location_id": 874,
+            "machine_id": 815,
+            "user_id": 307,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "AnimeDude892",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 98513,
+            "created_at": "2021-08-25T19:09:45.558-07:00",
+            "updated_at": "2025-01-11T11:04:11.240-08:00",
+            "location_id": 874,
+            "machine_id": 687,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 120690,
+                    "comment": "Flipper repaired.",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2025-01-11T11:04:11.233-08:00",
+                    "updated_at": "2025-01-11T11:04:11.233-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 120678,
+                    "comment": "Thing flipper not working",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2025-01-10T22:36:44.936-08:00",
+                    "updated_at": "2025-01-10T22:36:44.936-08:00",
+                    "user_id": 2741,
+                    "username": "jds"
+                },
+                {
+                    "id": 106548,
+                    "comment": "Chair light fixed.",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2024-04-26T08:36:27.539-07:00",
+                    "updated_at": "2024-04-26T08:36:27.539-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 106547,
+                    "comment": "Left sling fixed.",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2024-04-26T08:35:54.145-07:00",
+                    "updated_at": "2024-04-26T08:35:54.145-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 106546,
+                    "comment": "Flashers are the same flashers on all of our machines, none are brighter than the others.",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2024-04-26T08:35:28.903-07:00",
+                    "updated_at": "2024-04-26T08:35:28.903-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 106497,
+                    "comment": "Right light knocked off the chair",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2024-04-24T21:35:41.419-07:00",
+                    "updated_at": "2024-04-24T21:35:41.419-07:00",
+                    "user_id": 2741,
+                    "username": "jds"
+                },
+                {
+                    "id": 106448,
+                    "comment": "Left sling firing randomly",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2024-04-23T21:57:44.439-07:00",
+                    "updated_at": "2024-04-23T21:57:44.439-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 106294,
+                    "comment": "Looks and plays great! The only critique I have is the flashers are blindingly bright\u2026 it would be easier to see if dimmer LEDs were swapped in \ud83d\ude2c",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2024-04-20T16:15:56.068-07:00",
+                    "updated_at": "2024-04-20T16:15:56.068-07:00",
+                    "user_id": 26050,
+                    "username": "entityclay"
+                },
+                {
+                    "id": 105299,
+                    "comment": "The DMD is repaired.",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2024-04-01T14:43:05.101-07:00",
+                    "updated_at": "2024-04-01T14:43:05.101-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 105099,
+                    "comment": "DMD is fucked up",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2024-03-28T22:01:16.733-07:00",
+                    "updated_at": "2024-03-28T22:01:16.733-07:00",
+                    "user_id": 2741,
+                    "username": "jds"
+                },
+                {
+                    "id": 79077,
+                    "comment": "Flipper repaired.",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2022-12-09T09:27:38.312-08:00",
+                    "updated_at": "2022-12-09T09:27:38.312-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 77876,
+                    "comment": "Thing flipper not working",
+                    "location_machine_xref_id": 98513,
+                    "created_at": "2022-11-10T18:56:38.118-08:00",
+                    "updated_at": "2022-11-10T18:56:38.118-08:00",
+                    "user_id": 2741,
+                    "username": "jds"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 98511,
+            "created_at": "2021-08-25T19:09:07.126-07:00",
+            "updated_at": "2022-05-30T11:55:04.286-07:00",
+            "location_id": 874,
+            "machine_id": 2203,
+            "user_id": 19766,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "dylansnow",
+            "machine_conditions": [
+                {
+                    "id": 70428,
+                    "comment": "Issues fixed, working",
+                    "location_machine_xref_id": 98511,
+                    "created_at": "2022-05-30T11:55:04.291-07:00",
+                    "updated_at": "2022-05-30T11:55:04.291-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 67490,
+                    "comment": "Missing gates on plunge and riot shot, shoot again light flickering, right flipper button is sticky",
+                    "location_machine_xref_id": 98511,
+                    "created_at": "2022-03-19T19:48:58.534-07:00",
+                    "updated_at": "2022-03-19T19:48:58.534-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 63742,
+                    "comment": "Full plunges often get caught exiting the plunge lane and never make it up to the skillshot lane.",
+                    "location_machine_xref_id": 98511,
+                    "created_at": "2021-11-25T00:12:43.877-08:00",
+                    "updated_at": "2021-11-25T00:12:43.877-08:00",
+                    "user_id": 15982,
+                    "username": "victorb"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 125814,
+            "created_at": "2023-03-06T12:28:12.583-08:00",
+            "updated_at": "2023-03-06T12:28:12.583-08:00",
+            "location_id": 874,
+            "machine_id": 686,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 152541,
+            "created_at": "2024-04-02T10:13:35.307-07:00",
+            "updated_at": "2025-05-20T16:46:13.100-07:00",
+            "location_id": 874,
+            "machine_id": 651,
+            "user_id": 21919,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": [
+                {
+                    "id": 21868,
+                    "location_machine_xref_id": 152541,
+                    "score": 714692910,
+                    "created_at": "2025-05-20T16:46:13.086-07:00",
+                    "updated_at": "2025-05-20T16:46:13.094-07:00",
+                    "user_id": 1066,
+                    "rank": null,
+                    "username": "orbaddict"
+                }
+            ]
+        },
+        {
+            "id": 5871,
+            "created_at": "2011-08-14T10:13:00.000-07:00",
+            "updated_at": "2025-05-20T17:43:22.159-07:00",
+            "location_id": 874,
+            "machine_id": 697,
+            "user_id": 21471,
+            "machine_score_xrefs_count": 2,
+            "ic_enabled": null,
+            "last_updated_by_username": "gadgetman007",
+            "machine_conditions": [
+                {
+                    "id": 76610,
+                    "comment": "Plays great.",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2022-10-16T08:22:45.364-07:00",
+                    "updated_at": "2022-10-16T08:22:45.364-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                },
+                {
+                    "id": 36389,
+                    "comment": "Plays great.",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2018-09-27T09:45:07.126-07:00",
+                    "updated_at": "2018-09-27T09:45:07.126-07:00",
+                    "user_id": 938,
+                    "username": "jka"
+                },
+                {
+                    "id": 35480,
+                    "comment": "Goes into ball search after ball drains.",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2018-08-24T00:37:39.916-07:00",
+                    "updated_at": "2018-08-24T00:37:39.916-07:00",
+                    "user_id": 739,
+                    "username": "adalogue"
+                },
+                {
+                    "id": 28769,
+                    "comment": "Upper left flipper doesn\u2019t work.",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2017-12-23T20:55:20.895-08:00",
+                    "updated_at": "2017-12-23T20:55:20.895-08:00",
+                    "user_id": 938,
+                    "username": "jka"
+                },
+                {
+                    "id": 26894,
+                    "comment": "Thanks for letting us know!  The issues have been taken care of.",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2017-09-26T13:12:41.116-07:00",
+                    "updated_at": "2017-09-26T13:12:41.116-07:00",
+                    "user_id": 957,
+                    "username": "gkrepairs"
+                },
+                {
+                    "id": 26892,
+                    "comment": "Top flipper is getting stuck in the flipped position. Also doesn't seem to acknowledge the power ball in play.",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2017-09-25T20:17:16.537-07:00",
+                    "updated_at": "2017-09-25T20:17:16.537-07:00",
+                    "user_id": 687,
+                    "username": "vulpyfox"
+                },
+                {
+                    "id": 26849,
+                    "comment": "We installed a brand new powerball today!  -GK",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2017-09-23T11:58:26.572-07:00",
+                    "updated_at": "2017-09-23T11:58:26.572-07:00",
+                    "user_id": 957,
+                    "username": "gkrepairs"
+                },
+                {
+                    "id": 26700,
+                    "comment": "We finally got the clock back up and running!\r\nThanks!\r\n-GK",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2017-09-15T13:07:43.699-07:00",
+                    "updated_at": "2017-09-15T13:07:43.699-07:00",
+                    "user_id": 957,
+                    "username": "gkrepairs"
+                },
+                {
+                    "id": 591,
+                    "comment": "Home use only since 1993. As close to new as you can get! -GK, 8/14/11\n\nMachine does play great, but Powerball is so dirty it looks like a normal ball. Clock is broken as well.",
+                    "location_machine_xref_id": 5871,
+                    "created_at": "2014-11-17T16:00:00.000-08:00",
+                    "updated_at": "2015-02-08T21:37:56.958-08:00",
+                    "user_id": null,
+                    "username": ""
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 21869,
+                    "location_machine_xref_id": 5871,
+                    "score": 1907686080,
+                    "created_at": "2025-05-20T17:43:22.152-07:00",
+                    "updated_at": "2025-05-20T17:43:22.156-07:00",
+                    "user_id": 1066,
+                    "rank": null,
+                    "username": "orbaddict"
+                },
+                {
+                    "id": 20465,
+                    "location_machine_xref_id": 5871,
+                    "score": 197437230,
+                    "created_at": "2025-03-27T16:41:26.615-07:00",
+                    "updated_at": "2025-03-27T16:41:26.626-07:00",
+                    "user_id": 536,
+                    "rank": null,
+                    "username": "creid00"
+                }
+            ]
+        },
+        {
+            "id": 125811,
+            "created_at": "2023-03-06T11:30:51.807-08:00",
+            "updated_at": "2023-05-15T15:07:30.657-07:00",
+            "location_id": 874,
+            "machine_id": 3255,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": true,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 165885,
+            "created_at": "2024-10-04T10:58:42.429-07:00",
+            "updated_at": "2024-12-26T09:14:34.522-08:00",
+            "location_id": 874,
+            "machine_id": 4506,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": true,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 119624,
+                    "comment": "Tilt adjusted.",
+                    "location_machine_xref_id": 165885,
+                    "created_at": "2024-12-26T09:14:34.512-08:00",
+                    "updated_at": "2024-12-26T09:14:34.512-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 119548,
+                    "comment": "Tilt is... unreasonable.",
+                    "location_machine_xref_id": 165885,
+                    "created_at": "2024-12-23T19:51:42.598-08:00",
+                    "updated_at": "2024-12-23T19:51:42.598-08:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 119520,
+                    "comment": "Far left outlane rubber replaced, stuck ball issue fixed. We've been in communication with Stern about the plunger/autolaunch issue. Unfortunately it's problem with many Uncanny X-Men machines from the factory caused by the ball clattering in the orbit after launch. Stern is working on a fix and as soon as we get it we will install it.",
+                    "location_machine_xref_id": 165885,
+                    "created_at": "2024-12-23T09:09:30.947-08:00",
+                    "updated_at": "2024-12-23T09:09:30.947-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 119464,
+                    "comment": "Ball gets stuck in far left outlane. Plunger & start button don't have enough power to get the ball over the hump around 50% of the time. Really takes away from the game play",
+                    "location_machine_xref_id": 165885,
+                    "created_at": "2024-12-22T14:16:01.702-08:00",
+                    "updated_at": "2024-12-22T14:16:01.702-08:00",
+                    "user_id": 12243,
+                    "username": "manfro42"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 98494,
+            "created_at": "2021-08-25T19:04:27.155-07:00",
+            "updated_at": "2022-12-09T09:30:29.823-08:00",
+            "location_id": 874,
+            "machine_id": 663,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 79080,
+                    "comment": "Machine fixed, no more missing ball.",
+                    "location_machine_xref_id": 98494,
+                    "created_at": "2022-12-09T09:30:29.828-08:00",
+                    "updated_at": "2022-12-09T09:30:29.828-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 77875,
+                    "comment": "Not stuck anymore but there could still be a missing ball",
+                    "location_machine_xref_id": 98494,
+                    "created_at": "2022-11-10T18:55:40.725-08:00",
+                    "updated_at": "2022-11-10T18:55:40.725-08:00",
+                    "user_id": 12399,
+                    "username": "reunitedagain"
+                },
+                {
+                    "id": 77873,
+                    "comment": "Stuck without a ball",
+                    "location_machine_xref_id": 98494,
+                    "created_at": "2022-11-10T18:44:04.848-08:00",
+                    "updated_at": "2022-11-10T18:44:04.848-08:00",
+                    "user_id": 12399,
+                    "username": "reunitedagain"
+                },
+                {
+                    "id": 77775,
+                    "comment": "Fixed today.",
+                    "location_machine_xref_id": 98494,
+                    "created_at": "2022-11-08T11:58:31.751-08:00",
+                    "updated_at": "2022-11-08T11:58:31.751-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 77740,
+                    "comment": "Left flipper sticking",
+                    "location_machine_xref_id": 98494,
+                    "created_at": "2022-11-07T12:56:24.353-08:00",
+                    "updated_at": "2022-11-07T12:56:24.353-08:00",
+                    "user_id": 12399,
+                    "username": "reunitedagain"
+                },
+                {
+                    "id": 76872,
+                    "comment": "Both flippers usually stay up when flipped",
+                    "location_machine_xref_id": 98494,
+                    "created_at": "2022-10-20T13:27:57.872-07:00",
+                    "updated_at": "2022-10-20T13:27:57.872-07:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 69176,
+            "created_at": "2019-06-17T20:21:48.887-07:00",
+            "updated_at": "2024-08-11T18:50:53.014-07:00",
+            "location_id": 874,
+            "machine_id": 2923,
+            "user_id": 21471,
+            "machine_score_xrefs_count": 1,
+            "ic_enabled": true,
+            "last_updated_by_username": "gadgetman007",
+            "machine_conditions": [
+                {
+                    "id": 76615,
+                    "comment": "Beautiful. Plays great.",
+                    "location_machine_xref_id": 69176,
+                    "created_at": "2022-10-16T08:30:16.043-07:00",
+                    "updated_at": "2022-10-16T08:30:16.043-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                },
+                {
+                    "id": 44057,
+                    "comment": "best Pro in town",
+                    "location_machine_xref_id": 69176,
+                    "created_at": "2019-06-17T20:21:48.921-07:00",
+                    "updated_at": "2019-06-17T20:21:48.921-07:00",
+                    "user_id": 1445,
+                    "username": "dfr"
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 17546,
+                    "location_machine_xref_id": 69176,
+                    "score": 21829420,
+                    "created_at": "2024-08-11T18:50:52.999-07:00",
+                    "updated_at": "2024-08-11T18:50:53.008-07:00",
+                    "user_id": 24716,
+                    "rank": null,
+                    "username": "wiggletech"
+                }
+            ]
+        },
+        {
+            "id": 46900,
+            "created_at": "2017-11-29T16:04:58.297-08:00",
+            "updated_at": "2025-05-19T08:20:03.735-07:00",
+            "location_id": 874,
+            "machine_id": 2875,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": true,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 128361,
+                    "comment": "Orb shot temporarily repaired, part ordered, when it arrives it will be properly repaired.",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2025-05-19T08:20:03.729-07:00",
+                    "updated_at": "2025-05-19T08:20:03.729-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 128109,
+                    "comment": "Orb shot doesn't register. \nYou can get the drop target down, but you can't lock balls.",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2025-05-15T22:00:50.614-07:00",
+                    "updated_at": "2025-05-15T22:00:50.614-07:00",
+                    "user_id": 498,
+                    "username": "veenaday"
+                },
+                {
+                    "id": 119628,
+                    "comment": "Found issue and fixed it, Trough should be good now.",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2024-12-26T09:31:02.876-08:00",
+                    "updated_at": "2024-12-26T09:31:02.876-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 119553,
+                    "comment": "Trough issues are getting worse - will often fail to kick out balls successfully and this will cause issues with ball saves - game ends up losing track of how many balls it puts back into play.",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2024-12-23T23:39:55.102-08:00",
+                    "updated_at": "2024-12-23T23:39:55.102-08:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 113044,
+                    "comment": "Groot shot repaired.",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2024-08-19T10:39:35.713-07:00",
+                    "updated_at": "2024-08-19T10:39:35.713-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 113018,
+                    "comment": "Groot\u2019s mouth doesn\u2019t want to close between lock shots. On a new ball, modes often get selected automatically and the timer begins before the ball gets plunged. And the last ball I played, the auto plunger (button) didn\u2019t activate it.",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2024-08-18T19:36:31.847-07:00",
+                    "updated_at": "2024-08-18T19:36:31.847-07:00",
+                    "user_id": 30713,
+                    "username": "shinobee"
+                },
+                {
+                    "id": 106759,
+                    "comment": "Fixed.",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2024-04-29T14:50:31.598-07:00",
+                    "updated_at": "2024-04-29T14:50:31.598-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 106630,
+                    "comment": "Appears to be the orb drop target",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2024-04-27T19:05:12.655-07:00",
+                    "updated_at": "2024-04-27T19:05:12.655-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 106629,
+                    "comment": "Sometimes its firing a switch at start of ball/game which will auto select mode and start timer",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2024-04-27T19:04:04.469-07:00",
+                    "updated_at": "2024-04-27T19:04:04.469-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 89349,
+                    "comment": "Machine repaired and back on.",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2023-06-15T07:24:30.200-07:00",
+                    "updated_at": "2023-06-15T07:24:30.200-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 89198,
+                    "comment": "Out of order 6/11/2023",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2023-06-11T21:43:58.842-07:00",
+                    "updated_at": "2023-06-11T21:43:58.842-07:00",
+                    "user_id": 19150,
+                    "username": "indieanajones"
+                },
+                {
+                    "id": 70407,
+                    "comment": "Groot shot fixed",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2022-05-30T10:03:57.606-07:00",
+                    "updated_at": "2022-05-30T10:03:57.606-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 61363,
+                    "comment": "Groot very rarely registers a shot",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2021-09-06T23:09:47.669-07:00",
+                    "updated_at": "2021-09-06T23:09:47.669-07:00",
+                    "user_id": 2746,
+                    "username": "ekai"
+                },
+                {
+                    "id": 61362,
+                    "comment": "Groot\u2019s mouth won\u2019t open",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2021-09-06T22:15:39.688-07:00",
+                    "updated_at": "2021-09-06T22:15:39.688-07:00",
+                    "user_id": 2741,
+                    "username": "jds"
+                },
+                {
+                    "id": 45040,
+                    "comment": "Pop bumpers don\u2019t seem to be firing, not sure if it\u2019s only the bottom one or all of them having issues. Otherwise seems to work well",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2019-07-07T21:36:20.163-07:00",
+                    "updated_at": "2019-07-07T21:36:20.163-07:00",
+                    "user_id": 7508,
+                    "username": "worthwhilepanda"
+                },
+                {
+                    "id": 29608,
+                    "comment": "Great",
+                    "location_machine_xref_id": 46900,
+                    "created_at": "2018-02-04T18:14:25.873-08:00",
+                    "updated_at": "2018-02-04T18:14:25.873-08:00",
+                    "user_id": 775,
+                    "username": "col"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 143929,
+            "created_at": "2023-12-06T11:55:53.807-08:00",
+            "updated_at": "2025-03-08T10:31:07.610-08:00",
+            "location_id": 874,
+            "machine_id": 644,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 124086,
+                    "comment": "Fixed.",
+                    "location_machine_xref_id": 143929,
+                    "created_at": "2025-03-08T10:31:07.601-08:00",
+                    "updated_at": "2025-03-08T10:31:07.601-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 106447,
+                    "comment": "If a ball is in the lock, sometimes it will kick out two when kicking out after hitting the \nthe scoops",
+                    "location_machine_xref_id": 143929,
+                    "created_at": "2024-04-23T21:29:05.983-07:00",
+                    "updated_at": "2024-04-23T21:29:05.983-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 97359,
+            "created_at": "2021-08-03T19:13:49.150-07:00",
+            "updated_at": "2025-03-20T09:29:09.977-07:00",
+            "location_id": 874,
+            "machine_id": 2866,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 124759,
+                    "comment": "Switch fixed.",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2025-03-20T09:29:09.966-07:00",
+                    "updated_at": "2025-03-20T09:29:09.966-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 124747,
+                    "comment": "Is the spinner not registering or do I just not understand how Super Spinner mode works?",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2025-03-19T19:43:47.996-07:00",
+                    "updated_at": "2025-03-19T19:43:47.996-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 106550,
+                    "comment": "Both fixed",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2024-04-26T08:39:06.185-07:00",
+                    "updated_at": "2024-04-26T08:39:06.185-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 106437,
+                    "comment": "Upper pf sling kicker outside sling, plunger is hinky",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2024-04-23T19:22:28.990-07:00",
+                    "updated_at": "2024-04-23T19:22:28.990-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 106295,
+                    "comment": "One of the grid insert LEDs is out, it might be time to reseat the connectors or crimp new ones. Otherwise plays great!",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2024-04-20T16:19:13.867-07:00",
+                    "updated_at": "2024-04-20T16:19:13.867-07:00",
+                    "user_id": 26050,
+                    "username": "entityclay"
+                },
+                {
+                    "id": 103335,
+                    "comment": "Switch tested, fixed, now working.",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2024-02-26T10:24:44.427-08:00",
+                    "updated_at": "2024-02-26T10:24:44.427-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 103244,
+                    "comment": "The right outlane rollover wasn\u2019t registering.",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2024-02-24T20:08:17.483-08:00",
+                    "updated_at": "2024-02-24T20:08:17.483-08:00",
+                    "user_id": 687,
+                    "username": "vulpyfox"
+                },
+                {
+                    "id": 100597,
+                    "comment": "So fast, so good!",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2024-01-04T23:35:54.739-08:00",
+                    "updated_at": "2024-01-04T23:35:54.739-08:00",
+                    "user_id": 24806,
+                    "username": "mcdino"
+                },
+                {
+                    "id": 76608,
+                    "comment": "Plays great.",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2022-10-16T08:21:38.859-07:00",
+                    "updated_at": "2022-10-16T08:21:38.859-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                },
+                {
+                    "id": 74982,
+                    "comment": "It\u2019s turned on and SO FAST. I love this game",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2022-09-09T01:24:06.116-07:00",
+                    "updated_at": "2022-09-09T01:24:06.116-07:00",
+                    "user_id": 17091,
+                    "username": "cammikebrown"
+                },
+                {
+                    "id": 73460,
+                    "comment": "Game was out of order when I visited on 08/08/22",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2022-08-08T23:00:44.400-07:00",
+                    "updated_at": "2022-08-08T23:00:44.400-07:00",
+                    "user_id": 18981,
+                    "username": "hanklovespinball"
+                },
+                {
+                    "id": 70430,
+                    "comment": "Previous auto-launching issue fixed",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2022-05-30T12:01:35.452-07:00",
+                    "updated_at": "2022-05-30T12:01:35.452-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 64480,
+                    "comment": "Co-op mode not starting when Start button held down; always auto-launching every ball making skill shot nearly impossible.",
+                    "location_machine_xref_id": 97359,
+                    "created_at": "2021-12-21T22:15:06.376-08:00",
+                    "updated_at": "2021-12-21T22:15:06.376-08:00",
+                    "user_id": 16805,
+                    "username": "roosterroo"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 97361,
+            "created_at": "2021-08-03T19:17:12.859-07:00",
+            "updated_at": "2021-08-03T19:17:12.859-07:00",
+            "location_id": 874,
+            "machine_id": 2569,
+            "user_id": 2741,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "jds",
+            "machine_conditions": [],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 98501,
+            "created_at": "2021-08-25T19:05:47.955-07:00",
+            "updated_at": "2024-08-11T18:49:43.222-07:00",
+            "location_id": 874,
+            "machine_id": 3022,
+            "user_id": 6865,
+            "machine_score_xrefs_count": 2,
+            "ic_enabled": true,
+            "last_updated_by_username": "unitof",
+            "machine_conditions": [
+                {
+                    "id": 93287,
+                    "comment": "Snappy flipps!",
+                    "location_machine_xref_id": 98501,
+                    "created_at": "2023-08-15T16:28:22.403-07:00",
+                    "updated_at": "2023-08-15T16:28:22.403-07:00",
+                    "user_id": 6865,
+                    "username": "unitof"
+                },
+                {
+                    "id": 76721,
+                    "comment": "Fixed, back on",
+                    "location_machine_xref_id": 98501,
+                    "created_at": "2022-10-17T15:42:55.398-07:00",
+                    "updated_at": "2022-10-17T15:42:55.398-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 76606,
+                    "comment": "Turned off.",
+                    "location_machine_xref_id": 98501,
+                    "created_at": "2022-10-16T08:20:02.628-07:00",
+                    "updated_at": "2022-10-16T08:20:02.628-07:00",
+                    "user_id": 21471,
+                    "username": "gadgetman007"
+                },
+                {
+                    "id": 70421,
+                    "comment": "Lil Deadpool head missing, but playing normally",
+                    "location_machine_xref_id": 98501,
+                    "created_at": "2022-05-30T11:43:30.968-07:00",
+                    "updated_at": "2022-05-30T11:43:30.968-07:00",
+                    "user_id": 19766,
+                    "username": "dylansnow"
+                },
+                {
+                    "id": 63740,
+                    "comment": "Ball save light is almost invisible. Little Deadpool multiball is starting early: if you knock down the left 2 targets and then bounce the ball into the lil Deadpool zone, then it gets stuck behind the right target, but starts multiball immediately without putting the targets up and needing to hit them again. Happened two games in a row.",
+                    "location_machine_xref_id": 98501,
+                    "created_at": "2021-11-25T00:10:14.979-08:00",
+                    "updated_at": "2021-11-25T00:10:14.979-08:00",
+                    "user_id": 15982,
+                    "username": "victorb"
+                },
+                {
+                    "id": 61507,
+                    "comment": "Don\u2019t even try to nudge this machine.",
+                    "location_machine_xref_id": 98501,
+                    "created_at": "2021-09-11T14:15:57.195-07:00",
+                    "updated_at": "2021-09-11T14:15:57.195-07:00",
+                    "user_id": 12399,
+                    "username": "reunitedagain"
+                }
+            ],
+            "machine_score_xrefs": [
+                {
+                    "id": 17543,
+                    "location_machine_xref_id": 98501,
+                    "score": 15500820,
+                    "created_at": "2024-08-11T18:49:24.940-07:00",
+                    "updated_at": "2024-08-11T18:49:24.946-07:00",
+                    "user_id": 24716,
+                    "rank": null,
+                    "username": "wiggletech"
+                },
+                {
+                    "id": 17544,
+                    "location_machine_xref_id": 98501,
+                    "score": 35509260,
+                    "created_at": "2024-08-11T18:49:43.210-07:00",
+                    "updated_at": "2024-08-11T18:49:43.218-07:00",
+                    "user_id": 24716,
+                    "rank": null,
+                    "username": "wiggletech"
+                }
+            ]
+        },
+        {
+            "id": 106975,
+            "created_at": "2022-03-04T19:35:21.384-08:00",
+            "updated_at": "2024-04-26T08:39:52.245-07:00",
+            "location_id": 874,
+            "machine_id": 738,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 106551,
+                    "comment": "Plunger fixed.",
+                    "location_machine_xref_id": 106975,
+                    "created_at": "2024-04-26T08:39:52.242-07:00",
+                    "updated_at": "2024-04-26T08:39:52.242-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 106446,
+                    "comment": "Plunger still can't hit skill shot",
+                    "location_machine_xref_id": 106975,
+                    "created_at": "2024-04-23T21:27:49.038-07:00",
+                    "updated_at": "2024-04-23T21:27:49.038-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                },
+                {
+                    "id": 68336,
+                    "comment": "Back up and working!",
+                    "location_machine_xref_id": 106975,
+                    "created_at": "2022-04-07T22:57:32.468-07:00",
+                    "updated_at": "2022-04-07T22:57:32.468-07:00",
+                    "user_id": 16805,
+                    "username": "roosterroo"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 106974,
+            "created_at": "2022-03-04T19:33:57.810-08:00",
+            "updated_at": "2023-08-16T08:04:11.996-07:00",
+            "location_id": 874,
+            "machine_id": 659,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 93308,
+                    "comment": "Stuck balls fixed.",
+                    "location_machine_xref_id": 106974,
+                    "created_at": "2023-08-16T08:04:11.993-07:00",
+                    "updated_at": "2023-08-16T08:04:11.993-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 93045,
+                    "comment": "Two balls stuck in ramp (upper right corner)",
+                    "location_machine_xref_id": 106974,
+                    "created_at": "2023-08-11T22:48:59.484-07:00",
+                    "updated_at": "2023-08-11T22:48:59.484-07:00",
+                    "user_id": 3014,
+                    "username": "ontario"
+                },
+                {
+                    "id": 82782,
+                    "comment": "Flippers recently rebuilt, very strong",
+                    "location_machine_xref_id": 106974,
+                    "created_at": "2023-02-18T13:29:36.046-08:00",
+                    "updated_at": "2023-02-18T13:29:36.046-08:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                },
+                {
+                    "id": 77776,
+                    "comment": "Fixed a while ago, hasn't rev tested since.",
+                    "location_machine_xref_id": 106974,
+                    "created_at": "2022-11-08T12:01:04.592-08:00",
+                    "updated_at": "2022-11-08T12:01:04.592-08:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 67491,
+                    "comment": "Rev tested while playing",
+                    "location_machine_xref_id": 106974,
+                    "created_at": "2022-03-19T19:49:29.802-07:00",
+                    "updated_at": "2022-03-19T19:49:29.802-07:00",
+                    "user_id": 3790,
+                    "username": "piratemike"
+                }
+            ],
+            "machine_score_xrefs": []
+        },
+        {
+            "id": 125813,
+            "created_at": "2023-03-06T11:31:30.791-08:00",
+            "updated_at": "2024-07-15T09:27:33.638-07:00",
+            "location_id": 874,
+            "machine_id": 645,
+            "user_id": 21919,
+            "machine_score_xrefs_count": null,
+            "ic_enabled": null,
+            "last_updated_by_username": "groundkontroltech",
+            "machine_conditions": [
+                {
+                    "id": 111135,
+                    "comment": "Safe repaired and working.",
+                    "location_machine_xref_id": 125813,
+                    "created_at": "2024-07-15T09:27:33.628-07:00",
+                    "updated_at": "2024-07-15T09:27:33.628-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 111000,
+                    "comment": "The safe is totally hosed and barely registers, so what\u2019s the point?",
+                    "location_machine_xref_id": 125813,
+                    "created_at": "2024-07-12T23:03:18.036-07:00",
+                    "updated_at": "2024-07-12T23:03:18.036-07:00",
+                    "user_id": 8042,
+                    "username": "vid"
+                },
+                {
+                    "id": 109212,
+                    "comment": "The drop target does NOT send the ball flying back over the slingshot into the outlane. This is the only one in town like this.",
+                    "location_machine_xref_id": 125813,
+                    "created_at": "2024-06-12T19:49:09.622-07:00",
+                    "updated_at": "2024-06-12T19:49:09.622-07:00",
+                    "user_id": 988,
+                    "username": "MTP"
+                },
+                {
+                    "id": 94226,
+                    "comment": "A new color DMD was installed.",
+                    "location_machine_xref_id": 125813,
+                    "created_at": "2023-08-29T08:14:03.650-07:00",
+                    "updated_at": "2023-08-29T08:14:03.650-07:00",
+                    "user_id": 21919,
+                    "username": "groundkontroltech"
+                },
+                {
+                    "id": 93040,
+                    "comment": "Extra balls are currently enabled. DMD is unreliable: sometimes the top few rows of pixels are dark, screen went completely blank on starting the Executive Game mode",
+                    "location_machine_xref_id": 125813,
+                    "created_at": "2023-08-11T22:31:48.668-07:00",
+                    "updated_at": "2023-08-11T22:31:48.668-07:00",
+                    "user_id": 3014,
+                    "username": "ontario"
+                },
+                {
+                    "id": 83940,
+                    "comment": "Perfect machine, but extra Balls turned off. Awards 10M instead.",
+                    "location_machine_xref_id": 125813,
+                    "created_at": "2023-03-10T21:12:16.889-08:00",
+                    "updated_at": "2023-03-10T21:12:16.889-08:00",
+                    "user_id": 23385,
+                    "username": "spunk"
+                }
+            ],
+            "machine_score_xrefs": []
+        }
+    ]
+}
