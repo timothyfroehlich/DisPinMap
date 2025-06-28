@@ -62,7 +62,7 @@ async def test_monitoring_respects_poll_rate(db_session):
     mock_bot = Mock()
     mock_database = Mock()
     mock_notifier = Mock()
-    
+
     # Create monitor instance
     monitor = MachineMonitor(mock_bot, mock_database, mock_notifier)
 

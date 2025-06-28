@@ -134,12 +134,16 @@ async def test_add_location_command_success(db_session, api_mocker):
     await monitoring_cog.add(mock_ctx, "location", search_term)
 
     # 3. ASSERT
-    # Assert that the bot sent the correct confirmation message
-    mock_ctx.respond.assert_called_once()
-    response_text = mock_ctx.respond.call_args[0][0]
-    assert "✅" in response_text
-    assert "Monitoring started" in response_text
-    assert search_term in response_text
+    # Assert that the notifier's log_and_send was called with the correct message
+    assert mock_notifier.log_and_send.called, "log_and_send should have been called"
+    
+    # Get the last call (which should be the initial submissions message)
+    args, kwargs = mock_notifier.log_and_send.call_args
+    ctx_arg, message_arg = args
+    
+    # Verify the message content matches expected pattern
+    assert "No recent submissions found for location" in message_arg
+    assert search_term in message_arg
 
     # Assert that the target was saved to the database correctly
     session = db_session()

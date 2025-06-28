@@ -74,12 +74,12 @@ def test_add_duplicate_target_raises_error(db_session):
     session.add(target1)
     session.commit()
 
-    # Try to add duplicate target (same channel + type + data should violate constraint)
+    # Try to add duplicate target (same channel + type + name should violate constraint)
     target2 = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Different Name",  # Different name but same key fields
-        target_data="999",
+        target_name="Test Location",  # Same name - this should violate the constraint
+        target_data="888",  # Different data is fine since it's not part of the constraint
     )
 
     session.add(target2)
