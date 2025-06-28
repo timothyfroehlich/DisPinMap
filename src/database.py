@@ -30,34 +30,30 @@ except ImportError:
 
 
 class Database:
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, session_factory: Optional[sessionmaker] = None):
         """
-        Initialize database with SQLAlchemy (SQLite only)
+        Initialize database with SQLAlchemy.
 
         Args:
-            db_path: Optional database file path. If None, uses DATABASE_PATH environment
-                    variable or defaults to "pinball_bot.db" for backward compatibility.
-
-        DATABASE PATH CONFIGURATION:
-        - Local development: "pinball_bot.db" (default)
-        - Cloud Run deployment: "/tmp/pinball_bot.db" (writable filesystem)
-        - Custom environments: Set DATABASE_PATH environment variable
+            session_factory: An optional SQLAlchemy sessionmaker. If provided (e.g., in tests),
+                             it will be used to create sessions. If None (e.g., in production),
+                             a new engine and sessionmaker will be created based on environment.
         """
-        # Get database path from parameter, environment variable, or default
-        if db_path is None:
-            db_path = os.getenv("DATABASE_PATH", "pinball_bot.db")
-
-        if db_path == ":memory:":
-            # For in-memory databases (testing)
-            self.engine = create_engine("sqlite:///:memory:", echo=False)
+        if session_factory:
+            # Use the provided session factory (for tests)
+            self.SessionLocal = session_factory
+            self.engine = self.SessionLocal.kw["bind"]
         else:
-            # For file databases (production SQLite mode)
-            self.engine = create_engine(f"sqlite:///{db_path}", echo=False)
+            # Production: create a new engine and session factory
+            db_path = os.getenv("DATABASE_PATH", "pinball_bot.db")
+            if db_path == ":memory:":
+                self.engine = create_engine("sqlite:///:memory:", echo=False)
+            else:
+                self.engine = create_engine(f"sqlite:///{db_path}", echo=False)
 
-        # Create session factory
-        self.SessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=self.engine
-        )
+            self.SessionLocal = sessionmaker(
+                autocommit=False, autoflush=False, bind=self.engine
+            )
 
         # Create all tables
         self.init_database()
@@ -283,7 +279,11 @@ class Database:
                 channel_id=channel_id,
                 target_type=target_type,
                 target_name=target_name,
-                target_data=target_data,
+                location_id=(
+                    int(target_data)
+                    if target_type == "location" and target_data
+                    else None
+                ),
                 poll_rate_minutes=poll_rate_minutes,
                 notification_types=notification_types,
             )
@@ -346,7 +346,7 @@ class Database:
                     "channel_id": target.channel_id,
                     "target_type": target.target_type,
                     "target_name": target.target_name,
-                    "target_data": target.target_data,
+                    "location_id": target.location_id,
                     "poll_rate_minutes": target.poll_rate_minutes,
                     "notification_types": target.notification_types,
                     "last_checked_at": target.last_checked_at,

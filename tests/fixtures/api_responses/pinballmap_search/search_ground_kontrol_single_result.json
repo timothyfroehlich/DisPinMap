@@ -1,0 +1,31 @@
+{
+    "locations": [
+        {
+            "id": 874,
+            "name": "Ground Kontrol Classic Arcade",
+            "street": "115 NW 5th Ave",
+            "city": "Portland",
+            "state": "OR",
+            "zip": "97209",
+            "phone": "503-796-9364",
+            "lat": "45.5240826",
+            "lon": "-122.675826",
+            "website": "https://groundkontrol.com",
+            "created_at": "2010-12-31T16:30:00.000-08:00",
+            "updated_at": "2025-06-04T09:59:00.756-07:00",
+            "zone_id": 4,
+            "region_id": 1,
+            "location_type_id": 3,
+            "description": "Amazing arcade. Must visit. Machines are in top shape. Games use tap-to-scan gamecards. Price per play is incredibly reasonable. Roughly 60-90 cents in points per play. Half off weekdays noon to 5pm",
+            "operator_id": 173,
+            "date_last_updated": "2025-06-04",
+            "last_updated_by_user_id": 21919,
+            "is_stern_army": true,
+            "country": "US",
+            "ic_active": true,
+            "machine_count": 42,
+            "last_updated_by_username": "groundkontroltech",
+            "num_machines": 42
+        }
+    ]
+}

@@ -61,7 +61,7 @@ class MonitoringTarget(Base):
     )
     target_type = Column(String, nullable=False)  # 'latlong', 'location'
     target_name = Column(String, nullable=False)  # "lat,lon,radius" or location name
-    target_data = Column(String)  # location_id for location targets
+    location_id = Column(Integer)  # location_id for location targets
     poll_rate_minutes = Column(Integer, default=60)  # Individual poll rate per target
     notification_types = Column(
         String, default="machines"
@@ -77,7 +77,7 @@ class MonitoringTarget(Base):
     # Constraints
     __table_args__ = (
         UniqueConstraint(
-            "channel_id", "target_type", "target_name", name="unique_channel_target"
+            "channel_id", "target_type", "location_id", name="unique_channel_location"
         ),
     )
 

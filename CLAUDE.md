@@ -82,3 +82,37 @@ git commit --author="Claude Code <claude-code@anthropic.com>" -m "commit message
 - Use `--author` flag instead of changing global git configuration
 
 This ensures clear attribution while preserving the user's personal git settings.
+
+## CRITICAL: Mock Specifications Required
+
+**ALL mocks MUST use proper `spec` parameters to enforce interface compliance:**
+
+### Mock Requirements:
+1. **ALWAYS use spec-based factories** from `tests/utils/mock_factories.py`
+2. **NEVER use raw `Mock()` or `MagicMock()` without specs**
+3. **Use `autospec=True`** for all `@patch` decorators
+4. **Validate mock specs** to catch interface violations early
+
+### Factory Functions (REQUIRED):
+- `create_async_notifier_mock()` - For Notifier class mocks
+- `create_database_mock()` - For Database class mocks
+- `create_bot_mock()` - For Discord Bot mocks
+- `create_discord_context_mock()` - For Discord Context mocks
+- `create_requests_response_mock()` - For HTTP Response mocks
+
+### Examples:
+```python
+# ❌ WRONG - No spec validation
+mock_notifier = Mock()
+
+# ✅ CORRECT - Spec-based factory with interface validation
+mock_notifier = create_async_notifier_mock()
+
+# ❌ WRONG - Basic patching
+@patch("requests.get")
+
+# ✅ CORRECT - Autospec patching
+@patch("requests.get", autospec=True)
+```
+
+**Rationale**: Spec-based mocks catch interface changes at test time, preventing runtime failures and ensuring tests accurately reflect production behavior.

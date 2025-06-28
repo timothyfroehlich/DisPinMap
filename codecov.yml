@@ -1,0 +1,24 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        base: auto
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        base: auto
+
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+
+ignore:
+  - "tests/"
+  - "migrations/"
+  - "alembic/"
+  - "scripts/"
+  - "src/__init__.py"
