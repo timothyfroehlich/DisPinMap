@@ -26,6 +26,12 @@ def create_async_notifier_mock() -> AsyncMock:
 
     Returns:
         AsyncMock with Notifier spec that enforces interface compliance
+
+    Example:
+        >>> mock_notifier = create_async_notifier_mock()
+        >>> # Use in test
+        >>> await mock_notifier.log_and_send(ctx, "message")
+        >>> mock_notifier.log_and_send.assert_called_once_with(ctx, "message")
     """
     mock = AsyncMock(spec=Notifier)
 
@@ -60,6 +66,12 @@ def create_discord_context_mock(
 
     Returns:
         MagicMock with Context spec and proper async methods
+
+    Example:
+        >>> mock_ctx = create_discord_context_mock(user_id=123, channel_id=456)
+        >>> # Use in command test
+        >>> await command_function(mock_ctx, "test argument")
+        >>> mock_ctx.respond.assert_called_once()
     """
     mock_ctx = MagicMock(spec=Context)
 
@@ -94,7 +106,7 @@ def create_api_client_mock() -> AsyncMock:
         AsyncMock suitable for HTTP/API client mocking
     """
     # For now, use basic AsyncMock since we don't have a specific API client interface
-    # TODO: Add specific spec when API client interface is formalized
+    # TODO: Add specific spec when API client interface is formalized (Issue #54)
     mock = AsyncMock()
 
     # Ensure common HTTP methods are async
@@ -165,6 +177,12 @@ def create_requests_response_mock(
 
     Returns:
         MagicMock with requests.Response spec that enforces interface compliance
+
+    Example:
+        >>> response_data = {"results": [{"id": 1, "name": "test"}]}
+        >>> mock_response = create_requests_response_mock(200, response_data)
+        >>> assert mock_response.status_code == 200
+        >>> assert mock_response.json() == response_data
     """
     mock_response = MagicMock(spec=requests.Response)
     mock_response.status_code = status_code

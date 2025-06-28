@@ -76,13 +76,23 @@ echo "Litestream started with PID: $LITESTREAM_PID"
 # Give Litestream a moment to initialize
 sleep 2
 
-# Step 3: Start Discord bot application
+# Step 3: Run database migrations
+echo "Running database migrations..."
+if alembic upgrade head; then
+    echo "Database migrations completed successfully"
+else
+    echo "ERROR: Database migrations failed"
+    cleanup
+    exit 1
+fi
+
+# Step 4: Start Discord bot application
 echo "Starting Discord bot application..."
 python -u bot.py &
 BOT_PID=$!
 echo "Discord bot started with PID: $BOT_PID"
 
-# Step 4: Wait for either process to exit
+# Step 5: Wait for either process to exit
 wait_for_any() {
     while kill -0 $LITESTREAM_PID 2>/dev/null && kill -0 $BOT_PID 2>/dev/null; do
         sleep 1

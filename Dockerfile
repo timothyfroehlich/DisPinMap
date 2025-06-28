@@ -19,9 +19,10 @@ RUN tar -C /usr/local/bin -xzf /tmp/litestream.tar.gz && rm /tmp/litestream.tar.
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy requirements and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy project configuration and source code for installation
+COPY pyproject.toml .
+COPY src/ ./src/
+RUN pip install --no-cache-dir .
 
 # Stage 2: Final image
 FROM python:3.13-slim-bullseye
@@ -44,6 +45,10 @@ COPY --from=builder /usr/local/bin/litestream /usr/local/bin/litestream
 # Copy application source code
 COPY src/ /app/src/
 COPY bot.py /app/
+
+# Copy alembic migration files and configuration
+COPY alembic/ /app/alembic/
+COPY alembic.ini /app/alembic.ini
 
 # Copy Litestream configuration and startup script
 COPY litestream.yml /app/litestream.yml

@@ -26,6 +26,8 @@ class APIMocker:
         self.url_map = {}
         # The actual patcher for the requests.get function.
         self._patcher = None
+        # Cache for fixture file contents to improve performance
+        self._fixture_cache = {}
 
     def start(self):
         """Starts patching requests.get with our mock implementation."""
@@ -66,8 +68,15 @@ class APIMocker:
         """
         for substring, (fixture_file, status) in self.url_map.items():
             if substring in url:
-                with open(fixture_file, "r") as f:
-                    data = json.load(f)
+                # Check cache first for performance
+                cache_key = str(fixture_file)
+                if cache_key in self._fixture_cache:
+                    data = self._fixture_cache[cache_key]
+                else:
+                    # Load from file and cache
+                    with open(fixture_file, "r") as f:
+                        data = json.load(f)
+                    self._fixture_cache[cache_key] = data
 
                 # Create a spec-based mock response object that behaves like requests.Response
                 mock_response = create_requests_response_mock(
