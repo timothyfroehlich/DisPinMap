@@ -1,6 +1,47 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pinball_map_bot"
+version = "0.1.0"
+description = "A Discord bot to monitor pinballmap.com for machine changes."
+authors = [
+    {name = "Froeht", email = "froeht@users.noreply.github.com"},
+]
+requires-python = ">=3.9"
+dependencies = [
+    "discord.py",
+    "requests",
+    "python-dotenv",
+    "sqlalchemy>=2.0.0",
+    "google-cloud-secret-manager",
+    "cloud-sql-python-connector[pg8000]",
+    "aiohttp",
+    "colorama",
+]
+
+[project.scripts]
+"pinball-bot" = "src.main:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-xdist",
+    "pytest-cov",
+    "flake8",
+    "black",
+    "isort",
+    "mypy",
+    "types-requests",
+    "pre-commit",
+]
+
+[tool.setuptools]
+packages = ["src"]
+# If you have packages in subdirectories of src, use:
+# packages = find_packages(where="src")
 
 [tool.black]
 line-length = 88
@@ -29,7 +70,7 @@ multi_line_output = 3
 line_length = 88
 combine_as_imports = true
 known_first_party = ["src"]
-known_third_party = ["discord", "requests", "sqlalchemy", "pytest", "aiohttp", "colorama"]
+known_third_party = ["discord", "requests", "sqlalchemy", "pytest", "aiohttp", "colorama", "google"]
 skip_glob = ["migrations/*"]
 
 [tool.mypy]
@@ -59,7 +100,7 @@ exclude = [
 [[tool.mypy.overrides]]
 module = [
     "discord.*",
-    "google.cloud.*",
+    "google.cloud.secretmanager",
     "cloud_sql_python_connector.*",
     "pg8000.*",
     "tests.utils.*",

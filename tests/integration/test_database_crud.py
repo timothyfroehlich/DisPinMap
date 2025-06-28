@@ -28,7 +28,7 @@ def test_add_and_retrieve_monitoring_target(db_session):
         channel_id=12345,
         target_type="location",
         target_name="Ground Kontrol",
-        target_data="1337",  # Represents location_id
+        location_id=1337,  # Using location_id instead of target_data
     )
 
     # 2. ACTION
@@ -46,7 +46,7 @@ def test_add_and_retrieve_monitoring_target(db_session):
     assert retrieved_target.channel_id == 12345
     assert retrieved_target.target_type == "location"
     assert retrieved_target.target_name == "Ground Kontrol"
-    assert retrieved_target.target_data == "1337"
+    assert retrieved_target.location_id == 1337
 
     session.close()
 
@@ -68,7 +68,7 @@ def test_add_duplicate_target_raises_error(db_session):
         channel_id=12345,
         target_type="location",
         target_name="Test Location",
-        target_data="999",
+        location_id=999,
     )
 
     session.add(target1)
@@ -78,8 +78,8 @@ def test_add_duplicate_target_raises_error(db_session):
     target2 = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location",  # Same name - this should violate the constraint
-        target_data="888",  # Different data is fine since it's not part of the constraint
+        target_name="Test Location Different",  # Different name since constraint is on location_id
+        location_id=999,  # Same location_id - this should violate the unique constraint
     )
 
     session.add(target2)
