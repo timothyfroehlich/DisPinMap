@@ -57,7 +57,7 @@ async def test_add_location_by_name_e2e(db_session, api_mocker):
     # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
-    validate_async_mock(mock_notifier, "post_initial_submissions")
+    validate_async_mock(mock_notifier, "send_initial_notifications")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
     mock_ctx = create_discord_context_mock(channel_id=12345)  # Use unique channel ID
@@ -69,7 +69,7 @@ async def test_add_location_by_name_e2e(db_session, api_mocker):
     await monitoring_cog.add(mock_ctx, "location", location_name)
 
     # 3. ASSERT
-    assert mock_notifier.post_initial_submissions.called
+    assert mock_notifier.send_initial_notifications.called
 
     # Verify database entry
     session = db_session()
@@ -107,6 +107,7 @@ async def test_add_city_e2e(db_session, api_mocker):
     # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
+    validate_async_mock(mock_notifier, "send_initial_notifications")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
     mock_ctx = create_discord_context_mock()
@@ -118,7 +119,7 @@ async def test_add_city_e2e(db_session, api_mocker):
     await monitoring_cog.add(mock_ctx, "city", city_name)
 
     # 3. ASSERT
-    assert mock_notifier.post_initial_submissions.called
+    assert mock_notifier.send_initial_notifications.called
 
     # Verify database entry
     session = db_session()
@@ -156,6 +157,7 @@ async def test_add_city_with_radius_e2e(db_session, api_mocker):
     # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
+    validate_async_mock(mock_notifier, "send_initial_notifications")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
     mock_ctx = create_discord_context_mock()
@@ -167,7 +169,7 @@ async def test_add_city_with_radius_e2e(db_session, api_mocker):
     await monitoring_cog.add(mock_ctx, "city", city_name, str(radius))
 
     # 3. ASSERT
-    assert mock_notifier.post_initial_submissions.called
+    assert mock_notifier.send_initial_notifications.called
 
     # Verify database entry
     session = db_session()
@@ -198,9 +200,10 @@ async def test_add_coordinates_e2e(db_session, api_mocker):
     # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
+    validate_async_mock(mock_notifier, "send_initial_notifications")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
-    mock_ctx = create_discord_context_mock()
+    mock_ctx = create_discord_context_mock(channel_id=12345)  # Use unique channel ID
 
     # 2. ACTION
     monitoring_cog = bot.get_cog("Monitoring")
@@ -209,7 +212,7 @@ async def test_add_coordinates_e2e(db_session, api_mocker):
     await monitoring_cog.add(mock_ctx, "coordinates", str(lat), str(lon))
 
     # 3. ASSERT
-    assert mock_notifier.post_initial_submissions.called
+    assert mock_notifier.send_initial_notifications.called
 
     # Verify database entry
     session = db_session()
@@ -222,7 +225,7 @@ async def test_add_coordinates_e2e(db_session, api_mocker):
     assert target.target_type == "coordinates"
     assert abs(target.latitude - lat) < 0.01
     assert abs(target.longitude - lon) < 0.01
-    assert target.radius_miles == 100  # Default radius
+    assert target.radius_miles == 25  # Default radius
     session.close()
 
 
@@ -240,6 +243,7 @@ async def test_add_coordinates_with_radius_e2e(db_session, api_mocker):
     # Create mock notifier and bot
     mock_notifier = create_async_notifier_mock()
     validate_async_mock(mock_notifier, "log_and_send")
+    validate_async_mock(mock_notifier, "send_initial_notifications")
 
     bot = await create_bot(db_session, notifier=mock_notifier)
     mock_ctx = create_discord_context_mock()
@@ -251,7 +255,7 @@ async def test_add_coordinates_with_radius_e2e(db_session, api_mocker):
     await monitoring_cog.add(mock_ctx, "coordinates", str(lat), str(lon), str(radius))
 
     # 3. ASSERT
-    assert mock_notifier.post_initial_submissions.called
+    assert mock_notifier.send_initial_notifications.called
 
     # Verify database entry
     session = db_session()
@@ -597,9 +601,6 @@ async def test_remove_command_by_index_edge_cases(db_session):
     call_args = mock_notifier.log_and_send.call_args[0]
     message = call_args[1]
     assert "valid number" in message.lower() or "invalid index" in message.lower()
-
-
-# Note: This test function is duplicated - removing this stub as test_list_command_empty is already implemented above
 
 
 @pytest.mark.asyncio

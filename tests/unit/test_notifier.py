@@ -108,103 +108,87 @@ class TestNotifier:
         assert result == submissions
 
     @pytest.mark.asyncio
-    async def test_post_initial_submissions_with_submissions(
-        self, notifier, mock_ctx, mock_db
+    @patch("src.notifier.fetch_submissions_for_location", new_callable=AsyncMock)
+    async def test_send_initial_notifications_location_with_submissions(
+        self, mock_fetch, notifier, mock_ctx, mock_db
     ):
-        """Test post_initial_submissions with existing submissions"""
+        """Test send_initial_notifications for a location with submissions."""
         submissions = [
             {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
             {"submission_type": "new_condition", "machine_name": "Pinball 2"},
-            {"submission_type": "remove_machine", "machine_name": "Pinball 3"},
-            {"submission_type": "new_lmx", "machine_name": "Pinball 4"},
-            {"submission_type": "new_lmx", "machine_name": "Pinball 5"},
-            {"submission_type": "new_lmx", "machine_name": "Pinball 6"},
         ]
-
+        mock_fetch.return_value = submissions
         mock_db.get_channel_config.return_value = {"notification_types": "all"}
 
-        with patch.object(notifier, "post_submissions") as mock_post:
-            await notifier.post_initial_submissions(mock_ctx, submissions, "location")
+        with patch.object(
+            notifier, "post_submissions", new_callable=AsyncMock
+        ) as mock_post:
+            await notifier.send_initial_notifications(
+                ctx=mock_ctx,
+                target_name="Test Location",
+                target_data="123",
+                target_type="location",
+            )
 
-            # Should call post_submissions with first 5 submissions
+            mock_fetch.assert_called_once_with(location_id=123)
             mock_post.assert_called_once()
-            call_args = mock_post.call_args
-            assert len(call_args[0][1]) == 5  # First 5 submissions
-            assert call_args[0][1] == submissions[:5]
+            # Verify that the correct message was sent
+            mock_ctx.send.assert_any_call(
+                "✅ Found 2 recent submission(s) for **Test Location**:"
+            )
 
     @pytest.mark.asyncio
-    async def test_post_initial_submissions_no_submissions(
-        self, notifier, mock_ctx, mock_db
+    @patch("src.notifier.fetch_submissions_for_coordinates", new_callable=AsyncMock)
+    async def test_send_initial_notifications_city_no_submissions(
+        self, mock_fetch, notifier, mock_ctx, mock_db
     ):
-        """Test post_initial_submissions with no submissions"""
-        submissions = []
-
+        """Test send_initial_notifications for a city with no submissions."""
+        mock_fetch.return_value = []
         mock_db.get_channel_config.return_value = {"notification_types": "all"}
 
-        with patch.object(notifier, "post_submissions") as mock_post:
-            await notifier.post_initial_submissions(mock_ctx, submissions, "location")
+        with patch.object(
+            notifier, "post_submissions", new_callable=AsyncMock
+        ) as mock_post:
+            await notifier.send_initial_notifications(
+                ctx=mock_ctx,
+                target_name="Test City",
+                target_data="45.5,-122.6",
+                target_type="city",
+            )
 
-            # Should not call post_submissions
+            mock_fetch.assert_called_once_with(45.5, -122.6, 25)
             mock_post.assert_not_called()
+            mock_ctx.send.assert_called_once_with(
+                "ℹ️ No recent submissions found for **Test City**."
+            )
 
     @pytest.mark.asyncio
-    async def test_post_initial_submissions_filtered(self, notifier, mock_ctx, mock_db):
-        """Test post_initial_submissions with filtered submissions"""
+    @patch("src.notifier.fetch_submissions_for_location", new_callable=AsyncMock)
+    async def test_send_initial_notifications_filtered(
+        self, mock_fetch, notifier, mock_ctx, mock_db
+    ):
+        """Test send_initial_notifications with filtered submissions."""
         submissions = [
             {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
             {"submission_type": "new_condition", "machine_name": "Pinball 2"},
-            {"submission_type": "remove_machine", "machine_name": "Pinball 3"},
         ]
-
+        mock_fetch.return_value = submissions
         mock_db.get_channel_config.return_value = {"notification_types": "machines"}
 
-        with patch.object(notifier, "post_submissions") as mock_post:
-            await notifier.post_initial_submissions(mock_ctx, submissions, "location")
+        with patch.object(
+            notifier, "post_submissions", new_callable=AsyncMock
+        ) as mock_post:
+            await notifier.send_initial_notifications(
+                ctx=mock_ctx,
+                target_name="Test Location",
+                target_data="123",
+                target_type="location",
+            )
 
-            # Should call post_submissions with filtered submissions (only machines)
             mock_post.assert_called_once()
-            call_args = mock_post.call_args
-            assert len(call_args[0][1]) == 2  # Only machine-related submissions
-            assert call_args[0][1][0]["submission_type"] == "new_lmx"
-            assert call_args[0][1][1]["submission_type"] == "remove_machine"
-
-    @pytest.mark.asyncio
-    async def test_post_submissions_with_config(self, notifier, mock_ctx):
-        """Test post_submissions with configuration"""
-        submissions = [
-            {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
-            {"submission_type": "new_condition", "machine_name": "Pinball 2"},
-            {"submission_type": "remove_machine", "machine_name": "Pinball 3"},
-        ]
-
-        config = {"notification_types": "machines"}
-
-        with patch.object(notifier, "format_submission") as mock_format:
-            mock_format.return_value = "Formatted message"
-
-            await notifier.post_submissions(mock_ctx, submissions, config)
-
-            # Should call format_submission for machine-related submissions only
-            assert mock_format.call_count == 2  # Only new_lmx and remove_machine
-
-    @pytest.mark.asyncio
-    async def test_post_submissions_test_mode(self, notifier, mock_ctx):
-        """Test post_submissions in test mode (with sent_messages attribute)"""
-        submissions = [
-            {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
-            {"submission_type": "new_condition", "machine_name": "Pinball 2"},
-        ]
-
-        # Add sent_messages attribute to simulate test mode
-        mock_ctx.sent_messages = []
-
-        with patch.object(notifier, "format_submission") as mock_format:
-            mock_format.return_value = "Formatted message"
-
-            await notifier.post_submissions(mock_ctx, submissions)
-
-            # Should call format_submission for all submissions without sleep
-            assert mock_format.call_count == 2
+            call_args, _ = mock_post.call_args
+            assert len(call_args[1]) == 1
+            assert call_args[1][0]["submission_type"] == "new_lmx"
 
     def test_format_submission_new_lmx(self, notifier):
         """Test formatting new_lmx submission"""

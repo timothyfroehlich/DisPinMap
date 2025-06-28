@@ -23,7 +23,7 @@ class TestCommandParsing:
         self.mock_db = Mock()
         self.mock_notifier = Mock()
         self.mock_notifier.log_and_send = AsyncMock()
-        self.mock_notifier.post_initial_submissions = AsyncMock()
+        self.mock_notifier.send_initial_notifications = AsyncMock()
 
         self.cog = MonitoringCog(self.mock_bot, self.mock_db, self.mock_notifier)
         self.mock_ctx = Mock()
@@ -81,7 +81,7 @@ class TestListCommandParsing(TestCommandParsing):
 
         # Should send no targets message
         self.mock_notifier.log_and_send.assert_called_with(
-            self.mock_ctx, Messages.Command.TargetList.NO_TARGETS
+            self.mock_ctx, Messages.Command.Shared.NO_TARGETS
         )
 
 
