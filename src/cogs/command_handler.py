@@ -269,7 +269,7 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
         target_commands = []
         for i, target in enumerate(targets, 1):
             if target["target_type"] == "location":
-                target_commands.append(f"!add location {target['target_data']}")
+                target_commands.append(f"!add location {target['location_id']}")
             elif target["target_type"] == "city":
                 target_commands.append(f"!add city \"{target['target_name']}\"")
             elif target["target_type"] == "latlong":
