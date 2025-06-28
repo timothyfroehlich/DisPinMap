@@ -3,27 +3,39 @@
 This file tracks major completed tasks and ongoing activities for the DisPinMap project.
 
 ## Current Activity
-**Active Task**: Monitor Loop Improvements Deployment (PR #45)
-- **Status**: ✅ **DEPLOYED** - Successfully deployed to GCP Cloud Run
-- **Date**: 2025-06-26
+**Active Task**: Periodic Check Fix and Deployment (2025-06-28)
+- **Status**: ✅ **COMPLETED** - Successfully identified and fixed periodic check issue
+- **Date**: 2025-06-28
 
-### Latest Deployment Details (2025-06-26)
-**Deployed Changes**: Monitor loop improvements + CI linting fixes from branch `fix/monitor-loop-improvements-issue-41`
-**Cloud Run Status**:
-- Service URL: https://dispinmap-bot-wos45oz7vq-uc.a.run.app
-- Active Revision: `dispinmap-bot-00004-4x6` (created 2025-06-25T19:58:08.472847Z)
-- Health Check: ✅ Passing (HTTP 200 OK)
-- Container Image: `us-central1-docker.pkg.dev/andy-expl/dispinmap-bot-repo/dispinmap-bot:latest`
+### Latest Deployment Details (2025-06-28)
+**Issue**: Periodic check was not running in production
+**Root Cause Analysis**:
+- **Missing `alembic` dependency** - Not included in `pyproject.toml`
+- **Incorrect alembic database URL** - `alembic.ini` pointed to test database instead of production
+- **Missing task loop start** - `monitor_task_loop.start()` not called in `cog_load` method
+
+**Solution Applied**:
+1. Added `alembic` to dependencies in `pyproject.toml`
+2. Fixed `alembic/env.py` to use `DATABASE_PATH` environment variable
+3. Added `self.monitor_task_loop.start()` call in `cog_load` method
+
+**Deployment Status**:
+- Service URL: https://dispinmap-bot-825480538445.us-central1.run.app
+- Active Revision: `dispinmap-bot-00007-jlk` (created 2025-06-28T04:00:51Z)
+- Health Check: ✅ Passing
+- Bot Status: ✅ Connected and operational
 
 **Verification**:
-- ✅ Container build successful with latest source code
-- ✅ Push to Artifact Registry successful
-- ✅ Cloud Run automatic deployment successful
-- ✅ Health endpoint responding correctly
-- ✅ Discord bot connected and operational (Litestream backups working)
-- ✅ Manual check operations completing successfully
+- ✅ Container build successful with all dependencies
+- ✅ Database migrations running correctly
+- ✅ Monitor cog loading successfully
+- ✅ Task loop starting when bot is ready
+- ✅ Existing monitoring targets confirmed (Austin, Denver, Portland, Chicago)
 
-## Completed Tasks
+## Previous Activity
+**Monitor Loop Improvements Deployment (PR #45)**
+- **Status**: ✅ **DEPLOYED** - Successfully deployed to GCP Cloud Run
+- **Date**: 2025-06-26
 
 ### PR #45 CI Linting Issues Resolution (2025-06-26)
 **Issue**: CI pipeline failing due to black formatting violations

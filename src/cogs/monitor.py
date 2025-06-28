@@ -43,7 +43,8 @@ class MachineMonitor(commands.Cog, name="MachineMonitor"):
         """Prepare the monitoring task when the cog is loaded (task will start when bot is ready)."""
         logger.info("🔄 Preparing MachineMonitor task loop")
         self.monitor_start_time = datetime.now(timezone.utc)
-        # Note: Task loop will start automatically via before_loop when bot is ready
+        # Start the task loop - it will wait for bot to be ready via before_loop
+        self.monitor_task_loop.start()
         logger.info(
             "✅ MachineMonitor cog loaded, task loop will start when bot is ready"
         )

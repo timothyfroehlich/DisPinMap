@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
@@ -8,6 +9,10 @@ from src.models import Base
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config  # type: ignore
+
+# Get database URL from environment variable
+database_path = os.getenv("DATABASE_PATH", "pinball_bot.db")
+config.set_main_option("sqlalchemy.url", f"sqlite:///{database_path}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
