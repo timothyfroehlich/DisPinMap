@@ -19,6 +19,12 @@ The bot will find the location and start monitoring it for changes. After adding
 
 All commands are prefixed with `!`.
 
+#### `!help [command_name]`
+Shows a list of all available commands or provides detailed help for a specific command.
+
+*   **To see all commands**: `!help`
+*   **To see help for a specific command**: `!help add`
+
 #### `!add`
 Adds a new target to monitor. This command has three variations:
 
@@ -27,11 +33,11 @@ Adds a new target to monitor. This command has three variations:
     *   **By ID**: `!add location 123`
 
 2.  **`!add city <name> [radius]`**: Monitor a city. You can optionally provide a radius in miles.
-    *   **Without Radius**: `!add city "Portland, OR"` (uses PinballMap's default radius, 100Mi)
+    *   **Without Radius**: `!add city "Portland, OR"` (uses a default radius of 25 miles)
     *   **With Radius**: `!add city "Seattle, WA" 15`
 
 3.  **`!add coordinates <latitude> <longitude> [radius]`**: Monitor a specific geographic point with a radius in miles.
-    *   **Without Radius**: `!add coordinates 45.5231 -122.6765` (uses PinballMap's default radius of 100 miles)
+    *   **Without Radius**: `!add coordinates 45.5231 -122.6765` (uses a default radius of 25 miles)
     *   **With Radius**: `!add coordinates 47.6062 -122.3321 5`
 
 #### `!list` (or `!ls`, `!status`)
@@ -43,17 +49,15 @@ Displays a detailed table of all active monitoring targets in the current channe
 ```
 *Output:*
 ```
-┌───────┬──────────────────────────┬────────────┬───────────────┬────────────────┐
-│ Index │ Target                   │ Poll (min) │ Notifications │ Last Checked   │
-├───────┼──────────────────────────┼────────────┼───────────────┼────────────────┤
-│ 1     │ Location: Funland        │ 60         │ machines      │ 5 minutes ago  │
-│ 2     │ Coords: 40.71, -74.00    │ 30         │ all           │ 2 hours ago    │
-│ 3     │ City: Austin, TX         │ 60         │ machines      │ Never          │
-└───────┴──────────────────────────┴────────────┴───────────────┴────────────────┘
+Index | Target                               | Poll (min) | Notifications | Last Checked
+-|-
+1     | Location: Funland                    | 60         | machines      | 5m ago
+2     | Coords: 40.71, -74.00                | 30         | all           | 2h ago
+3     | City: Austin, TX                     | 60         | all           | Never
 ```
 
 #### `!check`
-Manually triggers an immediate check for new submissions across all active targets in the channel. The bot will report all new submissions since the last check, and if there are fewer than 5 total, it will also show older submissions to reach a total of 5 (helping you see recent activity even during quiet periods).
+Manually triggers an immediate check for new submissions across all active targets in the channel. If no new submissions are found, it will show the most recent previously seen submissions.
 
 **Example:**
 ```
@@ -75,7 +79,7 @@ Sets how frequently (in minutes) the bot checks for updates.
 *   **Set for the whole channel**: `!poll_rate 30` (All targets will be checked every 30 minutes, unless they have a custom poll rate.)
 *   **Set for a specific target**: `!poll_rate 10 1` (Target #1 will be checked every 10 minutes, ignoring the channel default.)
 
-#### `!rm <index>`
+#### `!rm <index>` (or `!remove`)
 Removes a monitoring target. The `index` corresponds to the number shown in the `!list` command.
 
 **Example:**
