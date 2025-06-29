@@ -30,9 +30,9 @@
 ## Current Status
 
 ### Test Coverage
-- **126 tests PASSING** out of 129 total (97.7% pass rate)
-- **3 tests FAILING**: 2 monitor mock issues + 1 logging timestamp parsing
-- **6 tests SKIPPED**: PostgreSQL-specific tests when PostgreSQL not available
+- **181 tests PASSING** out of 187 total (96.8% pass rate)
+- **6 tests FAILING**: API response format mismatches and database model issues (see Issue #61)
+- **0 tests SKIPPED**: PostgreSQL-specific tests when PostgreSQL not available
 
 ### Infrastructure Status
 - **GCP Deployment**: ✅ **FULLY OPERATIONAL**
