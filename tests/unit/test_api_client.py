@@ -8,8 +8,6 @@ All network requests will be mocked.
 
 # To be migrated from `tests_backup/unit/test_api.py` and `tests_backup/unit/test_geocoding_api.py`
 
-from unittest.mock import patch
-
 import pytest
 
 from src.api import geocode_city_name
