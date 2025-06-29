@@ -512,10 +512,12 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
                 status = search_result.get("status")
                 data = search_result.get("data")
 
-                if status == "success" and data and len(data) > 0:
-                    if len(data) == 1:
-                        location_id = data[0]["id"]
-                        location_details = await fetch_location_details(location_id)
+                # Handle both the expected API format and test fixture format
+                if status in ["exact", "suggestions", "success"] and data:
+                    # For exact matches, data is the location details directly
+                    if status == "exact":
+                        location_details = data
+                        location_id = location_details["id"]
                         await self._add_target_and_notify(
                             ctx,
                             "location",
@@ -523,22 +525,39 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
                             str(location_id),
                             location_details,
                         )
+                    # For suggestions (including single results), data is a list
+                    elif isinstance(data, list) and len(data) > 0:
+                        if len(data) == 1:
+                            # Single result - add it directly
+                            location_id = data[0]["id"]
+                            location_details = await fetch_location_details(location_id)
+                            await self._add_target_and_notify(
+                                ctx,
+                                "location",
+                                location_details["name"],
+                                str(location_id),
+                                location_details,
+                            )
+                        else:
+                            # Multiple results - show suggestions
+                            suggestions = [
+                                f"`{loc['id']}` - {loc['name']}" for loc in data
+                            ]
+                            await self.notifier.log_and_send(
+                                ctx,
+                                Messages.Command.Add.SUGGESTIONS.format(
+                                    search_term=location_input_stripped,
+                                    suggestions="\\n".join(suggestions),
+                                ),
+                            )
                     else:
-                        suggestions = [f"`{loc['id']}` - {loc['name']}" for loc in data]
+                        # Fallback to no locations found
                         await self.notifier.log_and_send(
                             ctx,
-                            Messages.Command.Add.SUGGESTIONS.format(
-                                search_term=location_input_stripped,
-                                suggestions="\\n".join(suggestions),
+                            Messages.Command.Add.NO_LOCATIONS.format(
+                                search_term=location_input_stripped
                             ),
                         )
-                else:
-                    await self.notifier.log_and_send(
-                        ctx,
-                        Messages.Command.Add.NO_LOCATIONS.format(
-                            search_term=location_input_stripped
-                        ),
-                    )
         except Exception as e:
             logger.error(f"Error handling location add for '{location_input}': {e}")
             logger.error(f"Full traceback: {traceback.format_exc()}")
@@ -567,9 +586,9 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
                 return
 
             target_name = f"{lat},{lon}"
-            target_data = target_name
             if radius:
-                target_data += f",{radius}"
+                target_name += f",{radius}"
+            target_data = target_name
 
             await self._add_target_and_notify(ctx, "latlong", target_name, target_data)
         except Exception as e:
