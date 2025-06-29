@@ -254,15 +254,15 @@ Use the index numbers with !rm to remove targets.""",
             headers[i].ljust(widths[i]) for i in range(len(headers))
         )
         separator_line = "-|-".join("-" * widths[i] for i in range(len(headers)))
-        table_rows = "\\n".join(
+        table_rows = "\n".join(
             " | ".join(cell.ljust(widths[i]) for i, cell in enumerate(row))
             for row in rows
         )
 
         message = (
-            f"```\\n{header_line}\\n{separator_line}\\n{table_rows}\\n```\\n\\n"
+            f"```\n{header_line}\n{separator_line}\n{table_rows}\n```\n\n"
             f"Channel defaults: Poll rate: {channel_config.get('poll_rate_minutes') if channel_config else 60} minutes, "
-            f"Notifications: {channel_config.get('notification_types') if channel_config else 'all'}\\n\\n"
+            f"Notifications: {channel_config.get('notification_types') if channel_config else 'all'}\n\n"
             "Use `!rm <index>` to remove a target"
         )
         await self.notifier.log_and_send(ctx, message)
@@ -320,8 +320,8 @@ Useful for backup or setting up identical monitoring in another channel.""",
                     f"!notifications {target['notification_types']} {i}"
                 )
 
-        channel_config_str = "\\n".join(commands_list)
-        targets_str = "\\n".join(target_commands)
+        channel_config_str = "\n".join(commands_list)
+        targets_str = "\n".join(target_commands)
 
         message = Messages.Command.Export.CONFIGURATION.format(
             channel_config=channel_config_str, targets=targets_str
@@ -664,7 +664,7 @@ Examples:
             ctx,
             Messages.Command.Add.SUGGESTIONS.format(
                 search_term=search_term,
-                suggestions="\\n".join(suggestions),
+                suggestions="\n".join(suggestions),
             ),
         )
 
