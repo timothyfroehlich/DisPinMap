@@ -175,7 +175,7 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
     @commands.command(
         name="list",
         aliases=["ls", "status"],
-        help="!list - Shows all monitored targets.\\n\\nDisplays a detailed table of all active monitoring targets in the current channel, including their index, poll rate, and notification settings.",
+        help="!list - Shows all monitored targets.\n\nDisplays a detailed table of all active monitoring targets in the current channel, including their index, poll rate, and notification settings.",
     )
     async def list_targets(self, ctx):
         """Show all monitored targets in a formatted table."""
@@ -195,6 +195,10 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
                 target_name = f"Coords: {coords[0]}, {coords[1]}"
                 if len(coords) > 2:
                     target_name += f" ({coords[2]}mi)"
+                # If radius is in target_data but not in target_name, display it
+                elif len(target.get("target_data", "").split(",")) > 2:
+                    radius = target["target_data"].split(",")[2]
+                    target_name += f" ({radius}mi)"
             else:
                 target_name = (
                     f"{target['target_type'].title()}: {target['target_name']}"
@@ -229,22 +233,24 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
             headers[i].ljust(widths[i]) for i in range(len(headers))
         )
         separator_line = "-|-".join("-" * widths[i] for i in range(len(headers)))
-        table_rows = "\\n".join(
+        table_rows = "\n".join(
             " | ".join(cell.ljust(widths[i]) for i, cell in enumerate(row))
             for row in rows
         )
 
         message = (
-            f"```\\n{header_line}\\n{separator_line}\\n{table_rows}\\n```\\n\\n"
+            f"```\n{header_line}\n{separator_line}\n{table_rows}\n```\n\n"
             f"Channel defaults: Poll rate: {channel_config.get('poll_rate_minutes') if channel_config else 60} minutes, "
-            f"Notifications: {channel_config.get('notification_types') if channel_config else 'all'}\\n\\n"
+            f"Notifications: {channel_config.get('notification_types') if channel_config else 'all'}\n\n"
             "Use `!rm <index>` to remove a target"
         )
+        # Replace double-escaped newlines with single-escaped newlines
+        message = message.replace("\\n", "\n")
         await self.notifier.log_and_send(ctx, message)
 
     @commands.command(
         name="export",
-        help="!export - Exports the channel's configuration.\\n\\nGenerates a copy-pasteable list of commands to replicate the channel's entire monitoring configuration.",
+        help="!export - Exports the channel's configuration.\n\nGenerates a copy-pasteable list of commands to replicate the channel's entire monitoring configuration.",
     )
     async def export(self, ctx):
         """Export channel configuration as copy-pasteable commands."""
@@ -269,12 +275,22 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
         target_commands = []
         for i, target in enumerate(targets, 1):
             if target["target_type"] == "location":
-                target_commands.append(f"!add location {target['target_data']}")
+                # Use target['target_data'] if it is an ID, else fallback to target_name
+                location_id = (
+                    target.get("target_data")
+                    or target.get("location_id")
+                    or target["target_name"]
+                )
+                target_commands.append(f"!add location {location_id}")
             elif target["target_type"] == "city":
-                target_commands.append(f"!add city \"{target['target_name']}\"")
+                target_commands.append(f'!add city "{target["target_name"]}"')
             elif target["target_type"] == "latlong":
-                lat, lon, *rest = target["target_name"].split(",")
-                radius_str = f" {rest[0]}" if rest else ""
+                # Always use target_data for coordinates to preserve radius
+                latlong_parts = target.get("target_data", target["target_name"]).split(
+                    ","
+                )
+                lat, lon = latlong_parts[0], latlong_parts[1]
+                radius_str = f" {latlong_parts[2]}" if len(latlong_parts) > 2 else ""
                 target_commands.append(f"!add coordinates {lat} {lon}{radius_str}")
 
             if target.get("poll_rate_minutes"):
@@ -284,12 +300,14 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
                     f"!notifications {target['notification_types']} {i}"
                 )
 
-        channel_config_str = "\\n".join(commands_list)
-        targets_str = "\\n".join(target_commands)
+        channel_config_str = "\n".join(commands_list)
+        targets_str = "\n".join(target_commands)
 
         message = Messages.Command.Export.CONFIGURATION.format(
             channel_config=channel_config_str, targets=targets_str
         )
+        # Replace double-escaped newlines with single-escaped newlines
+        message = message.replace("\\n", "\n")
         await self.notifier.log_and_send(ctx, message)
 
     @commands.command(
@@ -529,7 +547,7 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
                             ctx,
                             Messages.Command.Add.SUGGESTIONS.format(
                                 search_term=location_input_stripped,
-                                suggestions="\\n".join(suggestions),
+                                suggestions="\n".join(suggestions),
                             ),
                         )
                 else:
@@ -566,10 +584,13 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
                 )
                 return
 
-            target_name = f"{lat},{lon}"
-            target_data = target_name
+            # Always include radius in both target_name and target_data if present
             if radius:
-                target_data += f",{radius}"
+                target_name = f"{lat},{lon},{radius}"
+                target_data = target_name
+            else:
+                target_name = f"{lat},{lon}"
+                target_data = target_name
 
             await self._add_target_and_notify(ctx, "latlong", target_name, target_data)
         except Exception as e:
@@ -606,7 +627,7 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
             await self.notifier.log_and_send(
                 ctx,
                 Messages.Command.Add.CITY_SUGGESTIONS.format(
-                    city_name=city_name, suggestions="\\n".join(suggestions)
+                    city_name=city_name, suggestions="\n".join(suggestions)
                 ),
             )
         else:
