@@ -355,7 +355,7 @@ class TestExportCommand(TestCommandHandler):
             {
                 "target_type": "location",
                 "target_name": "Ground Kontrol Classic Arcade",
-                "location_id": "874",
+                "location_id": 874,
                 "poll_rate_minutes": 15,
                 "notification_types": "machines",
             }
@@ -369,8 +369,15 @@ class TestExportCommand(TestCommandHandler):
 
         mock_notifier.log_and_send.assert_called_once()
         call_args = mock_notifier.log_and_send.call_args[0]
-        assert '!add location "Ground Kontrol Classic Arcade"' in call_args[1]
+
+        # Should contain the location ID, not the name
+        assert "!add location 874" in call_args[1]
+
+        # Should contain channel default poll rate
         assert "!poll_rate 30" in call_args[1]
+
+        # Should contain per-target overrides
+        assert "!poll_rate 15 1" in call_args[1]
 
 
 class TestCheckCommand(TestCommandHandler):

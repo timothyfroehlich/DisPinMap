@@ -115,10 +115,7 @@ def test_database_operations():
     """Test basic database operations"""
     try:
         # Import database module
-        sys.path.append(
-            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
-        )
-        from database import Database
+        from src.database import Database
 
         # Test database creation and basic operations
         db = Database()
