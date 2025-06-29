@@ -1,0 +1,26 @@
+{
+  "recommendations": [
+    // Essential Python Development
+    "ms-python.python",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.mypy-type-checker",
+
+    // Git & Version Control
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+
+    // Testing & Coverage
+    "ryanluker.vscode-coverage-gutters",
+
+    "ms-vscode-remote.remote-containers",
+
+    // Configuration & Documentation
+    "tamasfe.even-better-toml",
+    "yzhang.markdown-all-in-one"
+  ],
+  "unwantedRecommendations": [
+    // Add any extensions you specifically don't want recommended
+    "ms-python.pylint"
+  ]
+}
