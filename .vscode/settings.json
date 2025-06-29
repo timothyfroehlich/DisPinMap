@@ -1,16 +1,7 @@
 {
-    "dev.containers.dockerPath": "/home/froeht/.local/bin/podman-host",
-    "dev.containers.dockerComposePath": "podman-compose",
-    "dev.containers.defaultExtensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance"
-    ],
-    
     // Python settings
     "python.defaultInterpreterPath": "./venv/bin/python",
-    "python.formatting.provider": "none",
-    "python.linting.enabled": false,
-    
+
     // Formatter settings
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
@@ -19,23 +10,23 @@
             "source.organizeImports": "explicit"
         }
     },
-    
+
     // File associations
     "files.associations": {
         "*.md": "markdown"
     },
-    
+
     // Editor settings
     "editor.rulers": [88],
     "editor.trimAutoWhitespace": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
-    
+
     // Test discovery
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": ["tests"],
-    
+
     // Hide generated files
     "files.exclude": {
         "**/__pycache__": true,
@@ -45,4 +36,4 @@
         "**/.mypy_cache": true,
         "**/htmlcov": true
     }
-} 
+}
