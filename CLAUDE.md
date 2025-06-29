@@ -145,3 +145,7 @@ git commit -m 'feat: Add new feature
 - This is the first bullet point.
 - This is the second, explaining the `!thing` command.'
 ```
+
+## Other
+
+Never use src.path.append for imports.
