@@ -102,7 +102,7 @@ def test_format_export_message():
     # Test export with channel defaults
     channel_commands = "!poll_rate 30\n!notifications all"
     target_commands = (
-        "!add location 874  # Ground Kontrol Classic Arcade\n"
+        '!add location "Ground Kontrol Classic Arcade"\n'
         "!poll_rate 15 1\n"
         "!notifications machines 1"
     )

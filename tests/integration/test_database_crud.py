@@ -28,7 +28,6 @@ def test_add_and_retrieve_monitoring_target(db_session):
         channel_id=12345,
         target_type="latlong",
         target_name="45.523,-122.676",
-        target_data="45.523,-122.676",
     )
 
     # 2. ACTION
@@ -46,7 +45,6 @@ def test_add_and_retrieve_monitoring_target(db_session):
     assert retrieved_target.channel_id == 12345
     assert retrieved_target.target_type == "latlong"
     assert retrieved_target.target_name == "45.523,-122.676"
-    assert retrieved_target.target_data == "45.523,-122.676"
 
     session.close()
 
