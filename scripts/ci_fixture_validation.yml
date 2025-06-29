@@ -1,0 +1,84 @@
+# GitHub Actions Workflow Template for Fixture Validation
+#
+# This file should be copied to .github/workflows/fixture-validation.yml
+# to enable automatic validation of fixtures on every PR.
+
+name: Fixture Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'tests/fixtures/**'
+  schedule:
+    # Run weekly to catch API changes
+    - cron: '0 6 * * 1'  # Monday at 6 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  validate-fixtures:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt || echo "No requirements.txt found"
+        # Install any additional test dependencies if needed
+        pip install requests || echo "requests already installed"
+
+    - name: Validate fixtures (CI mode - no API calls)
+      run: |
+        echo "🔍 Validating fixture system in CI mode..."
+        python scripts/run_all_validations.py validate --ci
+
+  check-fixture-freshness:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+
+    - name: Check fixture freshness and update if needed
+      run: |
+        echo "🕒 Checking fixture freshness..."
+        if python scripts/run_all_validations.py validate | grep -q "30 days old"; then
+          echo "Fixtures are stale, updating..."
+          python scripts/run_all_validations.py capture
+
+          # Create PR if fixtures were updated
+          if [ -n "$(git status --porcelain)" ]; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git checkout -b update-fixtures-$(date +%Y%m%d)
+            git add tests/fixtures/
+            git commit -m "chore: Update API fixtures (automated)"
+            git push --set-upstream origin update-fixtures-$(date +%Y%m%d)
+
+            # This would need GitHub CLI or REST API to create PR
+            echo "Created branch with updated fixtures"
+          fi
+        else
+          echo "Fixtures are fresh, no update needed"
+        fi

@@ -116,3 +116,40 @@ mock_notifier = create_async_notifier_mock()
 ```
 
 **Rationale**: Spec-based mocks catch interface changes at test time, preventing runtime failures and ensuring tests accurately reflect production behavior.
+
+## Custom Help Command
+
+The bot uses a custom `!help` command defined in `src/cogs/config.py` in the `ConfigCog` class. The default `discord.py` help command is disabled in `src/main.py` during the bot's initialization (`help_command=None`).
+
+The custom command dynamically generates a help message by iterating through all registered commands and displaying the `help` text from their decorators.
+
+**When adding or modifying a command, you MUST update its `help` parameter:**
+- The first line of the help text should be a brief summary of the command.
+- Subsequent lines can provide more detailed usage, arguments, and examples.
+- This ensures that the `!help` command always displays accurate, up-to-date information.
+
+## Commit Workflow Notes
+
+### Pre-Commit Hooks
+This project uses pre-commit hooks (`black`, `isort`, `flake8`, `mypy`) to enforce code quality. These hooks run automatically before each commit.
+
+If a commit fails due to a hook:
+1.  Read the error message to understand the failure (e.g., formatting issues, linting errors).
+2.  Fix the reported issues in your code.
+3.  If a hook modified a file (like `black` reformatting code), you **must** `git add` that file again before re-committing.
+4.  Attempt the commit again.
+
+### Commit Messages
+When writing multi-line commit messages with the `-m` flag, always wrap the entire message in **single quotes (`'`)** instead of double quotes (`"`). This prevents the shell from interpreting special characters like `!` or `` ` ``, which can cause the command to fail.
+
+**Example:**
+```bash
+git commit -m 'feat: Add new feature
+
+- This is the first bullet point.
+- This is the second, explaining the `!thing` command.'
+```
+
+## Other
+
+Never use src.path.append for imports.
