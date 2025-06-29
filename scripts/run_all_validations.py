@@ -121,6 +121,18 @@ class FixtureManager:
         if not any(r["name"] == name for r in self.index_data[category]["responses"]):
             self.index_data[category]["responses"].append(response_info)
 
+    def _generate_name_slug(self, name: str) -> str:
+        """Generate a slug for names/search terms for use in fixture filenames."""
+        slug = name.replace(", ", "_").replace(" ", "_").lower()
+        # Special cases for known test values
+        if name == "Ground Kontrol":
+            return "ground_kontrol_single_result"
+        if name == "NonexistentLocationName123":
+            return "nonexistent_location_name"
+        if slug == "nonexistentcity123":
+            return "nonexistent"
+        return slug
+
     async def capture_pinballmap_responses(self):
         """Capture various PinballMap API responses."""
         logger.info("Capturing PinballMap API responses...")
@@ -164,12 +176,7 @@ class FixtureManager:
             url = f"{PINBALLMAP_BASE}/locations.json?by_location_name={search_term.replace(' ', '%20')}"
             try:
                 result = await search_location_by_name(search_term)
-                name_slug = search_term.replace(" ", "_").lower()
-                if search_term == "Ground Kontrol":
-                    name_slug = "ground_kontrol_single_result"
-                elif search_term == "NonexistentLocationName123":
-                    name_slug = "nonexistent_location_name"
-
+                name_slug = self._generate_name_slug(search_term)
                 descriptions = {
                     "Seattle": "Multiple location results for Seattle search",
                     "Ground Kontrol": "Single result for Ground Kontrol search",
@@ -238,10 +245,7 @@ class FixtureManager:
             )
             try:
                 result = await geocode_city_name(city)
-                name_slug = city.replace(", ", "_").replace(" ", "_").lower()
-                if name_slug == "nonexistentcity123":
-                    name_slug = "nonexistent"
-
+                name_slug = self._generate_name_slug(city)
                 descriptions = {
                     "Seattle": "Geocoding results for Seattle",
                     "Portland": "Geocoding results for Portland",
