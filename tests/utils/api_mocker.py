@@ -75,6 +75,7 @@ class APIMocker:
                 else:
                     # Load from file and cache
                     with open(fixture_file, "r") as f:
+                        # Fixtures contain raw API responses, not wrapped in a 'data' key
                         data = json.load(f)
                     self._fixture_cache[cache_key] = data
 

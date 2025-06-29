@@ -22,6 +22,17 @@ The DisPinMap bot is a Python application designed to run on Google Cloud Platfo
     - [Pinball Map API](https://pinballmap.com/api/v1/docs): To fetch location and machine data.
     - [Open-Meteo Geocoding API](https://open-meteo.com/en/docs/geocoding-api): To convert city names into coordinates.
 
+### Command Handling and Cogs
+The bot's commands are organized into "Cogs," which are essentially modules or plugins for grouping related commands. The cogs are located in the `src/cogs/` directory.
+
+- **`monitoring.py`**: Contains the core commands for managing monitoring targets (`!add`, `!rm`, `!list`, etc.).
+- **`config.py`**: Contains commands for configuring channel-wide or target-specific settings (`!poll_rate`, `!notifications`).
+
+#### Custom Help Command
+The bot uses a custom `!help` command located in `src/cogs/config.py`. The default help command from `discord.py` is disabled during the bot's initialization in `src/main.py`.
+
+This custom implementation dynamically builds the help message by iterating through all registered commands and displaying the `help` text from their decorators. This approach ensures that the help message is always in sync with the available commands. When adding or modifying a command, developers only need to update the `help="..."` parameter in the command's decorator.
+
 ### GCP Infrastructure
 The application is deployed on GCP using Infrastructure as Code (IaC) with Terraform.
 - **Cloud Run**: Hosts the containerized Python application. It is configured with a `min_instance_count` of 1 to maintain the persistent WebSocket connection required by Discord. Scale-to-zero is not compatible with this architecture.

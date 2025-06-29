@@ -20,10 +20,10 @@ from src.database import (  # Assuming your models use a declarative base from t
 from tests.utils.api_mocker import api_mocker  # noqa: F401
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def db_session(request):
     """
-    Yields a SQLAlchemy session object that is isolated for each parallel test worker.
+    Yields a SQLAlchemy session object that is isolated for each test function.
 
     This is the core fixture that enables parallel test execution. It achieves
     isolation by creating a separate temporary SQLite database file for each
