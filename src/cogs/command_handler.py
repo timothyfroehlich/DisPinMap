@@ -10,11 +10,7 @@ from typing import List, Optional
 import discord
 from discord.ext import commands
 
-from src.api import (
-    fetch_location_details,
-    geocode_city_name,
-    search_location_by_name,
-)
+from src.api import fetch_location_details, geocode_city_name, search_location_by_name
 from src.database import Database
 from src.messages import Messages
 from src.notifier import Notifier
@@ -305,7 +301,11 @@ Useful for backup or setting up identical monitoring in another channel.""",
         target_commands = []
         for i, target in enumerate(targets, 1):
             if target["target_type"] == "location":
-                target_commands.append(f"!add location {target['location_id']}")
+                # Use location_id if available, otherwise fall back to target_name
+                if target.get("location_id"):
+                    target_commands.append(f"!add location {target['location_id']}")
+                else:
+                    target_commands.append(f"!add location \"{target['target_name']}\"")
             elif target["target_type"] == "city":
                 target_commands.append(f"!add city \"{target['target_name']}\"")
             elif target["target_type"] == "latlong":
@@ -565,77 +565,18 @@ Examples:
         """Handle adding a location, including searching and selection."""
         try:
             location_input_stripped = location_input.strip()
+
+            # Handle direct location ID input
             if location_input_stripped.isdigit():
-                location_id = int(location_input_stripped)
-                location_details = await fetch_location_details(location_id)
+                await self._handle_location_by_id(ctx, int(location_input_stripped))
+                return
 
-                if not location_details:
-                    await self.notifier.log_and_send(
-                        ctx,
-                        Messages.Command.Add.LOCATION_NOT_FOUND.format(
-                            location_id=location_id
-                        ),
-                    )
-                    return
+            # Handle location name search
+            search_result = await search_location_by_name(location_input_stripped)
+            await self._handle_search_result(
+                ctx, search_result, location_input_stripped
+            )
 
-                await self._add_target_and_notify(
-                    ctx,
-                    "location",
-                    location_details["name"],
-                    str(location_id),
-                    location_details,
-                )
-            else:
-                search_result = await search_location_by_name(location_input_stripped)
-                status = search_result.get("status")
-                data = search_result.get("data")
-
-                # Handle both the expected API format and test fixture format
-                if status in ["exact", "suggestions", "success"] and data:
-                    # For exact matches, data is the location details directly
-                    if status == "exact":
-                        location_details = data
-                        location_id = location_details["id"]
-                        await self._add_target_and_notify(
-                            ctx,
-                            "location",
-                            location_details["name"],
-                            str(location_id),
-                            location_details,
-                        )
-                    # For suggestions (including single results), data is a list
-                    elif isinstance(data, list) and len(data) > 0:
-                        if len(data) == 1:
-                            # Single result - add it directly
-                            location_id = data[0]["id"]
-                            location_details = await fetch_location_details(location_id)
-                            await self._add_target_and_notify(
-                                ctx,
-                                "location",
-                                location_details["name"],
-                                str(location_id),
-                                location_details,
-                            )
-                        else:
-                            # Multiple results - show suggestions
-                            suggestions = [
-                                f"`{loc['id']}` - {loc['name']}" for loc in data
-                            ]
-                            await self.notifier.log_and_send(
-                                ctx,
-                                Messages.Command.Add.SUGGESTIONS.format(
-                                    search_term=location_input_stripped,
-                                    suggestions="\\n".join(suggestions),
-                                ),
-                            )
-                    else:
-                        # Fallback to no locations found
-                        await self.notifier.log_and_send(
-                            ctx,
-                            Messages.Command.Add.NO_LOCATIONS.format(
-                                search_term=location_input_stripped
-                            ),
-                        )
         except Exception as e:
             logger.error(f"Error handling location add for '{location_input}': {e}")
             logger.error(f"Full traceback: {traceback.format_exc()}")
@@ -645,6 +586,94 @@ Examples:
                     target_type="location", error_message=str(e)
                 ),
             )
+
+    async def _handle_location_by_id(self, ctx, location_id: int):
+        """Handle adding a location by its ID."""
+        location_details = await fetch_location_details(location_id)
+
+        if not location_details:
+            await self.notifier.log_and_send(
+                ctx,
+                Messages.Command.Add.LOCATION_NOT_FOUND.format(location_id=location_id),
+            )
+            return
+
+        await self._add_target_and_notify(
+            ctx,
+            "location",
+            location_details["name"],
+            str(location_id),
+            location_details,
+        )
+
+    async def _handle_search_result(self, ctx, search_result: dict, search_term: str):
+        """Handle the result from location name search."""
+        status = search_result.get("status")
+        data = search_result.get("data")
+
+        # Handle no results or not found
+        if status == "not_found" or not data:
+            await self._send_no_locations_message(ctx, search_term)
+            return
+
+        # Handle exact match
+        if status == "exact":
+            await self._add_exact_match(ctx, data)
+            return
+
+        # Handle suggestions list
+        if status in ["suggestions", "success"] and isinstance(data, list):
+            if len(data) == 1:
+                await self._add_single_suggestion(ctx, data[0])
+            elif len(data) > 1:
+                await self._show_multiple_suggestions(ctx, data, search_term)
+            else:
+                await self._send_no_locations_message(ctx, search_term)
+            return
+
+        # Fallback for any unhandled cases
+        await self._send_no_locations_message(ctx, search_term)
+
+    async def _add_exact_match(self, ctx, location_details: dict):
+        """Add a location from an exact match result."""
+        location_id = location_details["id"]
+        await self._add_target_and_notify(
+            ctx,
+            "location",
+            location_details["name"],
+            str(location_id),
+            location_details,
+        )
+
+    async def _add_single_suggestion(self, ctx, location_data: dict):
+        """Add a location from a single search suggestion."""
+        location_id = location_data["id"]
+        location_details = await fetch_location_details(location_id)
+        await self._add_target_and_notify(
+            ctx,
+            "location",
+            location_details["name"],
+            str(location_id),
+            location_details,
+        )
+
+    async def _show_multiple_suggestions(self, ctx, locations: list, search_term: str):
+        """Show multiple location suggestions to the user."""
+        suggestions = [f"`{loc['id']}` - {loc['name']}" for loc in locations]
+        await self.notifier.log_and_send(
+            ctx,
+            Messages.Command.Add.SUGGESTIONS.format(
+                search_term=search_term,
+                suggestions="\\n".join(suggestions),
+            ),
+        )
+
+    async def _send_no_locations_message(self, ctx, search_term: str):
+        """Send a 'no locations found' message."""
+        await self.notifier.log_and_send(
+            ctx,
+            Messages.Command.Add.NO_LOCATIONS.format(search_term=search_term),
+        )
 
     async def _handle_coordinates_add(
         self, ctx, lat: float, lon: float, radius: Optional[int] = None
@@ -687,9 +716,8 @@ Examples:
         status = result.get("status")
 
         if status == "success":
-            location = result["data"][0]
-            lat = location["lat"]
-            lon = location["lon"]
+            lat = result["lat"]
+            lon = result["lon"]
 
             target_name = f"{city_name}"
             target_data = f"{lat},{lon}"
@@ -698,18 +726,14 @@ Examples:
 
             await self._add_target_and_notify(ctx, "city", target_name, target_data)
 
-        elif status == "multiple":
-            suggestions = [loc["display_name"] for loc in result["data"]]
-            await self.notifier.log_and_send(
-                ctx,
-                Messages.Command.Add.CITY_SUGGESTIONS.format(
-                    city_name=city_name, suggestions="\\n".join(suggestions)
-                ),
-            )
-        else:
-            await self.notifier.log_and_send(
-                ctx, Messages.Command.Add.CITY_NOT_FOUND.format(city_name=city_name)
-            )
+        elif status == "error":
+            error_message = result.get("message", "Unknown error occurred")
+            if "Multiple locations found" in error_message:
+                await self.notifier.log_and_send(ctx, error_message)
+            else:
+                await self.notifier.log_and_send(
+                    ctx, Messages.Command.Add.CITY_NOT_FOUND.format(city_name=city_name)
+                )
 
 
 async def setup(bot):

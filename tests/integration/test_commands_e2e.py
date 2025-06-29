@@ -480,8 +480,7 @@ async def test_export_command_e2e(db_session):
     # Verify export contains all commands
     call_args = mock_notifier.log_and_send.call_args[0]
     message = call_args[1]
-    assert "!add location" in message
-    assert "Ground Kontrol" in message
+    assert "!add location 874" in message  # Should export with ID when available
     assert "!add coordinates 45.5231 -122.6765 10" in message
     assert "!poll_rate 15 1" in message
     assert "!notifications machines 1" in message
