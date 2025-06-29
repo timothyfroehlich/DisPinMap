@@ -5,6 +5,9 @@ Comprehensive Fixture Management and Validation Script
 This script handles all fixture management operations and validation checks.
 It consolidates capture, validation, and automation functionality.
 
+IMPORTANT: All fixtures contain RAW API RESPONSES, not wrapped responses.
+This ensures tests accurately reflect what external APIs return.
+
 Usage:
     python scripts/run_all_validations.py [command] [options]
 
@@ -54,7 +57,19 @@ GEOCODING_BASE = "https://geocoding-api.open-meteo.com/v1"
 
 
 class FixtureManager:
-    """Manages API fixture capture and validation."""
+    """Manages API fixture capture and validation.
+
+    IMPORTANT: Fixtures contain RAW API RESPONSES, not wrapped responses.
+
+    Fixture Format Standards:
+    - PinballMap search responses: Raw JSON with "locations" array
+    - PinballMap location details: Raw location JSON object
+    - PinballMap submissions: Raw JSON with "user_submissions" array
+    - Geocoding responses: Raw JSON with "results" array (or empty with metadata)
+
+    This ensures fixtures accurately represent what external APIs return,
+    making tests more reliable and debugging easier.
+    """
 
     def __init__(self):
         self.index_data: Dict[str, Dict[str, Any]] = {
@@ -287,18 +302,27 @@ class FixtureManager:
             return json.load(f)
 
     def validate_geocoding_response(self, fixture_path: Path) -> Optional[str]:
-        """Validate geocoding response structure."""
+        """Validate geocoding response structure (raw API format)."""
         with open(fixture_path) as f:
             data = json.load(f)
 
-        if "status" not in data:
-            return f"Missing 'status' field in {fixture_path.name}"
+        # Raw geocoding API responses have a "results" array, except for empty responses
+        # which may only have metadata like "generationtime_ms"
+        if "results" in data:
+            if not isinstance(data["results"], list):
+                return f"'results' should be a list in {fixture_path.name}"
 
-        if data.get("status") == "success":
-            required_fields = ["lat", "lon", "display_name"]
-            for field in required_fields:
-                if field not in data:
-                    return f"Missing required field '{field}' in {fixture_path.name}"
+            # For non-empty results, validate basic structure
+            if data["results"]:
+                first_result = data["results"][0]
+                required_fields = ["latitude", "longitude", "name"]
+                for field in required_fields:
+                    if field not in first_result:
+                        return f"Missing required field '{field}' in first result of {fixture_path.name}"
+        elif "generationtime_ms" not in data:
+            # If no results field, should at least have some API metadata
+            return f"Missing 'results' field and no API metadata in {fixture_path.name}"
+
         return None
 
     def validate_pinballmap_location_response(
@@ -318,16 +342,24 @@ class FixtureManager:
         return None
 
     def validate_pinballmap_search_response(self, fixture_path: Path) -> Optional[str]:
-        """Validate pinballmap search response structure."""
+        """Validate pinballmap search response structure (raw API format)."""
         with open(fixture_path) as f:
             data = json.load(f)
 
-        if "status" not in data:
-            return f"Missing 'status' field in {fixture_path.name}"
-        if "data" not in data:
-            return f"Missing 'data' field in {fixture_path.name}"
-        if data["data"] is not None and not isinstance(data["data"], list):
-            return f"'data' field should be a list or null in {fixture_path.name}"
+        # Raw PinballMap search API responses have a "locations" array
+        if "locations" not in data:
+            return f"Missing 'locations' field in {fixture_path.name}"
+
+        if not isinstance(data["locations"], list):
+            return f"'locations' should be a list in {fixture_path.name}"
+
+        # For non-empty results, validate basic location structure
+        if data["locations"]:
+            first_location = data["locations"][0]
+            required_fields = ["id", "name", "lat", "lon"]
+            for field in required_fields:
+                if field not in first_location:
+                    return f"Missing required field '{field}' in first location of {fixture_path.name}"
         return None
 
     def validate_pinballmap_submissions_response(
