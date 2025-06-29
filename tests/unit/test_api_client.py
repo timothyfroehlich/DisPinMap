@@ -63,38 +63,22 @@ def test_geocode_city_name_failure():
 
 
 @pytest.mark.asyncio
-@patch("src.api.requests.get", autospec=True)
-async def test_geocode_client_parses_success_response(mock_get):
+async def test_geocode_client_parses_success_response(api_mocker):
     """
     Tests that the geocode client correctly parses a successful response.
-    - Mocks the `requests.get` call to return a mock response.
+    - Mocks the `requests.get` call to return a mock response using a real fixture.
     - Asserts that the function returns the expected dictionary of coordinates.
     """
     # 1. SETUP
-    # This is the raw JSON data we want the mock response to return.
-    mock_api_response_data = {
-        "results": [
-            {
-                "name": "Portland",
-                "latitude": 45.52345,
-                "longitude": -122.67621,
-                "country_code": "US",
-                "admin1": "Oregon",
-            }
-        ]
-    }
-
-    # Create a spec-based mock response object for requests.get (sync)
-    from tests.utils.mock_factories import create_requests_response_mock
-
-    mock_response = create_requests_response_mock(
-        status_code=200, json_data=mock_api_response_data
+    # Configure the API mocker to return a specific fixture for the geocoding URL.
+    api_mocker.add_response(
+        url_substring="geocoding-api.open-meteo.com/v1/search",
+        json_fixture_path="geocoding/city_portland_or.json",
     )
-    mock_get.return_value = mock_response
 
     # 2. ACTION
     # Call the function we are testing
-    result = await geocode_city_name("portland")
+    result = await geocode_city_name("portland, or")
 
     # 3. ASSERT
     # Verify that the function returned the correctly parsed data

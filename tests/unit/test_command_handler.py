@@ -277,23 +277,26 @@ class TestAddCommand(TestCommandHandler):
     """Test parsing of add command arguments"""
 
     @pytest.mark.asyncio
-    async def test_add_location_by_id(self, command_handler, mock_ctx, mock_notifier):
-        """Test parsing location by ID"""
+    async def test_add_location_by_id(
+        self, command_handler, mock_ctx, mock_notifier, api_mocker
+    ):
+        """Test parsing location by ID using a real fixture."""
+        # 1. SETUP
         # Test that location ID is correctly identified
-        location_input = "123"
+        location_input = "874"  # Use an ID that has a corresponding fixture
 
-        # Mock the API calls
-        with (
-            patch(
-                "src.cogs.command_handler.fetch_location_details",
-                new=AsyncMock(return_value={"name": "Test Location", "id": 123}),
-            ),
-            patch("src.cogs.command_handler.search_location_by_name", new=AsyncMock()),
-        ):
-            await command_handler.add.callback(
-                command_handler, mock_ctx, "location", location_input
-            )
+        # Configure the API mocker to serve the location details from a fixture
+        api_mocker.add_response(
+            url_substring="locations/874.json",
+            json_fixture_path="pinballmap_locations/location_874_details.json",
+        )
 
+        # 2. ACTION
+        await command_handler.add.callback(
+            command_handler, mock_ctx, "location", location_input
+        )
+
+        # 3. ASSERT
         # Verify the correct handler was called and a notification was sent
         mock_notifier.send_initial_notifications.assert_called_once()
 

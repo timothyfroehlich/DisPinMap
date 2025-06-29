@@ -31,7 +31,7 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
     # Help Command
     @commands.command(
         name="help",
-        help="!help [command] - Shows this help message.",
+        help="Shows this help message or details for a specific command.",
         aliases=["h"],
     )
     async def help_command(self, ctx, *, command_name: Optional[str] = None):
@@ -62,7 +62,21 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
     # Monitoring Commands
     @commands.command(
         name="add",
-        help='!add <location|city|coordinates> ... - Adds a new target to monitor.\\n\\nMonitors a specific location, city, or geographic area for new machine or condition submissions on PinballMap.com.\\n\\n**Usage:**\\n• `!add location "My Favorite Arcade"`\\n• `!add city "Portland, OR" [radius]`\\n• `!add coordinates 45.52 -122.67 [radius]`',
+        help="""Add a new monitoring target for pinball location updates.
+
+Monitors a specific location, city, or geographic area for new machine submissions and condition updates on PinballMap.com.
+
+Usage:
+  !add location "Arcade Name" - Monitor by location name
+  !add location 123 - Monitor by location ID
+  !add city "Portland, OR" [radius] - Monitor city area
+  !add coordinates 45.52 -122.67 [radius] - Monitor coordinates
+
+Examples:
+  !add location "Ground Kontrol"
+  !add location 874
+  !add city "Seattle" 10
+  !add coordinates 45.515 -122.678 5""",
     )
     async def add(self, ctx, target_type: str, *args):
         """Add a new monitoring target. Usage: /add <location|coordinates|city> <args>"""
@@ -121,7 +135,15 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
     @commands.command(
         name="rm",
         aliases=["remove"],
-        help="!rm <index> - Removes a monitoring target.\\n\\nRemoves a target from the monitoring list using its index number from the `!list` command.",
+        help="""Remove a monitoring target by its index number.
+
+Use the index number shown in the !list command to remove specific targets.
+
+Usage:
+  !rm <index>
+
+Example:
+  !rm 2 - Removes the second target from the list""",
     )
     async def remove(self, ctx, index: str):
         """Remove a monitoring target by its index from the list."""
@@ -175,7 +197,14 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
     @commands.command(
         name="list",
         aliases=["ls", "status"],
-        help="!list - Shows all monitored targets.\\n\\nDisplays a detailed table of all active monitoring targets in the current channel, including their index, poll rate, and notification settings.",
+        help="""Display all active monitoring targets in this channel.
+
+Shows a detailed table with index numbers, target details, poll rates, notification settings, and last check times.
+
+Usage:
+  !list
+
+Use the index numbers with !rm to remove targets.""",
     )
     async def list_targets(self, ctx):
         """Show all monitored targets in a formatted table."""
@@ -244,7 +273,14 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
 
     @commands.command(
         name="export",
-        help="!export - Exports the channel's configuration.\\n\\nGenerates a copy-pasteable list of commands to replicate the channel's entire monitoring configuration.",
+        help="""Export channel configuration as copy-pasteable commands.
+
+Generates a list of commands that can recreate the entire monitoring setup for this channel, including all targets and settings.
+
+Usage:
+  !export
+
+Useful for backup or setting up identical monitoring in another channel.""",
     )
     async def export(self, ctx):
         """Export channel configuration as copy-pasteable commands."""
@@ -294,7 +330,14 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
 
     @commands.command(
         name="check",
-        help="!check - Manually checks for new submissions.\\n\\nTriggers an immediate check for new submissions across all active targets in the channel.",
+        help="""Manually trigger an immediate check for new submissions.
+
+Checks all active targets in this channel for new machine submissions and condition updates, bypassing the normal poll schedule.
+
+Usage:
+  !check
+
+Useful for testing or getting immediate updates.""",
     )
     async def check(self, ctx):
         """Manually check for new submissions across all targets."""
@@ -315,7 +358,17 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
             ctx.channel.id, channel_config, is_manual_check=True
         )
 
-    @commands.command(name="monitor_health")
+    @commands.command(
+        name="monitor_health",
+        help="""Display health status of the monitoring service.
+
+Shows current status, performance metrics, and any issues with the background monitoring system.
+
+Usage:
+  !monitor_health
+
+Useful for troubleshooting or checking system status.""",
+    )
     async def monitor_health(self, ctx):
         """Get health status of the monitoring service."""
         runner_cog = self.bot.get_cog("Runner")
@@ -330,7 +383,17 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
     # Config Commands
     @commands.command(
         name="poll_rate",
-        help="!poll_rate <minutes> [index] - Sets the poll rate.\n\nSets how frequently (in minutes) the bot checks for updates.\nCan be set for the whole channel or for a specific target by its index.",
+        help="""Set how frequently to check for updates (in minutes).
+
+Configure polling frequency for the entire channel or a specific target. Minimum 1 minute, recommended 5+ minutes to avoid rate limiting.
+
+Usage:
+  !poll_rate <minutes> - Set channel default
+  !poll_rate <minutes> <index> - Set for specific target
+
+Examples:
+  !poll_rate 10 - Check every 10 minutes
+  !poll_rate 5 2 - Check target #2 every 5 minutes""",
     )
     async def poll_rate(self, ctx, minutes: str, target_selector: Optional[str] = None):
         """Set poll rate for channel or specific target."""
@@ -386,7 +449,22 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
 
     @commands.command(
         name="notifications",
-        help="!notifications <type> [index] - Sets notification types.\n\nSets the type of notifications (machines, comments, all).\nCan be set for the whole channel or for a specific target by its index.",
+        help="""Configure what types of updates to receive notifications for.
+
+Control notification types for the channel or specific targets.
+
+Types:
+  machines - Only new machine additions
+  comments - Only condition updates and comments
+  all - Both machines and comments (default)
+
+Usage:
+  !notifications <type> - Set channel default
+  !notifications <type> <index> - Set for specific target
+
+Examples:
+  !notifications machines - Only machine updates
+  !notifications all 1 - All updates for target #1""",
     )
     async def notifications(
         self, ctx, notification_type: str, target_selector: Optional[str] = None
