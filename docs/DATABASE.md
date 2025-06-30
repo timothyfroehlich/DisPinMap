@@ -71,28 +71,32 @@ CREATE TABLE monitoring_targets (
     id INTEGER NOT NULL PRIMARY KEY,
     channel_id BIGINT NOT NULL,
     target_type VARCHAR NOT NULL,      -- 'location', 'city', 'latlong'
-    target_name VARCHAR NOT NULL,      -- Human-readable name
-    target_data VARCHAR,               -- Location ID or coordinates
+    target_name VARCHAR NOT NULL,      -- Human-readable name (for 'location') or coordinates (for 'city', 'latlong')
+    location_id INTEGER,               -- PinballMap location ID (for 'location' targets)
     poll_rate_minutes INTEGER DEFAULT 60,
     notification_types VARCHAR DEFAULT 'machines',
     last_checked_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     -- Constraints
-    CONSTRAINT unique_channel_target UNIQUE (channel_id, target_type, target_name),
+    CONSTRAINT unique_channel_location UNIQUE (channel_id, target_type, location_id),
     FOREIGN KEY(channel_id) REFERENCES channel_configs (channel_id)
 );
 ```
 
 #### Data Examples
 ```sql
--- Location monitoring (target_data contains PinballMap location ID)
-INSERT INTO monitoring_targets (channel_id, target_type, target_name, target_data)
-VALUES (1377474091149164584, 'location', 'Austin Pinball Collective', '26454');
+-- Location monitoring (location_id contains PinballMap location ID)
+INSERT INTO monitoring_targets (channel_id, target_type, target_name, location_id)
+VALUES (1377474091149164584, 'location', 'Austin Pinball Collective', 26454);
 
--- City monitoring (target_data contains lat,lon coordinates)
-INSERT INTO monitoring_targets (channel_id, target_type, target_name, target_data)
-VALUES (1377474127648133130, 'city', 'Austin, Texas, US', '30.26715,-97.74306');
+-- City monitoring (target_name contains lat,lon coordinates)
+INSERT INTO monitoring_targets (channel_id, target_type, target_name)
+VALUES (1377474127648133130, 'city', '30.26715,-97.74306');
+
+-- LatLong monitoring (target_name contains lat,lon,radius coordinates)
+INSERT INTO monitoring_targets (channel_id, target_type, target_name)
+VALUES (1377474127648133130, 'latlong', '30.26715,-97.74306,5');
 ```
 
 ### Known Schema Issues
@@ -100,7 +104,7 @@ VALUES (1377474127648133130, 'city', 'Austin, Texas, US', '30.26715,-97.74306');
 #### ✅ [RESOLVED] Constraint Design Problem
 The unique constraint on the `monitoring_targets` table was originally on `(channel_id, target_type, target_name)`, which incorrectly allowed multiple targets for the same location ID.
 
-**This has been resolved in migration `5c8e4212f5ed`.** The schema now correctly uses `location_id` and has a unique constraint on `(channel_id, target_type, location_id)`.
+**This has been resolved in migration `5c8e4212f5ed`.** The schema now correctly uses `location_id` for `location` type targets and has a unique constraint on `(channel_id, target_type, location_id)`. For `city` and `latlong` targets, `location_id` is NULL and `target_name` stores the coordinate data.
 
 ## Migration Management
 
