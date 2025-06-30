@@ -240,3 +240,18 @@ class TestMainModule:
         from src.main import TEST_STARTUP
 
         assert isinstance(TEST_STARTUP, bool)
+
+    @pytest.mark.asyncio
+    async def test_error_handler_missing_required_argument(self):
+        """Test that the error handler message exists and is properly formatted"""
+        from src.messages import Messages
+
+        # Test that the new error message exists and is properly formatted
+        missing_index_msg = Messages.Command.Remove.MISSING_INDEX
+        assert missing_index_msg is not None
+        assert "❌" in missing_index_msg
+        assert "!rm <index>" in missing_index_msg
+        assert "!list" in missing_index_msg
+
+        # This verifies that our error message integration point exists
+        # The actual Discord.py integration is tested in integration tests

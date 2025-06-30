@@ -74,9 +74,19 @@ Examples:
   !add city "Seattle" 10
   !add coordinates 45.515 -122.678 5""",
     )
-    async def add(self, ctx, target_type: str, *args):
+    async def add(self, ctx, target_type: str | None = None, *args):
         """Add a new monitoring target. Usage: /add <location|coordinates|city> <args>"""
         try:
+            # Handle missing or invalid target_type
+            if target_type is None or target_type not in (
+                "location",
+                "coordinates",
+                "city",
+            ):
+                await self.notifier.log_and_send(
+                    ctx, Messages.Command.Add.INVALID_SUBCOMMAND
+                )
+                return
             if target_type == "location":
                 if not args:
                     await self.notifier.log_and_send(

@@ -300,6 +300,36 @@ class TestAddCommand(TestCommandHandler):
         # Verify the correct handler was called and a notification was sent
         mock_notifier.send_initial_notifications.assert_called_once()
 
+    @pytest.mark.asyncio
+    async def test_add_missing_arguments(
+        self, command_handler, mock_ctx, mock_notifier
+    ):
+        """Test add command with no arguments shows helpful error"""
+        from src.messages import Messages
+
+        # Call add with no target_type (None)
+        await command_handler.add.callback(command_handler, mock_ctx)
+
+        # Should send invalid subcommand message
+        mock_notifier.log_and_send.assert_called_once_with(
+            mock_ctx, Messages.Command.Add.INVALID_SUBCOMMAND
+        )
+
+    @pytest.mark.asyncio
+    async def test_add_invalid_target_type(
+        self, command_handler, mock_ctx, mock_notifier
+    ):
+        """Test add command with invalid target_type shows helpful error"""
+        from src.messages import Messages
+
+        # Call add with invalid target_type
+        await command_handler.add.callback(command_handler, mock_ctx, "invalid_type")
+
+        # Should send invalid subcommand message
+        mock_notifier.log_and_send.assert_called_once_with(
+            mock_ctx, Messages.Command.Add.INVALID_SUBCOMMAND
+        )
+
 
 class TestRemoveCommand(TestCommandHandler):
     """Test parsing of remove command arguments"""
