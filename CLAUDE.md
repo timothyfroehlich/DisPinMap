@@ -5,6 +5,7 @@
 - If you are using an AI agent to automate coding, testing, or infrastructure tasks, you (and the agent) must read this file first.
 - Human contributors: For general developer guidance, see `docs/DEVELOPER_HANDBOOK.md`.
 
+This is our repo: <https://github.com/timothyfroehlich/DisPinMap>
 ---
 
 ## 🗂️ Directory-Specific Agent Instructions
@@ -96,6 +97,16 @@ git commit --author="Claude Code <claude-code@anthropic.com>" -m "commit message
 - Use `--author` flag instead of changing global git configuration
 
 This ensures clear attribution while preserving the user's personal git settings.
+
+## Debugging
+
+Use this command to check recent logs:
+
+```
+gcloud run services logs read dispinmap-bot --region=us-central1 --limit=50
+```
+
+When presented with a production bug, start by adding a failing test that reproduces the bug. Only start fixing the bug once you have a test that fails.
 
 ## Other
 

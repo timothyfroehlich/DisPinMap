@@ -289,7 +289,9 @@ def test_database_operation(db_session):
 When adding new tests:
 
 1. **Choose the Right Tier**: Unit for isolated logic, Integration for component interaction, Simulation for user journeys
-2. **Use Spec-Based Mocks**: Always use mock factory functions
-3. **Follow Naming Conventions**: Descriptive test names with clear intent
-4. **Add Documentation**: Document complex test setups and patterns
-5. **Validate Coverage**: Ensure new functionality is adequately tested
+2. **Avoid creating new test files** Identify the file that most closely fits for this new test
+3. **Follow our testing patterns** Base your test implementations on other tests within the file. Make good use of the test utils.
+4. **Use Spec-Based Mocks**: Always use mock factory functions
+5. **Follow Naming Conventions**: Descriptive test names with clear intent
+6. **Add Documentation**: Document complex test setups and patterns
+7. **Validate Coverage**: Ensure new functionality is adequately tested

@@ -170,6 +170,55 @@ async def test_run_checks_handles_location_id_field(db_session):
             raise
 
 
+@pytest.mark.asyncio
+async def test_run_checks_for_channel_with_invalid_city_target_is_handled(caplog):
+    """
+    Test that run_checks_for_channel handles an invalid 'city' target gracefully
+    by logging an error and not crashing.
+    """
+    import logging
+
+    from src.cogs.runner import Runner
+    from tests.utils.mock_factories import (
+        create_async_notifier_mock,
+        create_bot_mock,
+        create_database_mock,
+    )
+
+    # Arrange
+    mock_bot = create_bot_mock()
+    mock_db = create_database_mock()
+    mock_notifier = create_async_notifier_mock()
+
+    runner = Runner(bot=mock_bot, database=mock_db, notifier=mock_notifier)
+
+    channel_id = 12345
+    config = {"channel_id": channel_id}
+
+    # This is the problematic target
+    targets = [
+        {
+            "id": 1,
+            "target_type": "city",
+            "target_name": "Austin",
+            "location_id": None,
+        }
+    ]
+    mock_db.get_monitoring_targets.return_value = targets
+
+    # Act
+    # This should no longer raise a ValueError but handle it gracefully.
+    caplog.set_level(logging.ERROR)
+    await runner.run_checks_for_channel(channel_id, config, is_manual_check=True)
+
+    # Assert
+    assert "Skipping target with unsupported type 'city': id=1" in caplog.text
+    assert (
+        "This target should be re-added using the add command to geocode it correctly."
+        in caplog.text
+    )
+
+
 def test_monitoring_loop_handles_api_errors_gracefully(db_session, api_mocker):
     """
     Tests that the monitoring loop continues running even if one target's API call fails.
