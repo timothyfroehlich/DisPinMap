@@ -97,6 +97,16 @@ git commit --author="Claude Code <claude-code@anthropic.com>" -m "commit message
 
 This ensures clear attribution while preserving the user's personal git settings.
 
+## Debugging
+
+Use this command to check recent logs:
+
+```
+gcloud run services logs read dispinmap-bot --region=us-central1 --limit=50
+```
+
+When presented with a production bug, start by adding a failing test that reproduces the bug. Only start fixing the bug once you have a test that fails.
+
 ## Other
 
 Never use src.path.append for imports.
