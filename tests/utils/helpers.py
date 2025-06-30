@@ -68,7 +68,17 @@ def assert_message_sent(mock_discord_channel, expected_content):
         DeprecationWarning,
         stacklevel=2,
     )
-    # mock_discord_channel.send.assert_called_once()
-    # call_args = mock_discord_channel.send.call_args[0][0]
-    # assert expected_content in call_args
-    pass
+
+    # Basic implementation for backward compatibility
+    mock_discord_channel.send.assert_called()
+
+    # Check if expected content is in any of the sent messages
+    call_args_list = mock_discord_channel.send.call_args_list
+    messages_sent = [
+        str(call[0][0]) if call[0] else str(call[1]) for call in call_args_list
+    ]
+
+    found = any(expected_content in message for message in messages_sent)
+    assert (
+        found
+    ), f"Expected content '{expected_content}' not found in sent messages: {messages_sent}"

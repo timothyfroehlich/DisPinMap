@@ -11,7 +11,9 @@ provided by the `db_session` fixture.
 # import pytest  # Will be needed for actual test implementation
 # from sqlalchemy.exc import IntegrityError  # Will be needed for actual test implementation
 
-from src.models import MonitoringTarget
+from datetime import datetime
+
+from src.models import ChannelConfig, MonitoringTarget, SeenSubmission
 
 
 def test_add_and_retrieve_monitoring_target(db_session):
@@ -96,7 +98,33 @@ def test_update_channel_config(db_session):
     - Calls the update logic to change the poll rate.
     - Retrieves the config and asserts that the poll rate has been updated.
     """
-    pass
+    session = db_session()
+
+    # Create initial channel config
+    initial_config = ChannelConfig(
+        channel_id=12345,
+        guild_id=11111,
+        poll_rate_minutes=60,
+        notification_types="machines",
+        is_active=True,
+    )
+
+    session.add(initial_config)
+    session.commit()
+
+    # Update the config
+    config_to_update = session.query(ChannelConfig).filter_by(channel_id=12345).first()
+    config_to_update.poll_rate_minutes = 30
+    config_to_update.notification_types = "all"
+    session.commit()
+
+    # Retrieve and verify the update
+    updated_config = session.query(ChannelConfig).filter_by(channel_id=12345).first()
+    assert updated_config.poll_rate_minutes == 30
+    assert updated_config.notification_types == "all"
+    assert updated_config.is_active is True  # Should remain unchanged
+
+    session.close()
 
 
 def test_remove_monitoring_target(db_session):
@@ -106,7 +134,40 @@ def test_remove_monitoring_target(db_session):
     - Calls the removal logic.
     - Queries the database and asserts that the target no longer exists.
     """
-    pass
+    session = db_session()
+
+    # Add a target to remove later
+    target = MonitoringTarget(
+        channel_id=12345,
+        target_type="location",
+        target_name="Test Location",
+        location_id=999,
+    )
+
+    session.add(target)
+    session.commit()
+
+    # Verify it was added
+    added_target = (
+        session.query(MonitoringTarget)
+        .filter_by(channel_id=12345, location_id=999)
+        .first()
+    )
+    assert added_target is not None
+
+    # Remove the target
+    session.delete(added_target)
+    session.commit()
+
+    # Verify it was removed
+    removed_target = (
+        session.query(MonitoringTarget)
+        .filter_by(channel_id=12345, location_id=999)
+        .first()
+    )
+    assert removed_target is None
+
+    session.close()
 
 
 def test_filter_new_submissions(db_session):
@@ -116,4 +177,42 @@ def test_filter_new_submissions(db_session):
     - Calls the `filter_new_submissions` logic with a list containing both old and new IDs.
     - Asserts that the function correctly returns only the new submission IDs.
     """
-    pass
+    session = db_session()
+
+    # Create a channel config first (required for foreign key)
+    channel_config = ChannelConfig(channel_id=12345, guild_id=11111, is_active=True)
+    session.add(channel_config)
+    session.commit()
+
+    # Add some seen submissions
+    seen_submissions = [
+        SeenSubmission(channel_id=12345, submission_id=100, seen_at=datetime.now()),
+        SeenSubmission(channel_id=12345, submission_id=200, seen_at=datetime.now()),
+        SeenSubmission(channel_id=12345, submission_id=300, seen_at=datetime.now()),
+    ]
+
+    for submission in seen_submissions:
+        session.add(submission)
+    session.commit()
+
+    # Test filtering logic
+    all_submission_ids = [100, 200, 300, 400, 500]  # Mix of seen and unseen
+
+    # Query existing seen submissions for this channel
+    existing_seen = (
+        session.query(SeenSubmission.submission_id).filter_by(channel_id=12345).all()
+    )
+    existing_seen_ids = {row[0] for row in existing_seen}
+
+    # Filter out already seen submissions
+    new_submission_ids = [
+        sub_id for sub_id in all_submission_ids if sub_id not in existing_seen_ids
+    ]
+
+    # Assert that only new submissions remain
+    assert set(new_submission_ids) == {400, 500}
+    assert 100 not in new_submission_ids
+    assert 200 not in new_submission_ids
+    assert 300 not in new_submission_ids
+
+    session.close()

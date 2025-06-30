@@ -25,18 +25,33 @@ async def setup_monitoring_target(
     Returns:
         The newly created Target object.
     """
-    # new_target = Target(
-    #     user_id=user_id,
-    #     location_id=location_id,
-    #     location_name=location_name,
-    #     guild_id=12345,  # A default mock guild ID
-    #     channel_id=67890, # A default mock channel ID
-    # )
-    # db_session.add(new_target)
-    # db_session.commit()
-    # db_session.refresh(new_target)
-    # return new_target
-    pass
+    from src.models import ChannelConfig, MonitoringTarget
+
+    session = db_session()
+
+    # Create channel config if it doesn't exist
+    channel_config = session.query(ChannelConfig).filter_by(channel_id=67890).first()
+    if not channel_config:
+        channel_config = ChannelConfig(
+            channel_id=67890,  # Default mock channel ID
+            guild_id=12345,  # Default mock guild ID
+            is_active=True,
+        )
+        session.add(channel_config)
+        session.commit()
+
+    # Create monitoring target
+    new_target = MonitoringTarget(
+        channel_id=67890,  # Default mock channel ID
+        target_type="location",
+        target_name=location_name,
+        location_id=location_id,
+    )
+    session.add(new_target)
+    session.commit()
+    session.refresh(new_target)
+
+    return new_target
 
 
 async def get_target_by_location_id(db_session, location_id: int):
@@ -46,5 +61,7 @@ async def get_target_by_location_id(db_session, location_id: int):
     Returns:
         The Target object or None if not found.
     """
-    # return db_session.query(Target).filter_by(location_id=location_id).first()
-    pass
+    from src.models import MonitoringTarget
+
+    session = db_session()
+    return session.query(MonitoringTarget).filter_by(location_id=location_id).first()

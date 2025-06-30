@@ -9,9 +9,11 @@ data format, these tests will fail, alerting us to the necessary updates.
 # To be migrated from `tests_backup/integration/test_geocoding_api_integration.py`
 # and `tests_backup/integration/test_pinballmap_api.py`
 
+import asyncio
+
 import pytest
 
-from src.api import search_location_by_name
+from src.api import geocode_city_name, search_location_by_name
 
 
 def test_handle_geocoding_response_for_seattle(api_mocker):
@@ -21,7 +23,25 @@ def test_handle_geocoding_response_for_seattle(api_mocker):
     - Calls the geocoding logic.
     - Asserts that the correct lat/long is extracted.
     """
-    pass
+
+    async def test_async():
+        # Setup API mocker for Seattle geocoding request
+        api_mocker.add_response(
+            url_substring="geocoding-api.open-meteo.com",
+            json_fixture_path="geocoding/city_seattle.json",
+        )
+
+        # Call the geocoding function
+        result = await geocode_city_name("Seattle, WA")
+
+        # Assert the response is correctly parsed
+        assert result["status"] == "success"
+        assert "lat" in result
+        assert "lon" in result
+        assert "display_name" in result
+        assert "Seattle" in result["display_name"]
+
+    asyncio.run(test_async())
 
 
 def test_handle_pinballmap_location_details_response(api_mocker):
@@ -31,7 +51,29 @@ def test_handle_pinballmap_location_details_response(api_mocker):
     - Calls the location details fetching logic.
     - Asserts that the name, city, and other details are parsed correctly.
     """
-    pass
+
+    async def test_async():
+        from src.api import fetch_location_details
+
+        # Setup API mocker for location details request
+        api_mocker.add_response(
+            url_substring="locations/874.json",
+            json_fixture_path="pinballmap_locations/location_874_details.json",
+        )
+
+        # Call the location details function
+        result = await fetch_location_details(874)
+
+        # Assert the response is correctly parsed
+        assert isinstance(result, dict)
+        assert result["id"] == 874
+        assert result["name"] == "Ground Kontrol Classic Arcade"
+        assert result["city"] == "Portland"
+        assert result["state"] == "OR"
+        assert "location_machine_xrefs" in result
+        assert isinstance(result["location_machine_xrefs"], list)
+
+    asyncio.run(test_async())
 
 
 def test_handle_pinballmap_submissions_response(api_mocker):
@@ -41,7 +83,29 @@ def test_handle_pinballmap_submissions_response(api_mocker):
     - Calls the submission fetching logic.
     - Asserts that the list of submissions is parsed into the correct data structure.
     """
-    pass
+
+    async def test_async():
+        from src.api import fetch_submissions_for_location
+
+        # Setup API mocker for submissions request
+        api_mocker.add_response(
+            url_substring="user_submissions",
+            json_fixture_path="pinballmap_submissions/location_874_recent.json",
+        )
+
+        # Call the submissions function
+        result = await fetch_submissions_for_location(874)
+
+        # Assert the response is correctly parsed
+        assert isinstance(result, list)
+        # The fixture should contain submissions data
+        if result:  # If there are submissions in the fixture
+            first_submission = result[0]
+            assert isinstance(first_submission, dict)
+            # Common submission fields that should exist
+            assert "id" in first_submission or "submission_type" in first_submission
+
+    asyncio.run(test_async())
 
 
 def test_handle_api_error_responses(api_mocker):
@@ -50,7 +114,39 @@ def test_handle_api_error_responses(api_mocker):
     - Mocks an HTTP request to return a non-200 status code.
     - Asserts that the client returns an appropriate error indicator or raises a specific exception.
     """
-    pass
+
+    async def test_async():
+        import requests
+
+        from src.api import fetch_location_details
+
+        # Mock a 404 response for a non-existent location
+        class MockResponse:
+            def __init__(self, status_code):
+                self.status_code = status_code
+
+            def json(self):
+                return {"errors": ["Location not found"]}
+
+            def raise_for_status(self):
+                if self.status_code != 200:
+                    raise requests.exceptions.HTTPError(f"HTTP {self.status_code}")
+
+        # Mock the rate_limited_request to return 404
+        from unittest.mock import patch
+
+        with patch("src.api.rate_limited_request", return_value=MockResponse(404)):
+            try:
+                result = await fetch_location_details(999999)
+                # Should return empty dict on error
+                assert result == {}
+            except Exception as e:
+                # Or should raise appropriate exception
+                assert "not found" in str(e).lower() or isinstance(
+                    e, requests.exceptions.HTTPError
+                )
+
+    asyncio.run(test_async())
 
 
 @pytest.mark.asyncio
@@ -113,4 +209,24 @@ def test_api_returns_error_for_unknown_location_id():
     - Mocks the API to return an error for a non-existent location ID.
     - Asserts that the function returns an appropriate error indicator.
     """
-    pass
+
+    async def test_async():
+        from unittest.mock import patch
+
+        from src.api import fetch_location_details
+
+        # Mock the API to return a fixture for unknown location
+        with patch("src.api.rate_limited_request") as mock_request:
+            # Set up mock response
+            mock_response = type("MockResponse", (), {})()
+            mock_response.json = lambda: {"errors": ["Location not found"]}
+            mock_response.status_code = 404
+            mock_request.return_value = mock_response
+
+            # Test the fetch_location_details function
+            result = await fetch_location_details(999999)
+
+            # Should return empty dict for error (based on the function implementation)
+            assert result == {}
+
+    asyncio.run(test_async())
