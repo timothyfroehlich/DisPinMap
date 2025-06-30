@@ -200,6 +200,21 @@ Example:
                 ctx, Messages.Command.Shared.INVALID_INDEX_NUMBER
             )
 
+    @remove.error
+    async def remove_error(self, ctx, error):
+        """Error handler for the rm command."""
+        from discord.ext.commands import MissingRequiredArgument
+
+        from src.messages import Messages
+
+        if isinstance(error, MissingRequiredArgument):
+            await self.notifier.log_and_send(ctx, Messages.Command.Remove.MISSING_INDEX)
+        else:
+            # Fallback for other errors not specifically handled
+            await self.notifier.log_and_send(
+                ctx, f"❌ An unexpected error occurred: {error}"
+            )
+
     @commands.command(
         name="list",
         aliases=["ls", "status"],

@@ -111,19 +111,10 @@ async def create_bot(db_session_factory=None, notifier=None):
         """Handle command errors"""
         from discord.ext.commands import MissingRequiredArgument
 
-        from src.messages import Messages
-
         logger.error(f"An error occurred in command '{ctx.command}': {error}")
 
         # Handle missing required arguments with helpful user messages
         if isinstance(error, MissingRequiredArgument):
-            if ctx.command and ctx.command.name == "rm":
-                command_handler = bot.get_cog("CommandHandler")
-                if command_handler and command_handler.notifier:
-                    await command_handler.notifier.log_and_send(
-                        ctx, Messages.Command.Remove.MISSING_INDEX
-                    )
-                    return
 
             # Generic fallback for other commands with missing arguments
             await ctx.send(

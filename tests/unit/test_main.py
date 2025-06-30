@@ -257,40 +257,6 @@ class TestMainModule:
         # The actual Discord.py integration is tested in integration tests
 
     @pytest.mark.asyncio
-    async def test_on_command_error_rm_missing_argument(self):
-        """Test on_command_error handler for !rm with a missing argument"""
-        from discord.ext.commands import MissingRequiredArgument
-
-        from src.messages import Messages
-
-        # Create mock context and error
-        mock_ctx = AsyncMock()
-        mock_ctx.command.name = "rm"
-        mock_param = Mock()
-        mock_param.name = "index"
-        error = MissingRequiredArgument(mock_param)
-
-        # Create mock command handler and notifier
-        mock_command_handler = Mock()
-        mock_command_handler.notifier = AsyncMock()
-
-        # Create the bot instance
-        bot = await create_bot()
-
-        # Patch bot.get_cog to return our mock
-        with patch.object(bot, "get_cog", return_value=mock_command_handler):
-            # Get the error handler from the bot instance
-            on_command_error = bot.on_command_error
-
-            # Call the error handler
-            await on_command_error(mock_ctx, error)
-
-            # Assert that the notifier was called with the correct message
-            mock_command_handler.notifier.log_and_send.assert_called_once_with(
-                mock_ctx, Messages.Command.Remove.MISSING_INDEX
-            )
-
-    @pytest.mark.asyncio
     async def test_on_command_error_generic_missing_argument(self):
         """Test on_command_error handler for a generic command with a missing argument"""
         from discord.ext.commands import MissingRequiredArgument
