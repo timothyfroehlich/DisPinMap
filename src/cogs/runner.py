@@ -305,7 +305,7 @@ class Runner(commands.Cog, name="Runner"):
                 )
                 return [], True  # Mark as failed to prevent silent failures
 
-            if target_type in ("latlong"):
+            if target_type == "latlong":
                 source_data = target.get("target_name")
                 if not source_data:
                     logger.warning(

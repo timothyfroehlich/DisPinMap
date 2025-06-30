@@ -5,6 +5,7 @@
 - If you are using an AI agent to automate coding, testing, or infrastructure tasks, you (and the agent) must read this file first.
 - Human contributors: For general developer guidance, see `docs/DEVELOPER_HANDBOOK.md`.
 
+This is our repo: <https://github.com/timothyfroehlich/DisPinMap>
 ---
 
 ## 🗂️ Directory-Specific Agent Instructions
