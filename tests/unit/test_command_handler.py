@@ -360,6 +360,28 @@ class TestRemoveCommand(TestCommandHandler):
         call_args = mock_notifier.log_and_send.call_args[0]
         assert "Invalid index" in call_args[1]
 
+    @pytest.mark.asyncio
+    async def test_remove_missing_argument_error_handling(
+        self, command_handler, mock_ctx
+    ):
+        """Test that the rm command's error handler catches MissingRequiredArgument."""
+        from discord.ext.commands import MissingRequiredArgument
+
+        from src.messages import Messages
+
+        # Simulate a MissingRequiredArgument error
+        mock_param = Mock()
+        mock_param.name = "index"
+        error = MissingRequiredArgument(mock_param)
+
+        # Call the error handler directly
+        await command_handler.remove_error(mock_ctx, error)
+
+        # Assert that the correct message was sent
+        command_handler.notifier.log_and_send.assert_called_once_with(
+            mock_ctx, Messages.Command.Remove.MISSING_INDEX
+        )
+
 
 class TestListCommand(TestCommandHandler):
     """Test parsing of list command arguments"""

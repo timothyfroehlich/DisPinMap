@@ -240,3 +240,44 @@ class TestMainModule:
         from src.main import TEST_STARTUP
 
         assert isinstance(TEST_STARTUP, bool)
+
+    @pytest.mark.asyncio
+    async def test_error_handler_missing_required_argument(self):
+        """Test that the error handler message exists and is properly formatted"""
+        from src.messages import Messages
+
+        # Test that the new error message exists and is properly formatted
+        missing_index_msg = Messages.Command.Remove.MISSING_INDEX
+        assert missing_index_msg is not None
+        assert "❌" in missing_index_msg
+        assert "!rm <index>" in missing_index_msg
+        assert "!list" in missing_index_msg
+
+        # This verifies that our error message integration point exists
+        # The actual Discord.py integration is tested in integration tests
+
+    @pytest.mark.asyncio
+    async def test_on_command_error_generic_missing_argument(self):
+        """Test on_command_error handler for a generic command with a missing argument"""
+        from discord.ext.commands import MissingRequiredArgument
+
+        # Create mock context and error
+        mock_ctx = AsyncMock()
+        mock_ctx.command.name = "some_other_command"
+        mock_param = Mock()
+        mock_param.name = "some_param"
+        error = MissingRequiredArgument(mock_param)
+
+        # Create the bot instance
+        bot = await create_bot()
+
+        # Get the error handler from the bot instance
+        on_command_error = bot.on_command_error
+
+        # Call the error handler
+        await on_command_error(mock_ctx, error)
+
+        # Assert that ctx.send was called with the generic message
+        mock_ctx.send.assert_called_once_with(
+            f"❌ Missing required argument: {error.param}. Use `!help {mock_ctx.command.name}` for usage info."
+        )

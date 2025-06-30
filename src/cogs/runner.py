@@ -299,11 +299,7 @@ class Runner(commands.Cog, name="Runner"):
             target_type = target["target_type"]
 
             if target_type in ("latlong", "city"):
-                source_data = (
-                    target["target_name"]
-                    if target_type == "latlong"
-                    else target["location_id"]
-                )
+                source_data = target["target_name"]
                 if not source_data:
                     logger.warning(
                         f"Skipping target with missing data: id={target_id}, type={target_type}"

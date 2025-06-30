@@ -190,7 +190,6 @@ pinball_bot.db
 *.lz4
 .cursor/
 cloud_sql_proxy
-# CLAUDE.md
 .claude/
 
 # Test generated files
@@ -267,10 +266,6 @@ simulation_results_*.json
 simulation_output/
 temp/
 tmp/
-
-# Git worktrees directory
-worktrees/
-claude-worktrees/
 
 # Coverage reports
 coverage.xml

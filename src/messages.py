@@ -128,6 +128,9 @@ class Messages:
             - target_name: str - The name of the target being removed
             """
 
+            MISSING_INDEX = "❌ Please provide an index number. Usage: `!rm <index>`\nUse `!list` to see target indices."
+            """No format parameters."""
+
         class List:
             """List command messages."""
 
