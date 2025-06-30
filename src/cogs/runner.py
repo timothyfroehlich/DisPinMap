@@ -302,7 +302,7 @@ class Runner(commands.Cog, name="Runner"):
                 source_data = (
                     target["target_name"]
                     if target_type == "latlong"
-                    else target["target_data"]
+                    else target["location_id"]
                 )
                 if not source_data:
                     logger.warning(
@@ -320,8 +320,8 @@ class Runner(commands.Cog, name="Runner"):
                 submissions = await fetch_submissions_for_coordinates(
                     lat, lon, radius, use_min_date=not is_manual_check
                 )
-            elif target_type == "location" and target["target_data"]:
-                location_id = int(target["target_data"])
+            elif target_type == "location" and target["location_id"]:
+                location_id = int(target["location_id"])
                 submissions = await fetch_submissions_for_location(
                     location_id, use_min_date=not is_manual_check
                 )
