@@ -1,31 +1,24 @@
-# DisPinMap Test Framework
-
-This document describes the testing framework architecture and best practices for the DisPinMap project.
+# Testing Framework Agent Instructions
 
 ## Overview
 
-The DisPinMap test suite follows a **pyramid structure** with three distinct tiers:
+The DisPinMap test suite follows a **pyramid structure** with three distinct tiers supporting **parallel execution** via strict database isolation:
 
 - **Unit Tests** (`tests/unit/`): Fast, isolated tests with no external dependencies
 - **Integration Tests** (`tests/integration/`): Tests with database and API interactions
 - **Simulation Tests** (`tests/simulation/`): High-level user journey testing
 
-## Key Features
+### Key Features
 
-### ✅ Parallel Execution Support
-The framework supports parallel test execution via `pytest-xdist` through strict database isolation. Each worker gets its own temporary SQLite database.
+✅ **Parallel Execution Support** - Each worker gets isolated SQLite database
+✅ **Spec-Based Mock Framework** - Interface compliance and early error detection
+✅ **Comprehensive API Mocking** - Easy HTTP response mocking with JSON fixtures
 
-### ✅ Spec-Based Mock Framework
-All mocks use `unittest.mock` `spec` parameters for interface compliance and early error detection.
+## CRITICAL: Mock Specifications Required
 
-### ✅ Comprehensive API Mocking
-The `api_mocker` fixture provides easy HTTP response mocking using saved JSON fixtures.
+**ALL mocks MUST use proper `spec` parameters to enforce interface compliance:**
 
-## Spec-Based Mock Framework
-
-### Why Use `spec` Parameters?
-
-The `spec` parameter in `unittest.mock` provides several critical benefits:
+### Why Use Spec-Based Mocks?
 
 1. **Interface Enforcement**: Prevents access to non-existent attributes/methods
 2. **Early Error Detection**: Catches typos and wrong method names during test execution
@@ -33,11 +26,14 @@ The `spec` parameter in `unittest.mock` provides several critical benefits:
 4. **Type Safety**: Better IDE support and static analysis
 5. **Refactoring Safety**: Tests break when real interfaces change
 
-### Mock Factory Functions
+### Mock Requirements
 
-All mocks should be created using the factory functions in `tests/utils/mock_factories.py`:
+1. **ALWAYS use spec-based factories** from `tests/utils/mock_factories.py`
+2. **NEVER use raw `Mock()` or `MagicMock()` without specs**
+3. **Use `autospec=True`** for all `@patch` decorators
+4. **Validate mock specs** to catch interface violations early
 
-#### Core Mock Factories
+### Factory Functions (REQUIRED)
 
 ```python
 from tests.utils.mock_factories import (
@@ -48,31 +44,34 @@ from tests.utils.mock_factories import (
     create_api_client_mock,
 )
 
-# Create a properly spec'd notifier mock
+# Create properly spec'd mocks
 mock_notifier = create_async_notifier_mock()
-
-# Create a Discord context mock with proper specs
 mock_ctx = create_discord_context_mock(user_id=12345, channel_id=67890)
-
-# Create a database mock
 mock_db = create_database_mock()
 ```
 
-#### Validation Utilities
+### Examples
 
 ```python
-from tests.utils.mock_factories import validate_async_mock, validate_mock_spec
+# ❌ WRONG - No spec validation
+mock_notifier = Mock()
+mock_notifier = AsyncMock()  # TypeError on await!
 
-# Validate that an async mock is properly awaitable
-validate_async_mock(mock_notifier, 'log_and_send')
+# ✅ CORRECT - Spec-based factory with interface validation
+mock_notifier = create_async_notifier_mock()
+await mock_notifier.log_and_send("test")
 
-# Validate that a mock has the expected spec
-validate_mock_spec(mock_notifier, Notifier)
+# ❌ WRONG - Basic patching
+@patch("requests.get")
+
+# ✅ CORRECT - Autospec patching
+@patch("requests.get", autospec=True)
 ```
 
 ### Migration from Legacy Mocks
 
 **❌ Old Pattern (Deprecated):**
+
 ```python
 from unittest.mock import AsyncMock, MagicMock
 
@@ -82,6 +81,7 @@ mock_ctx = MagicMock()
 ```
 
 **✅ New Pattern (Recommended):**
+
 ```python
 from tests.utils.mock_factories import create_async_notifier_mock, create_discord_context_mock
 
@@ -90,7 +90,9 @@ mock_notifier = create_async_notifier_mock()
 mock_ctx = create_discord_context_mock()
 ```
 
-## Test Structure and Patterns
+**Rationale**: Spec-based mocks catch interface changes at test time, preventing runtime failures and ensuring tests accurately reflect production behavior.
+
+## Test Structure & Patterns
 
 ### Unit Tests (`tests/unit/`)
 
@@ -168,30 +170,30 @@ def test_api_integration(api_mocker):
 ## Best Practices
 
 ### ✅ DO: Use Spec-Based Mocks
+
 ```python
 # Always use factory functions
 mock_notifier = create_async_notifier_mock()
 ```
 
 ### ❌ DON'T: Use Raw Mocks
+
 ```python
 # Avoid raw mocks without specs
 mock_notifier = AsyncMock()  # No interface enforcement!
 ```
 
 ### ✅ DO: Validate Async Mocks
+
 ```python
+from tests.utils.mock_factories import validate_async_mock
+
 mock_notifier = create_async_notifier_mock()
 validate_async_mock(mock_notifier, 'log_and_send')
 ```
 
-### ✅ DO: Use Descriptive Test Names
-```python
-def test_add_location_command_with_valid_search_result():
-    """Test the add location command when API returns valid results."""
-```
-
 ### ✅ DO: Follow AAA Pattern
+
 ```python
 def test_example():
     # 1. ARRANGE: Set up test data and mocks
@@ -207,28 +209,29 @@ def test_example():
 
 ## Running Tests
 
-### Run All Tests
 ```bash
+# All tests
 pytest
-```
 
-### Run Tests in Parallel
-```bash
+# Parallel execution (faster)
 pytest -n auto  # Uses all CPU cores
 pytest -n 4     # Uses 4 workers
-```
 
-### Run Specific Test Tiers
-```bash
-pytest tests/unit/           # Unit tests only
-pytest tests/integration/    # Integration tests only
-pytest tests/simulation/     # Simulation tests only
-```
+# Specific tier
+pytest tests/unit/           # Unit only
+pytest tests/integration/    # Integration only
+pytest tests/simulation/     # Simulation only
 
-### Run with Coverage
-```bash
+# With coverage
 pytest --cov=src --cov-report=html
 ```
+
+## Fixture Management
+
+- **API responses** stored in `tests/fixtures/api_responses/`
+- **Organized by service**: `pinballmap_search/`, `geocoding/`
+- **Use real API data** for accuracy
+- **Validate fixtures** with `scripts/run_all_validations.py`
 
 ## Troubleshooting
 
@@ -237,6 +240,7 @@ pytest --cov=src --cov-report=html
 **Problem**: `TypeError: object MagicMock can't be used in 'await' expression`
 
 **Solution**: Use spec-based mock factories:
+
 ```python
 # ❌ Problem
 mock = MagicMock()
@@ -252,6 +256,7 @@ await mock.log_and_send()  # Works!
 **Problem**: `AttributeError: Mock object has no attribute 'method_name'`
 
 **Solution**: Check the spec and ensure method exists on real class:
+
 ```python
 # The mock spec enforces real interface
 mock = create_async_notifier_mock()
@@ -264,12 +269,20 @@ mock.log_and_send()        # Works - method exists
 **Problem**: Tests interfere with each other
 
 **Solution**: Ensure using `db_session` fixture:
+
 ```python
 def test_database_operation(db_session):
     """Each test gets isolated database."""
     session = db_session()
     # Safe to modify database
 ```
+
+## Test Organization
+
+- **Descriptive names**: `test_add_location_with_valid_search_result()`
+- **AAA pattern**: Arrange, Act, Assert
+- **One concept per test**: Focus on single behavior
+- **Clear assertions**: Use specific assertions, not just `assert result`
 
 ## Contributing
 
@@ -280,10 +293,3 @@ When adding new tests:
 3. **Follow Naming Conventions**: Descriptive test names with clear intent
 4. **Add Documentation**: Document complex test setups and patterns
 5. **Validate Coverage**: Ensure new functionality is adequately tested
-
-## Future Improvements
-
-- [ ] Add property-based testing with Hypothesis
-- [ ] Implement mutation testing for test quality validation
-- [ ] Add performance benchmarking for critical paths
-- [ ] Enhance API fixture management and versioning

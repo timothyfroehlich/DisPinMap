@@ -45,7 +45,9 @@ This prevents test failures from masking real functionality issues and ensures c
 
 ## GCP Cost Optimization & Database Architecture
 
-### Dual-Mode Database Design
+We used to support both SQLite and PostgreSQL, but the PostgreSQL server cost too much to run, especially for our small project. We use litestream to persist it in the cloud.
+
+### Database Design
 
 The bot supports both SQLite and PostgreSQL modes for flexible deployment:
 
@@ -54,12 +56,6 @@ The bot supports both SQLite and PostgreSQL modes for flexible deployment:
 - Eliminates Cloud SQL costs (~$7-15/month savings)
 - Suitable for Discord bot workloads with moderate data needs
 - Activated by: `DB_TYPE=sqlite` (default)
-
-**PostgreSQL Mode (Enterprise, Preserved):**
-- Google Cloud SQL with full enterprise features
-- Higher cost but better for high-concurrency/large datasets
-- All infrastructure code preserved but commented out in Terraform
-- Activated by: `DB_TYPE=postgres` + uncomment Terraform resources
 
 ### Scale-to-Zero Analysis Results
 
