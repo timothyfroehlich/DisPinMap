@@ -112,6 +112,64 @@ async def test_monitoring_respects_poll_rate(db_session):
     session.close()
 
 
+@pytest.mark.asyncio
+async def test_run_checks_handles_location_id_field(db_session):
+    """
+    Test that runner.run_checks_for_channel handles location_id field correctly.
+
+    This test reproduces Issue #68: KeyError 'target_data' in !check command.
+    The database field was renamed from target_data to location_id, but runner.py
+    still tries to access target['target_data'] causing a KeyError.
+    """
+    from src.cogs.runner import Runner
+    from tests.utils.mock_factories import (
+        create_async_notifier_mock,
+        create_bot_mock,
+        create_database_mock,
+    )
+
+    # Create mock dependencies using spec-based factories
+    mock_bot = create_bot_mock()
+    mock_database = create_database_mock()
+    mock_notifier = create_async_notifier_mock()
+
+    # Create runner instance
+    runner = Runner(mock_bot, mock_database, mock_notifier)
+
+    # Mock database to return target with location_id field (post-migration schema)
+    mock_target = {
+        "id": 1,
+        "target_type": "location",
+        "location_id": "123",  # This is the NEW field name
+        "target_name": "Test Location",
+    }
+
+    mock_database.get_monitoring_targets.return_value = [mock_target]
+    mock_database.get_channel_config.return_value = {
+        "channel_id": 12345,
+        "poll_rate_minutes": 60,
+        "is_active": True,
+    }
+
+    # This should NOT crash with KeyError: 'target_data'
+    # The bug occurs in runner.py lines 305, 323, 324 where it tries to access
+    # target["target_data"] but the database returns target["location_id"]
+    try:
+        submissions, api_failure = await runner._process_target(
+            mock_target, is_manual_check=True
+        )
+        # If we get here without KeyError, the fix worked
+        assert True, "Successfully handled location_id field without KeyError"
+    except KeyError as e:
+        if "target_data" in str(e):
+            pytest.fail(
+                f"KeyError accessing target_data field: {e}. Field should be location_id"
+            )
+        else:
+            # Re-raise if it's a different KeyError
+            raise
+
+
 def test_monitoring_loop_handles_api_errors_gracefully(db_session, api_mocker):
     """
     Tests that the monitoring loop continues running even if one target's API call fails.
