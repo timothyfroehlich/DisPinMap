@@ -303,9 +303,9 @@ class Runner(commands.Cog, name="Runner"):
                     f"Skipping target with unsupported type 'city': id={target_id}. "
                     f"This target should be re-added using the add command to geocode it correctly."
                 )
-                return [], True  # Mark as failed to prevent silent failures
+                return [], False  # Not an API failure, just invalid config
 
-            if target_type == "latlong":
+            elif target_type == "latlong":
                 source_data = target.get("target_name")
                 if not source_data:
                     logger.warning(
