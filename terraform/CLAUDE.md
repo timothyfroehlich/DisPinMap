@@ -24,12 +24,18 @@ port = 8080
 
 ## Deployment Commands
 ```bash
-# Build and push new image
+# Build and push new image to Artifact Registry
 docker build -t us-central1-docker.pkg.dev/andy-expl/dispinmap-bot-repo/dispinmap-bot:latest .
 docker push us-central1-docker.pkg.dev/andy-expl/dispinmap-bot-repo/dispinmap-bot:latest
 
-# Deploy to Cloud Run
-terraform apply -auto-approve
+# Cloud Run is configured to use the 'latest' tag. Pushing a new image with this tag
+# will often automatically trigger a new Cloud Run revision. However, to explicitly
+# force a new deployment with the latest image, use:
+gcloud run deploy dispinmap-bot --image us-central1-docker.pkg.dev/andy-expl/dispinmap-bot-repo/dispinmap-bot:latest --region us-central1 --platform managed
+
+# If there are changes to the Terraform configuration itself (e.g., new environment variables,
+# scaling settings, etc.), then run terraform apply:
+# terraform apply -auto-approve
 
 # Verify deployment
 curl -f https://dispinmap-bot-wos45oz7vq-uc.a.run.app/health
