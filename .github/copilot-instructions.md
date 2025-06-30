@@ -3,3 +3,5 @@
 This project is a Python Discord bot that checks pinballmap.com API for new or removed Pinball machines near Austin, Texas, and posts updates to a Discord channel.
 
 ALWAYS READ THE CLAUDE.md file in the root of the repository as if it were part of your copilot-instructions.md
+
+Check the git remote to find out which repo this is.

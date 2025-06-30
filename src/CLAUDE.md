@@ -14,13 +14,6 @@
 - ✅ Use `location_id`
 - ❌ NEVER use `target_data` (causes KeyError - see Issue #68)
 
-## Current Production Issues
-**YOU MUST understand these before modifying command handlers:**
-- **Issue #66**: `!add` command fails with "target_type missing" - argument validation broken
-- **Issue #67**: `!rm` command fails with "index missing" - argument validation broken
-- **Issue #68**: `!check` crashes with KeyError 'target_data' in runner.py:305
-- **Issue #61**: Location search not creating database entries
-
 ## Command Architecture
 - **Handler**: `cogs/command_handler.py` - Discord command processing
 - **Runner**: `cogs/runner.py` - Background monitoring loop
