@@ -43,7 +43,7 @@ CREATE TABLE monitoring_targets (
     CONSTRAINT target_data_check CHECK (
         (target_type = 'location' AND location_id IS NOT NULL AND latitude IS NULL)
         OR
-        (target_type = 'geographic' AND location_id IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL)
+        (target_type = 'geographic' AND location_id IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL AND radius_miles IS NOT NULL)
     ),
     CONSTRAINT valid_coordinates CHECK (
         latitude IS NULL OR (latitude BETWEEN -90 AND 90)
