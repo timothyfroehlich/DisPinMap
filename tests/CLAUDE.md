@@ -2,16 +2,19 @@
 
 ## Overview
 
-The DisPinMap test suite follows a **pyramid structure** with three distinct tiers supporting **parallel execution** via strict database isolation:
+The DisPinMap test suite follows a **pyramid structure** with three distinct
+tiers supporting **parallel execution** via strict database isolation:
 
-- **Unit Tests** (`tests/unit/`): Fast, isolated tests with no external dependencies
-- **Integration Tests** (`tests/integration/`): Tests with database and API interactions
+- **Unit Tests** (`tests/unit/`): Fast, isolated tests with no external
+  dependencies
+- **Integration Tests** (`tests/integration/`): Tests with database and API
+  interactions
 - **Simulation Tests** (`tests/simulation/`): High-level user journey testing
 
 ### Key Features
 
-✅ **Parallel Execution Support** - Each worker gets isolated SQLite database
-✅ **Spec-Based Mock Framework** - Interface compliance and early error detection
+✅ **Parallel Execution Support** - Each worker gets isolated SQLite database ✅
+**Spec-Based Mock Framework** - Interface compliance and early error detection
 ✅ **Comprehensive API Mocking** - Easy HTTP response mocking with JSON fixtures
 
 ## CRITICAL: Mock Specifications Required
@@ -21,8 +24,10 @@ The DisPinMap test suite follows a **pyramid structure** with three distinct tie
 ### Why Use Spec-Based Mocks?
 
 1. **Interface Enforcement**: Prevents access to non-existent attributes/methods
-2. **Early Error Detection**: Catches typos and wrong method names during test execution
-3. **AsyncMock Compatibility**: Prevents "TypeError: object MagicMock can't be used in 'await' expression"
+2. **Early Error Detection**: Catches typos and wrong method names during test
+   execution
+3. **AsyncMock Compatibility**: Prevents "TypeError: object MagicMock can't be
+   used in 'await' expression"
 4. **Type Safety**: Better IDE support and static analysis
 5. **Refactoring Safety**: Tests break when real interfaces change
 
@@ -90,7 +95,8 @@ mock_notifier = create_async_notifier_mock()
 mock_ctx = create_discord_context_mock()
 ```
 
-**Rationale**: Spec-based mocks catch interface changes at test time, preventing runtime failures and ensuring tests accurately reflect production behavior.
+**Rationale**: Spec-based mocks catch interface changes at test time, preventing
+runtime failures and ensuring tests accurately reflect production behavior.
 
 ## Test Structure & Patterns
 
@@ -140,7 +146,8 @@ async def test_add_command_end_to_end(db_session, api_mocker):
 
 ### Database Isolation (`db_session`)
 
-The `db_session` fixture provides isolated database sessions for parallel testing:
+The `db_session` fixture provides isolated database sessions for parallel
+testing:
 
 ```python
 def test_database_operations(db_session):
@@ -288,9 +295,12 @@ def test_database_operation(db_session):
 
 When adding new tests:
 
-1. **Choose the Right Tier**: Unit for isolated logic, Integration for component interaction, Simulation for user journeys
-2. **Avoid creating new test files** Identify the file that most closely fits for this new test
-3. **Follow our testing patterns** Base your test implementations on other tests within the file. Make good use of the test utils.
+1. **Choose the Right Tier**: Unit for isolated logic, Integration for component
+   interaction, Simulation for user journeys
+2. **Avoid creating new test files** Identify the file that most closely fits
+   for this new test
+3. **Follow our testing patterns** Base your test implementations on other tests
+   within the file. Make good use of the test utils.
 4. **Use Spec-Based Mocks**: Always use mock factory functions
 5. **Follow Naming Conventions**: Descriptive test names with clear intent
 6. **Add Documentation**: Document complex test setups and patterns

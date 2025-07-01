@@ -1,18 +1,22 @@
 # Database Migration Agent Instructions
 
 ## CRITICAL: Recent Migration Impact
+
 **Migration `5c8e4212f5ed`** renamed `target_data` → `location_id`
 
 **IMPORTANT**: Issue #68 shows some code still uses old field name
+
 - ❌ `target["target_data"]` causes KeyError in production
 - ✅ Use `target["location_id"]` everywhere
 
 ## Key Files
+
 - **env.py** - Migration environment, database URL configuration
 - **script.py.mako** - Template for new migration files
 - **versions/** - Individual migration scripts (chronological order)
 
 ## Database Schema
+
 ```sql
 -- ChannelConfig: Discord channel monitoring settings
 CREATE TABLE channel_configs (
@@ -35,6 +39,7 @@ CREATE TABLE monitoring_targets (
 ```
 
 ## Common Commands
+
 ```bash
 # Create new migration
 alembic revision --autogenerate -m "description of changes"
@@ -53,22 +58,28 @@ alembic history
 ```
 
 ## Database URL Configuration
+
 - **Development**: Uses `DATABASE_PATH` environment variable
 - **Production**: Set via environment or alembic.ini
 - **Testing**: Temporary SQLite files per test worker
 
 ## Migration Best Practices
+
 - **Test both up and down**: Ensure migrations are reversible
 - **Data compatibility**: Consider existing data when changing schemas
 - **Code updates**: Update all code references when renaming fields
 - **Database compatibility**: Ensure migrations work correctly with SQLite
 
 ## Current Schema Issues
-**Issue #47**: `is_active` defaults to `False` causing silent monitoring failures
+
+**Issue #47**: `is_active` defaults to `False` causing silent monitoring
+failures
+
 - Channels with targets but `is_active=False` are skipped silently
 - Consider changing default to `True` to prevent confusion
 
 ## Troubleshooting
+
 ```bash
 # Reset to clean state (DESTRUCTIVE)
 alembic downgrade base

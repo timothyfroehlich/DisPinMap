@@ -31,85 +31,17 @@ dev = [
     "pytest-asyncio",
     "pytest-xdist",
     "pytest-cov",
-    "flake8",
-    "black",
-    "isort",
-    "mypy",
-    "types-requests",
+    "ruff",
     "pre-commit",
+    "prettier",
 ]
 
-[tool.setuptools]
-packages = ["src"]
-# If you have packages in subdirectories of src, use:
-# packages = find_packages(where="src")
+[tool.setuptools.packages.find]
+where = ["src"]
 
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ['py313']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | migrations
-)/
-'''
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-combine_as_imports = true
-known_first_party = ["src"]
-known_third_party = ["discord", "requests", "sqlalchemy", "pytest", "aiohttp", "colorama", "google"]
-skip_glob = ["migrations/*"]
-
-[tool.mypy]
-python_version = "3.13"
-warn_return_any = false
-warn_unused_configs = true
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-check_untyped_defs = false
-disallow_untyped_decorators = false
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = false
-warn_no_return = false
-warn_unreachable = false
-strict_equality = false
-explicit_package_bases = true
-mypy_path = "."
-exclude = [
-    "migrations/.*",
-    ".venv/.*",
-    "build/.*",
-    "dist/.*",
-    "alembic/.*"
-]
-
-[[tool.mypy.overrides]]
-module = [
-    "discord.*",
-    "google.cloud.secretmanager",
-    "cloud_sql_python_connector.*",
-    "pg8000.*",
-    "tests.utils.*",
-    "setuptools.*",
-    "colorama.*",
-    "notifier"
-]
-ignore_missing_imports = true
+target-version = "py313"
 
 [tool.coverage.run]
 source = ["src"]
