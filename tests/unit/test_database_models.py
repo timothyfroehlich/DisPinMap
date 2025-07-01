@@ -88,7 +88,7 @@ def test_model_initialization_defaults():
     config_table = ChannelConfig.__table__
     assert config_table.columns["poll_rate_minutes"].default.arg == 60
     assert config_table.columns["notification_types"].default.arg == "machines"
-    assert config_table.columns["is_active"].default.arg is False
+    assert config_table.columns["is_active"].default.arg is True
 
     # Test MonitoringTarget column defaults
     target_table = MonitoringTarget.__table__
