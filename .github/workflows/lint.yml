@@ -46,13 +46,8 @@ jobs:
         run: |
           prettier --check "**/*.{md,yml,yaml}" --ignore-path .gitignore
 
-      - name: Install actionlint
-        run: |
-          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-
       - name: Run actionlint (GitHub Actions check)
-        run: |
-          actionlint
+        uses: ryo-ma/github-action-actionlint@v1
 
       - name: Run pre-commit hooks
         run: |
