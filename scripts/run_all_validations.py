@@ -39,8 +39,8 @@ import requests
 # Add src to path for imports - noqa: E402
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.api import (  # noqa: E402
-    fetch_location_details,
+from src.api import (
+    fetch_location_details,  # noqa: E402
     fetch_submissions_for_location,
     geocode_city_name,
     search_location_by_name,

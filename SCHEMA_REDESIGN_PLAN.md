@@ -113,6 +113,11 @@ CREATE TABLE monitoring_targets (
 - Fix end-to-end workflows with new coordinate handling
 - Update API integration tests for geographic vs location targets
 - Test runner functionality with new data patterns
+- Integration test `tests/integration/test_commands_e2e.py` needs further changes:
+  - Update all command invocations to use the correct subcommand methods or simulate Discord command invocation as appropriate for the test framework.
+  - Replace all references to the old schema field `target_name` with `display_name` and update any other schema field usages to match the new schema.
+  - Ensure all test code that instantiates `MonitoringTarget` or calls `add_monitoring_target` uses the new schema fields.
+  - Review and update any other test logic that assumes the old schema or command structure.
 
 #### ❌ Phase 3.3: Migration Test Updates (Pending)
 
@@ -222,7 +227,7 @@ CREATE TABLE monitoring_targets (
 
 ### Agent 1: Unit Test Specialist (CURRENT)
 
-**Duration:** 2-3 days  
+**Duration:** 2-3 days
 **Files:** All `tests/unit/*.py` files (15 files need updates) **Tasks:**
 
 - ✅ `tests/unit/test_database_models.py` - Updated for new schema
@@ -241,6 +246,11 @@ CREATE TABLE monitoring_targets (
 - Update API integration tests for geographic vs location targets
 - Update/simplify migration tests for fresh database approach
 - Test runner functionality with new data patterns
+- Integration test `tests/integration/test_commands_e2e.py` needs further changes:
+  - Update all command invocations to use the correct subcommand methods or simulate Discord command invocation as appropriate for the test framework.
+  - Replace all references to the old schema field `target_name` with `display_name` and update any other schema field usages to match the new schema.
+  - Ensure all test code that instantiates `MonitoringTarget` or calls `add_monitoring_target` uses the new schema fields.
+  - Review and update any other test logic that assumes the old schema or command structure.
 
 ### Agent 3: Alembic Baseline Specialist
 
