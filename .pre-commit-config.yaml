@@ -13,8 +13,8 @@ repos:
     rev: v0.8.4
     hooks:
       - id: ruff
-        args: [--fix]
       - id: ruff-format
+        args: [--fix]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
