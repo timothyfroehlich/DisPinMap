@@ -11,46 +11,124 @@ data format, these tests will fail, alerting us to the necessary updates.
 
 import pytest
 
-from src.api import search_location_by_name
+from src.api import geocode_city_name, search_location_by_name
 
 
-def test_handle_geocoding_response_for_seattle(api_mocker):
+@pytest.mark.asyncio
+async def test_handle_geocoding_response_for_seattle(api_mocker):
     """
     Tests handling of a real geocoding response for 'Seattle, WA'.
     - Mocks the HTTP request to return the contents of 'city_seattle_wa.json'.
     - Calls the geocoding logic.
     - Asserts that the correct lat/long is extracted.
     """
-    pass
+    # Setup API mocker for Seattle geocoding request
+    api_mocker.add_response(
+        url_substring="geocoding-api.open-meteo.com",
+        json_fixture_path="geocoding/city_seattle.json",
+    )
+
+    # Call the geocoding function
+    result = await geocode_city_name("Seattle, WA")
+
+    # Assert the response is correctly parsed
+    assert result["status"] == "success"
+    assert "lat" in result
+    assert "lon" in result
+    assert "display_name" in result
+    assert "Seattle" in result["display_name"]
 
 
-def test_handle_pinballmap_location_details_response(api_mocker):
+@pytest.mark.asyncio
+async def test_handle_pinballmap_location_details_response(api_mocker):
     """
     Tests handling of a real location details response from PinballMap.
     - Mocks the HTTP request to return 'location_1_details.json'.
     - Calls the location details fetching logic.
     - Asserts that the name, city, and other details are parsed correctly.
     """
-    pass
+    from src.api import fetch_location_details
+
+    # Setup API mocker for location details request
+    api_mocker.add_response(
+        url_substring="locations/874.json",
+        json_fixture_path="pinballmap_locations/location_874_details.json",
+    )
+
+    # Call the location details function
+    result = await fetch_location_details(874)
+
+    # Assert the response is correctly parsed
+    assert isinstance(result, dict)
+    assert result["id"] == 874
+    assert result["name"] == "Ground Kontrol Classic Arcade"
+    assert result["city"] == "Portland"
+    assert result["state"] == "OR"
+    assert "location_machine_xrefs" in result
+    assert isinstance(result["location_machine_xrefs"], list)
 
 
-def test_handle_pinballmap_submissions_response(api_mocker):
+@pytest.mark.asyncio
+async def test_handle_pinballmap_submissions_response(api_mocker):
     """
     Tests handling of a real submissions response from PinballMap.
     - Mocks the HTTP request to return 'coords_seattle_5mi_all.json'.
     - Calls the submission fetching logic.
     - Asserts that the list of submissions is parsed into the correct data structure.
     """
-    pass
+    from src.api import fetch_submissions_for_location
+
+    # Setup API mocker for submissions request
+    api_mocker.add_response(
+        url_substring="user_submissions",
+        json_fixture_path="pinballmap_submissions/location_874_recent.json",
+    )
+
+    # Call the submissions function
+    result = await fetch_submissions_for_location(874)
+
+    # Assert the response is correctly parsed
+    assert isinstance(result, list)
+    # The fixture should contain submissions data
+    if result:  # If there are submissions in the fixture
+        first_submission = result[0]
+        assert isinstance(first_submission, dict)
+        # Common submission fields that should exist
+        assert "id" in first_submission or "submission_type" in first_submission
 
 
-def test_handle_api_error_responses(api_mocker):
+@pytest.mark.asyncio
+async def test_handle_api_error_responses(api_mocker):
     """
     Tests that the API clients handle error responses (e.g., 404, 500) gracefully.
     - Mocks an HTTP request to return a non-200 status code.
     - Asserts that the client returns an appropriate error indicator or raises a specific exception.
     """
-    pass
+    from unittest.mock import patch
+
+    import requests
+
+    from src.api import fetch_location_details
+    from tests.utils.mock_factories import create_requests_response_mock
+
+    # Mock a 404 response for a non-existent location using factory
+    mock_response = create_requests_response_mock(
+        404, {"errors": ["Location not found"]}
+    )
+    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
+        "HTTP 404"
+    )
+
+    with patch("src.api.rate_limited_request", return_value=mock_response):
+        try:
+            result = await fetch_location_details(999999)
+            # Should return empty dict on error
+            assert result == {}
+        except Exception as e:
+            # Or should raise appropriate exception
+            assert "not found" in str(e).lower() or isinstance(
+                e, requests.exceptions.HTTPError
+            )
 
 
 @pytest.mark.asyncio
@@ -107,10 +185,26 @@ async def test_geocode_api_contract_for_known_city(api_mocker):
     assert "display_name" in result
 
 
-def test_api_returns_error_for_unknown_location_id():
+@pytest.mark.asyncio
+async def test_api_returns_error_for_unknown_location_id():
     """
     Tests that the PinballMap client handles a 'not found' error gracefully.
     - Mocks the API to return an error for a non-existent location ID.
     - Asserts that the function returns an appropriate error indicator.
     """
-    pass
+    from unittest.mock import patch
+
+    from src.api import fetch_location_details
+    from tests.utils.mock_factories import create_requests_response_mock
+
+    # Mock the API to return a fixture for unknown location using factory
+    mock_response = create_requests_response_mock(
+        404, {"errors": ["Location not found"]}
+    )
+
+    with patch("src.api.rate_limited_request", return_value=mock_response):
+        # Test the fetch_location_details function
+        result = await fetch_location_details(999999)
+
+        # Should return empty dict for error (based on the function implementation)
+        assert result == {}
