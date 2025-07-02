@@ -378,7 +378,7 @@ async def geocode_city_name(city_input: str) -> Dict[str, Any]:
                 return {
                     "status": "error",
                     "message": f"Multiple locations found for '{city_name}'. Please specify which one you want:\n"
-                    + "\n".join(f"{i+1}. {s}" for i, s in enumerate(suggestions)),
+                    + "\n".join(f"{i + 1}. {s}" for i, s in enumerate(suggestions)),
                 }
         else:
             # If no state/country specified, use the first result

@@ -24,6 +24,7 @@
 ## Pre-commit Hooks
 
 Before committing, the following checks will run automatically:
+
 - Code formatting (Black)
 - Import sorting (isort)
 - Linting (flake8)
@@ -33,6 +34,7 @@ Before committing, the following checks will run automatically:
 ## VS Code Integration
 
 This project includes VS Code settings for:
+
 - Automatic formatting on save
 - Test discovery
 - Recommended extensions

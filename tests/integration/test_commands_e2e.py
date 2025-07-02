@@ -673,17 +673,17 @@ async def test_list_command_with_targets(db_session):
     assert "Index" in message_arg, "Table should contain Index column header"
     assert "Target" in message_arg, "Table should contain Target column header"
     assert "Poll (min)" in message_arg, "Table should contain Poll (min) column header"
-    assert (
-        "Notifications" in message_arg
-    ), "Table should contain Notifications column header"
-    assert (
-        "Last Checked" in message_arg
-    ), "Table should contain Last Checked column header"
+    assert "Notifications" in message_arg, (
+        "Table should contain Notifications column header"
+    )
+    assert "Last Checked" in message_arg, (
+        "Table should contain Last Checked column header"
+    )
 
     # Verify each target appears in the message
-    assert (
-        "Location: Ground Kontrol Classic Arcade" in message_arg
-    ), "Should show location target"
+    assert "Location: Ground Kontrol Classic Arcade" in message_arg, (
+        "Should show location target"
+    )
     assert "Coords: 45.5231, -122.6765" in message_arg, "Should show coordinate target"
     assert "City: Portland, OR" in message_arg, "Should show city target"
 
@@ -695,9 +695,9 @@ async def test_list_command_with_targets(db_session):
     # Verify default settings are shown
     assert "60" in message_arg, "Should show default poll rate of 60 minutes"
     assert "machines" in message_arg, "Should show default notification type"
-    assert (
-        "Never" in message_arg
-    ), "Should show 'Never' for last checked since targets were just added"
+    assert "Never" in message_arg, (
+        "Should show 'Never' for last checked since targets were just added"
+    )
 
     # Verify that targets were actually stored in the database correctly
     session = db_session()

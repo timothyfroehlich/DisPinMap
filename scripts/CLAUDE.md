@@ -1,16 +1,19 @@
 # Scripts Agent Instructions
 
 ## Validation Scripts
+
 - **run_all_validations.py** - Comprehensive fixture and API validation
 - **validate_litestream.py** - Database backup configuration checks
 
 ## Git Worktree Management (Advanced)
+
 - **create-feature-worktree.sh** - Create new worktree for parallel development
 - **sync-all-worktrees.sh** - Sync all worktrees with latest changes
 - **cleanup-completed-worktree.sh** - Remove finished worktrees
 - **../worktree-aliases.sh** - Convenience aliases (in project root)
 
 ## Common Commands
+
 ```bash
 # Validate all fixtures and API responses
 python scripts/run_all_validations.py --ci-safe
@@ -26,13 +29,16 @@ python scripts/validate_litestream.py
 ```
 
 ## Fixture Validation
+
 The `run_all_validations.py` script ensures:
+
 - API response fixtures match current API format
 - All test fixtures load without JSON errors
 - External API endpoints are reachable (when not in CI)
 - Fixture data matches expected schema
 
 ## Worktree Workflow (Advanced)
+
 **Purpose**: Work on multiple features simultaneously without branch switching
 
 ```bash
@@ -51,17 +57,21 @@ cleanup-completed-worktree feature-name
 ```
 
 ## Script Dependencies
+
 - **Python scripts**: Require active virtual environment
 - **Bash scripts**: Require git and standard Unix tools
 - **Validation scripts**: May need network access for API checks
 
 ## Environment Variables
+
 Some scripts check for:
+
 - `CI` - Skips network-dependent validations
 - `DATABASE_PATH` - For database-related validations
 - Git configuration for worktree operations
 
 ## Integration with CI
+
 - **GitHub Actions** uses `ci_fixture_validation.yml` workflow
 - Scripts designed to run in both local and CI environments
 - Exit codes indicate success/failure for automation

@@ -330,9 +330,9 @@ Useful for backup or setting up identical monitoring in another channel.""",
                 if target.get("location_id"):
                     target_commands.append(f"!add location {target['location_id']}")
                 else:
-                    target_commands.append(f"!add location \"{target['target_name']}\"")
+                    target_commands.append(f'!add location "{target["target_name"]}"')
             elif target["target_type"] == "city":
-                target_commands.append(f"!add city \"{target['target_name']}\"")
+                target_commands.append(f'!add city "{target["target_name"]}"')
             elif target["target_type"] == "latlong":
                 lat, lon, *rest = target["target_name"].split(",")
                 radius_str = f" {rest[0]}" if rest else ""

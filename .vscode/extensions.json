@@ -2,9 +2,7 @@
   "recommendations": [
     // Essential Python Development
     "ms-python.python",
-    "ms-python.black-formatter",
-    "ms-python.isort",
-    "ms-python.mypy-type-checker",
+    "charliermarsh.ruff",
 
     // Git & Version Control
     "eamodio.gitlens",

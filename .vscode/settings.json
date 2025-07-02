@@ -4,10 +4,11 @@
 
     // Formatter settings
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
+            "source.organizeImports": "explicit",
+            "source.fixAll.ruff": "explicit"
         }
     },
 
@@ -35,7 +36,6 @@
         "**/*.pyc": true,
         "**/node_modules": true,
         "**/.pytest_cache": true,
-        "**/.mypy_cache": true,
         "**/htmlcov": true
     }
 }

@@ -115,7 +115,6 @@ async def create_bot(db_session_factory=None, notifier=None):
 
         # Handle missing required arguments with helpful user messages
         if isinstance(error, MissingRequiredArgument):
-
             # Generic fallback for other commands with missing arguments
             await ctx.send(
                 f"❌ Missing required argument: {error.param}. Use `!help {ctx.command.name}` for usage info."

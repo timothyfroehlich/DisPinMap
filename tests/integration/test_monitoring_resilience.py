@@ -123,9 +123,9 @@ async def test_monitoring_is_resilient_to_database_error(db_session, api_mocker)
 
             # The important part is that we can catch and handle this error
             # without crashing the entire monitoring system
-            assert "Database connection failed" in str(
-                e
-            ), "Should properly catch and handle database errors"
+            assert "Database connection failed" in str(e), (
+                "Should properly catch and handle database errors"
+            )
 
     # Test that normal operations still work after error recovery
     session.rollback()  # Reset session state

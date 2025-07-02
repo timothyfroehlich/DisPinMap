@@ -1,10 +1,12 @@
 # Database Architecture Guide
 
-This document provides comprehensive information about the DisPinMap database architecture, migration procedures, and operational details.
+This document provides comprehensive information about the DisPinMap database
+architecture, migration procedures, and operational details.
 
 ## Architecture Overview
 
 ### Database Technology Stack
+
 - **Primary Database**: SQLite 3
 - **Backup System**: Litestream continuous replication
 - **Storage Backend**: Google Cloud Storage (GCS)
@@ -13,12 +15,14 @@ This document provides comprehensive information about the DisPinMap database ar
 ### Why SQLite + Litestream?
 
 **SQLite Benefits**:
+
 - Cost-effective (no managed database service costs)
 - Sufficient for Discord bot workloads
 - Simple deployment and maintenance
 - ACID compliance and reliability
 
 **Litestream Benefits**:
+
 - Continuous backup to cloud storage
 - Point-in-time recovery capabilities
 - Handles container restarts and crashes
@@ -27,6 +31,7 @@ This document provides comprehensive information about the DisPinMap database ar
 ## Production Database Access
 
 ### Current Deployment Location
+
 - **Environment**: Google Cloud Run
 - **Service URL**: https://dispinmap-bot-wos45oz7vq-uc.a.run.app
 - **Database File**: `/tmp/pinball_bot.db` (in container)
@@ -35,6 +40,7 @@ This document provides comprehensive information about the DisPinMap database ar
 ### Accessing Production Data
 
 #### Method 1: Download Latest Backup
+
 ```bash
 # List available backup generations
 gsutil ls gs://dispinmap-bot-sqlite-backups/db/generations/
@@ -53,6 +59,7 @@ sqlite3 production_backup.db
 ```
 
 #### Method 2: Container Access (Advanced)
+
 ```bash
 # Get running container instance
 CONTAINER_ID=$(gcloud run services describe dispinmap-bot --region=us-central1 --format="value(status.latestRevisionName)")
@@ -66,6 +73,7 @@ gcloud run services proxy dispinmap-bot --port=8080
 ### Current Production Schema
 
 #### MonitoringTarget Table
+
 ```sql
 CREATE TABLE monitoring_targets (
     id INTEGER NOT NULL PRIMARY KEY,
@@ -85,6 +93,7 @@ CREATE TABLE monitoring_targets (
 ```
 
 #### Data Examples
+
 ```sql
 -- Location monitoring (location_id contains PinballMap location ID)
 INSERT INTO monitoring_targets (channel_id, target_type, target_name, location_id)
@@ -102,15 +111,22 @@ VALUES (1377474127648133130, 'latlong', '30.26715,-97.74306,5');
 ### Known Schema Issues
 
 #### ✅ [RESOLVED] Constraint Design Problem
-The unique constraint on the `monitoring_targets` table was originally on `(channel_id, target_type, target_name)`, which incorrectly allowed multiple targets for the same location ID.
 
-**This has been resolved in migration `5c8e4212f5ed`.** The schema now correctly uses `location_id` for `location` type targets and has a unique constraint on `(channel_id, target_type, location_id)`. For `city` and `latlong` targets, `location_id` is NULL and `target_name` stores the coordinate data.
+The unique constraint on the `monitoring_targets` table was originally on
+`(channel_id, target_type, target_name)`, which incorrectly allowed multiple
+targets for the same location ID.
+
+**This has been resolved in migration `5c8e4212f5ed`.** The schema now correctly
+uses `location_id` for `location` type targets and has a unique constraint on
+`(channel_id, target_type, location_id)`. For `city` and `latlong` targets,
+`location_id` is NULL and `target_name` stores the coordinate data.
 
 ## Migration Management
 
 ### Alembic Configuration
 
 #### Setup
+
 ```bash
 # Initialize Alembic (already done)
 alembic init alembic
@@ -121,11 +137,13 @@ alembic init alembic
 ```
 
 #### Environment Variables
+
 - `SQLALCHEMY_URL`: Override database URL for migrations
 - `LITESTREAM_BUCKET`: GCS bucket for backups
 - `LITESTREAM_PATH`: Database file path
 
 #### Common Migration Commands
+
 ```bash
 # Create new migration
 alembic revision --autogenerate -m "description"
@@ -145,19 +163,38 @@ alembic downgrade -1
 
 ### SQLite-Specific Migration Considerations
 
-Migrating schemas in SQLite requires special care due to its limited `ALTER TABLE` support. Unlike other databases like PostgreSQL, you cannot simply drop a constraint. Complex changes often require recreating the table, which Alembic handles through "batch mode".
+Migrating schemas in SQLite requires special care due to its limited
+`ALTER TABLE` support. Unlike other databases like PostgreSQL, you cannot simply
+drop a constraint. Complex changes often require recreating the table, which
+Alembic handles through "batch mode".
 
-However, even with batch mode, complex, multi-step operations within a single migration can fail silently or unreliably. The migration may be marked as "applied" in the `alembic_version` table, but the schema changes (like new constraints) will not be present in the database.
+However, even with batch mode, complex, multi-step operations within a single
+migration can fail silently or unreliably. The migration may be marked as
+"applied" in the `alembic_version` table, but the schema changes (like new
+constraints) will not be present in the database.
 
 #### Golden Rules for SQLite Migrations
+
 Based on experience, follow these rules to ensure safe and reliable migrations:
-1.  **Keep Migrations Atomic:** Each migration script should perform only one small, distinct task (e.g., add a column, or copy data, or create a constraint). Do not combine these into a single script.
-2.  **Separate Schema and Data Changes:** Never mix schema changes (like adding a column) and data changes (like populating that column) in the same `batch_alter_table` block. Perform them in separate steps, often in separate migration files.
-3.  **Always Test on Production Data:** Before running a migration in production, always test it on a fresh copy of the production database (`production_snapshot.lz4`).
-4.  **Revert Models First:** Before generating a new migration, ensure your SQLAlchemy models in `src/models.py` match the *current* state of the production database. Make the model changes *after* generating the script.
-5.  **Trust, but Verify:** After running a migration, manually inspect the database schema with `.schema` to ensure the changes were actually applied.
+
+1.  **Keep Migrations Atomic:** Each migration script should perform only one
+    small, distinct task (e.g., add a column, or copy data, or create a
+    constraint). Do not combine these into a single script.
+2.  **Separate Schema and Data Changes:** Never mix schema changes (like adding
+    a column) and data changes (like populating that column) in the same
+    `batch_alter_table` block. Perform them in separate steps, often in separate
+    migration files.
+3.  **Always Test on Production Data:** Before running a migration in
+    production, always test it on a fresh copy of the production database
+    (`production_snapshot.lz4`).
+4.  **Revert Models First:** Before generating a new migration, ensure your
+    SQLAlchemy models in `src/models.py` match the _current_ state of the
+    production database. Make the model changes _after_ generating the script.
+5.  **Trust, but Verify:** After running a migration, manually inspect the
+    database schema with `.schema` to ensure the changes were actually applied.
 
 #### Constraint Changes Require Batch Mode
+
 SQLite doesn't support `ALTER TABLE` for constraints. Use batch mode:
 
 ```python
@@ -169,9 +206,12 @@ def upgrade():
 ```
 
 #### Data Migration Pattern
-A safe pattern for migrations that involve changing a column and preserving its data is to do it in multiple, distinct migration scripts.
+
+A safe pattern for migrations that involve changing a column and preserving its
+data is to do it in multiple, distinct migration scripts.
 
 **Migration 1: Add the new column**
+
 ```python
 # revision: 1_add_new_column
 def upgrade():
@@ -179,6 +219,7 @@ def upgrade():
 ```
 
 **Migration 2: Copy data to the new column**
+
 ```python
 # revision: 2_copy_data
 def upgrade():
@@ -187,6 +228,7 @@ def upgrade():
 ```
 
 **Migration 3: Drop the old column and apply new constraints**
+
 ```python
 # revision: 3_finalize_schema
 def upgrade():
@@ -198,6 +240,7 @@ def upgrade():
 ## Backup and Recovery
 
 ### Litestream Configuration
+
 See `litestream.yml` in project root:
 
 ```yaml
@@ -214,6 +257,7 @@ dbs:
 ### Recovery Procedures
 
 #### Restore from Backup
+
 ```bash
 # Using Litestream (in container)
 litestream restore -config /app/litestream.yml /tmp/pinball_bot.db
@@ -224,6 +268,7 @@ lz4 -d 00000000.snapshot.lz4 restored.db
 ```
 
 #### Backup Validation
+
 ```bash
 # Run validation script
 python scripts/validate_litestream.py
@@ -236,11 +281,13 @@ sqlite3 backup.db "SELECT COUNT(*) FROM monitoring_targets;"
 ## Development Workflow
 
 ### Local Development
+
 1. **Use Production Backup**: Copy latest backup for realistic testing
 2. **Run Migrations**: Test migrations on production data copy
 3. **Validate Changes**: Ensure data integrity after migrations
 
 ### Migration Testing
+
 ```bash
 # 1. Get production backup
 gsutil cp gs://dispinmap-bot-sqlite-backups/db/generations/LATEST/snapshots/00000000.snapshot.lz4 ./
@@ -256,6 +303,7 @@ sqlite3 test_migration.db "SELECT COUNT(*) FROM monitoring_targets;"
 ```
 
 ### Production Deployment
+
 1. **Container Update**: Migration runs automatically on container startup
 2. **Litestream Backup**: Continuous backup ensures safety
 3. **Rollback Available**: Can restore from pre-migration backup if needed
@@ -265,14 +313,18 @@ sqlite3 test_migration.db "SELECT COUNT(*) FROM monitoring_targets;"
 ### Common Issues
 
 #### Migration Fails with "duplicate column"
+
 - **Cause**: Model changes applied before migration created
-- **Solution**: Reset models to production state, generate migration, then apply model changes
+- **Solution**: Reset models to production state, generate migration, then apply
+  model changes
 
 #### SQLite constraint errors
+
 - **Cause**: Trying to use PostgreSQL-style ALTER TABLE
 - **Solution**: Use Alembic batch mode with `render_as_batch=True`
 
 #### Backup restoration fails
+
 - **Cause**: Litestream version mismatch or configuration issues
 - **Solution**: Use manual GCS download and lz4 decompression
 
@@ -306,5 +358,6 @@ SELECT version_num FROM alembic_version;
 
 - **SQLite Limitations**: Single writer, but sufficient for Discord bot workload
 - **Backup Overhead**: Litestream adds minimal performance impact
-- **Container Storage**: Database file is ephemeral, relies on Litestream for persistence
+- **Container Storage**: Database file is ephemeral, relies on Litestream for
+  persistence
 - **Recovery Time**: Fast restoration from GCS (typically < 30 seconds)

@@ -113,9 +113,9 @@ class TestTargetTypeValidation:
         valid_types = ["location", "coordinates", "city"]
 
         for target_type in invalid_types:
-            assert (
-                target_type not in valid_types
-            ), f"Unexpectedly valid target type: {target_type}"
+            assert target_type not in valid_types, (
+                f"Unexpectedly valid target type: {target_type}"
+            )
 
 
 class TestNotificationTypeValidation:
@@ -126,9 +126,9 @@ class TestNotificationTypeValidation:
         valid_types = ["all", "machines", "comments", "conditions"]
 
         for notification_type in valid_types:
-            assert (
-                notification_type in valid_types
-            ), f"Invalid notification type: {notification_type}"
+            assert notification_type in valid_types, (
+                f"Invalid notification type: {notification_type}"
+            )
 
     def test_invalid_notification_types(self):
         """Test invalid notification types"""
@@ -136,6 +136,6 @@ class TestNotificationTypeValidation:
         valid_types = ["all", "machines", "comments", "conditions"]
 
         for notification_type in invalid_types:
-            assert (
-                notification_type not in valid_types
-            ), f"Unexpectedly valid notification type: {notification_type}"
+            assert notification_type not in valid_types, (
+                f"Unexpectedly valid notification type: {notification_type}"
+            )

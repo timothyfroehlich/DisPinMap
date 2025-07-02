@@ -1,23 +1,29 @@
 # Database Schema Redesign Plan
-**Issues**: #78, #81
-**Branch**: `feature/schema-redesign-issues-78-81`
+
+**Issues**: #78, #81 **Branch**: `feature/schema-redesign-issues-78-81`
 **Approach**: Complete schema redesign with fresh database start
 
 ## Overview
 
-This plan implements a comprehensive database schema redesign to resolve architectural issues with data overloading in the `target_name` field and inconsistent data access patterns. We will create a new, properly normalized schema and migrate existing production data.
+This plan implements a comprehensive database schema redesign to resolve
+architectural issues with data overloading in the `target_name` field and
+inconsistent data access patterns. We will create a new, properly normalized
+schema and migrate existing production data.
 
 ## Current Problems Being Solved
 
-1. **Data Overloading**: `target_name` stores different data types (names vs coordinates)
+1. **Data Overloading**: `target_name` stores different data types (names vs
+   coordinates)
 2. **Type Confusion**: 'city' targets cause crashes, should be 'geographic'
-3. **No Coordinate Validation**: String-based coordinates prevent proper validation
+3. **No Coordinate Validation**: String-based coordinates prevent proper
+   validation
 4. **Inconsistent Access**: Different fields used for different target types
 5. **Constraint Issues**: Duplicate geographic targets possible
 
 ## New Schema Design
 
 ### MonitoringTarget Table (Redesigned)
+
 ```sql
 CREATE TABLE monitoring_targets (
     id INTEGER PRIMARY KEY,
@@ -67,7 +73,8 @@ CREATE TABLE monitoring_targets (
 
 1. **Single Responsibility**: Each field has one clear purpose
 2. **Type Safety**: Proper data types with validation constraints
-3. **Clear Semantics**: `display_name` always human-readable, coordinates always numeric
+3. **Clear Semantics**: `display_name` always human-readable, coordinates always
+   numeric
 4. **Extensibility**: Easy to add new target types or geographic features
 5. **Data Integrity**: Comprehensive constraints prevent invalid data
 
@@ -76,23 +83,27 @@ CREATE TABLE monitoring_targets (
 ### Phase 1: Test Development & Schema Validation (3 days)
 
 #### 1.1 Create New Model Classes
+
 - **File**: `src/models_new.py` (temporary)
 - Create new SQLAlchemy models with proper constraints
 - Include validation methods and helper functions
 
 #### 1.2 Data Transformation Pipeline Tests
+
 - **File**: `tests/migration/test_data_transformation.py`
 - Test export from current schema
 - Test transformation logic for each target type
 - Test import to new schema with validation
 
 #### 1.3 Schema Validation Tests
+
 - **File**: `tests/migration/test_new_schema.py`
 - Test all constraints work correctly
 - Test data integrity rules
 - Test edge cases and invalid data rejection
 
 #### 1.4 Production Data Copy Testing
+
 - Download latest production database backup
 - Run transformation pipeline on real data
 - Validate all targets can be converted successfully
@@ -101,12 +112,14 @@ CREATE TABLE monitoring_targets (
 ### Phase 2: Data Migration Pipeline (3 days)
 
 #### 2.1 Export Pipeline
+
 - **File**: `scripts/export_current_data.py`
 - Export all monitoring targets to JSON format
 - Include metadata for validation
 - Create data integrity checksums
 
 #### 2.2 Transformation Pipeline
+
 - **File**: `scripts/transform_schema_data.py`
 - **Location Targets**:
   - `location_id` → `location_id` (unchanged)
@@ -121,6 +134,7 @@ CREATE TABLE monitoring_targets (
 - **Conflict Resolution**: Handle any duplicate geographic targets
 
 #### 2.3 Import Pipeline
+
 - **File**: `scripts/import_new_schema.py`
 - Create new database with new schema
 - Import transformed data with validation
@@ -128,6 +142,7 @@ CREATE TABLE monitoring_targets (
 - Generate import report with statistics
 
 #### 2.4 Rollback Procedures
+
 - **File**: `scripts/rollback_schema.py`
 - Export data from new schema back to old format
 - Create emergency rollback database
@@ -136,6 +151,7 @@ CREATE TABLE monitoring_targets (
 ### Phase 3: Code Refactoring (5 days)
 
 #### 3.1 Database Layer Updates
+
 - **File**: `src/database.py`
 - Update all CRUD operations for new schema
 - Add helper methods for coordinate handling
@@ -143,12 +159,14 @@ CREATE TABLE monitoring_targets (
 - Add validation for coordinate inputs
 
 #### 3.2 Model Updates
+
 - **File**: `src/models.py`
 - Replace with new schema models
 - Add validation methods
 - Add helper methods for coordinate formatting
 
 #### 3.3 Command Handler Refactoring
+
 - **File**: `src/cogs/command_handler.py`
 - **Add Commands**:
   - Location: Use `location_id` and `display_name`
@@ -159,6 +177,7 @@ CREATE TABLE monitoring_targets (
 - **Export Command**: Generate commands using new field structure
 
 #### 3.4 Runner Logic Updates
+
 - **File**: `src/cogs/runner.py`
 - Remove all 'city' target type handling (should not exist)
 - Update coordinate parsing to use numeric fields
@@ -166,6 +185,7 @@ CREATE TABLE monitoring_targets (
 - Update API calls to use appropriate fields
 
 #### 3.5 API Integration Updates
+
 - **File**: `src/api.py`
 - Update coordinate-based API calls to use numeric fields
 - Update location-based API calls to use `location_id`
@@ -174,12 +194,14 @@ CREATE TABLE monitoring_targets (
 ### Phase 4: Testing & Integration (4 days)
 
 #### 4.1 Unit Test Updates
+
 - Update all existing tests for new schema
 - Add tests for new constraint validations
 - Test coordinate validation and edge cases
 - Test data access patterns
 
 #### 4.2 Integration Testing
+
 - **File**: `tests/integration/test_schema_e2e.py`
 - End-to-end testing with transformed production data
 - Test all command flows with new schema
@@ -187,12 +209,14 @@ CREATE TABLE monitoring_targets (
 - Verify API integrations work correctly
 
 #### 4.3 User Journey Testing
+
 - **File**: `tests/simulation/test_new_schema_journeys.py`
 - Test complete user workflows with new schema
 - Verify all commands work as documented in USER_DOCUMENTATION.md
 - Test edge cases and error handling
 
 #### 4.4 Performance Testing
+
 - Compare query performance between old and new schema
 - Test geographic coordinate queries
 - Validate that all operations are at least as fast as before
@@ -200,6 +224,7 @@ CREATE TABLE monitoring_targets (
 ### Phase 5: Documentation & Deployment (2 days)
 
 #### 5.1 Documentation Updates
+
 - **File**: `docs/DATABASE.md`
   - Update schema documentation
   - Add new constraint explanations
@@ -212,12 +237,14 @@ CREATE TABLE monitoring_targets (
   - Add new data access patterns
 
 #### 5.2 Migration Documentation
+
 - **File**: `docs/SCHEMA_MIGRATION.md`
   - Document the migration process
   - Include rollback procedures
   - Add troubleshooting guide
 
 #### 5.3 Deployment Preparation
+
 - Create deployment checklist
 - Prepare monitoring for migration
 - Create validation scripts for production deployment
@@ -258,12 +285,14 @@ CREATE TABLE monitoring_targets (
 ## Risk Mitigation
 
 ### Technical Risks
+
 1. **Data Loss**: Comprehensive testing with production copies
 2. **Downtime**: Minimize by pre-testing entire pipeline
 3. **Performance**: Benchmark new schema against old
 4. **Rollback**: Maintain complete rollback capability
 
 ### Operational Risks
+
 1. **User Impact**: Ensure no user-visible changes
 2. **Command Changes**: Maintain backward compatibility
 3. **API Compatibility**: Ensure all API integrations work
@@ -272,6 +301,7 @@ CREATE TABLE monitoring_targets (
 ## Success Criteria
 
 ### Technical Success
+
 - [ ] All production data successfully migrated
 - [ ] All existing functionality preserved
 - [ ] New schema constraints working correctly
@@ -279,12 +309,14 @@ CREATE TABLE monitoring_targets (
 - [ ] All tests passing
 
 ### User Experience Success
+
 - [ ] All commands work as documented
 - [ ] No user-visible changes in behavior
 - [ ] All existing monitoring targets continue working
 - [ ] Export/import functionality works with new schema
 
 ### Code Quality Success
+
 - [ ] Cleaner, more maintainable code
 - [ ] Proper separation of concerns
 - [ ] Type safety and validation
@@ -293,14 +325,14 @@ CREATE TABLE monitoring_targets (
 
 ## Timeline Summary
 
-| Phase | Duration | Dependencies |
-|-------|----------|--------------|
-| 1. Test Development | 3 days | None |
-| 2. Migration Pipeline | 3 days | Phase 1 complete |
-| 3. Code Refactoring | 5 days | Phase 2 complete |
-| 4. Testing & Integration | 4 days | Phase 3 complete |
-| 5. Documentation & Deployment | 2 days | Phase 4 complete |
-| **Total** | **17 days** | Sequential execution |
+| Phase                         | Duration    | Dependencies         |
+| ----------------------------- | ----------- | -------------------- |
+| 1. Test Development           | 3 days      | None                 |
+| 2. Migration Pipeline         | 3 days      | Phase 1 complete     |
+| 3. Code Refactoring           | 5 days      | Phase 2 complete     |
+| 4. Testing & Integration      | 4 days      | Phase 3 complete     |
+| 5. Documentation & Deployment | 2 days      | Phase 4 complete     |
+| **Total**                     | **17 days** | Sequential execution |
 
 ## Commit Strategy
 
@@ -316,4 +348,5 @@ Following conventional commits and small, atomic changes:
 - `docs: update documentation for new schema`
 - `feat: complete schema redesign migration`
 
-Each commit will be small, focused, and independently testable following the project's TDD principles.
+Each commit will be small, focused, and independently testable following the
+project's TDD principles.
