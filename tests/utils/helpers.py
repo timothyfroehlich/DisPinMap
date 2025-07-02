@@ -74,12 +74,23 @@ def assert_message_sent(mock_discord_channel, expected_content):
 
     # Check if expected content is in any of the sent messages
     call_args_list = mock_discord_channel.send.call_args_list
-    messages_sent = [
-        str(call.kwargs.get('content', call.args[0] if call.args else None)) 
-        for call in call_args_list
-    ]
+    messages_sent = []
+
+    for call in call_args_list:
+        args, kwargs = call
+        # Extract message from positional args (first argument)
+        if args:
+            messages_sent.append(str(args[0]))
+        # Extract message from keyword arguments ('content' key)
+        elif kwargs and "content" in kwargs:
+            messages_sent.append(str(kwargs["content"]))
+        # Fallback for other patterns
+        elif kwargs:
+            messages_sent.append(str(kwargs))
+        else:
+            messages_sent.append("(no message content)")
 
     found = any(expected_content in message for message in messages_sent)
-    assert found, (
-        f"Expected content '{expected_content}' not found in sent messages: {messages_sent}"
-    )
+    assert (
+        found
+    ), f"Expected content '{expected_content}' not found in sent messages: {messages_sent}"
