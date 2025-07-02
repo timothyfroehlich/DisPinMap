@@ -47,7 +47,7 @@ jobs:
           prettier --check "**/*.{md,yml,yaml}" --ignore-path .gitignore
 
       - name: Run actionlint (GitHub Actions check)
-        uses: rhysd/actionlint-action@v1
+        uses: raven-actions/actionlint@v2
 
       - name: Run pre-commit hooks
         run: |
