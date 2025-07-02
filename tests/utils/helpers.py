@@ -91,6 +91,6 @@ def assert_message_sent(mock_discord_channel, expected_content):
             messages_sent.append("(no message content)")
 
     found = any(expected_content in message for message in messages_sent)
-    assert (
-        found
-    ), f"Expected content '{expected_content}' not found in sent messages: {messages_sent}"
+    assert found, (
+        f"Expected content '{expected_content}' not found in sent messages: {messages_sent}"
+    )

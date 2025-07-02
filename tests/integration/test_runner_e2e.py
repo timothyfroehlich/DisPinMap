@@ -259,9 +259,9 @@ async def test_run_checks_handles_location_id_field(db_session):
             mock_target, is_manual_check=True
         )
         # If we get here without KeyError, the fix worked
-        assert (
-            submissions is not None
-        ), "Should return submissions data without KeyError"
+        assert submissions is not None, (
+            "Should return submissions data without KeyError"
+        )
         assert isinstance(submissions, list), "Submissions should be a list"
     except KeyError as e:
         if "target_data" in str(e):
@@ -378,9 +378,9 @@ async def test_monitoring_loop_handles_api_errors_gracefully(db_session, api_moc
             assert result1 == []
         except Exception as e:
             # Should handle the exception gracefully without crashing
-            assert (
-                "API" in str(e) or "connection" in str(e) or "timeout" in str(e)
-            ), f"Unexpected exception type: {e}"
+            assert "API" in str(e) or "connection" in str(e) or "timeout" in str(e), (
+                f"Unexpected exception type: {e}"
+            )
 
     # Mock API success for location 874
     api_mocker.add_response(
