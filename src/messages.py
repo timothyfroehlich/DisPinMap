@@ -106,6 +106,12 @@ class Messages:
             - search_term: str - The search term that yielded no results
             """
 
+            RADIUS_UPDATED = "✅ Updated radius to {radius} miles for existing coordinates: **{display_name}**"
+            """Format parameters:
+            - radius: int - The new radius in miles
+            - display_name: str - The display name of the target
+            """
+
             NOT_FOUND = "❌ {target_type} '{target_name}' not found"
             """Format parameters:
             - target_type: str - Type of target (location, coordinates, city)

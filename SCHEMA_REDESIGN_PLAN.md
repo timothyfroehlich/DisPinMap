@@ -1,14 +1,15 @@
 # Database Schema Redesign Plan
 
 **Issues**: #78, #81 **Branch**: `feature/schema-redesign-issues-78-81`
-**Approach**: Complete schema redesign with fresh database start
+**Approach**: Complete schema redesign with fresh database start (no data
+migration)
 
 ## Overview
 
 This plan implements a comprehensive database schema redesign to resolve
 architectural issues with data overloading in the `target_name` field and
 inconsistent data access patterns. We will create a new, properly normalized
-schema and migrate existing production data.
+schema and start with a fresh database (no data migration required).
 
 ## Current Problems Being Solved
 
@@ -78,209 +79,91 @@ CREATE TABLE monitoring_targets (
 4. **Extensibility**: Easy to add new target types or geographic features
 5. **Data Integrity**: Comprehensive constraints prevent invalid data
 
-## Implementation Phases
+## Implementation Status
 
-### Phase 1: Test Development & Schema Validation (3 days)
+### ✅ COMPLETED PHASES
 
-#### 1.1 Create New Model Classes
+#### ✅ Phase 1: Schema Models & Validation
 
-- **File**: `src/models_new.py` (temporary)
-- Create new SQLAlchemy models with proper constraints
-- Include validation methods and helper functions
+- **File**: `src/models.py` (updated directly, not temporary)
+- ✅ New SQLAlchemy models with comprehensive constraints
+- ✅ Validation methods and helper functions
+- ✅ Data integrity constraints and proper types
 
-#### 1.2 Data Transformation Pipeline Tests
+#### ✅ Phase 2: Code Refactoring
 
-- **File**: `tests/migration/test_data_transformation.py`
-- Test export from current schema
-- Test transformation logic for each target type
-- Test import to new schema with validation
+- **File**: `src/database.py` - ✅ Updated for new schema
+- **File**: `src/models.py` - ✅ Replaced with new schema models
+- **File**: `src/cogs/command_handler.py` - ✅ Refactored for new schema
+- **File**: `src/cogs/runner.py` - ✅ Updated coordinate handling
+- **File**: `src/notifier.py` - ✅ Updated API integration
 
-#### 1.3 Schema Validation Tests
+### 🟡 CURRENT PHASE: Testing & Alembic
 
-- **File**: `tests/migration/test_new_schema.py`
-- Test all constraints work correctly
-- Test data integrity rules
-- Test edge cases and invalid data rejection
+#### 🟡 Phase 3.1: Unit Test Updates (In Progress)
 
-#### 1.4 Production Data Copy Testing
+- 🟡 Update all `tests/unit/*.py` files for new schema (15 files)
+- 🟡 Fix field name changes (`target_name` → `display_name`)
+- 🟡 Update mock data structures and test fixtures
+- 🟡 Update database operation tests for new method signatures
 
-- Download latest production database backup
-- Run transformation pipeline on real data
-- Validate all targets can be converted successfully
-- Document any data quality issues found
+#### ❌ Phase 3.2: Integration Test Updates (Pending)
 
-### Phase 2: Data Migration Pipeline (3 days)
+- Update all `tests/integration/*.py` files for new schema
+- Fix end-to-end workflows with new coordinate handling
+- Update API integration tests for geographic vs location targets
+- Test runner functionality with new data patterns
 
-#### 2.1 Export Pipeline
+#### ❌ Phase 3.3: Migration Test Updates (Pending)
 
-- **File**: `scripts/export_current_data.py`
-- Export all monitoring targets to JSON format
-- Include metadata for validation
-- Create data integrity checksums
+- Update `tests/migration/*.py` files for new approach
+- Remove data transformation tests (not needed)
+- Focus on fresh schema validation tests
 
-#### 2.2 Transformation Pipeline
+### ❌ REMAINING PHASES
 
-- **File**: `scripts/transform_schema_data.py`
-- **Location Targets**:
-  - `location_id` → `location_id` (unchanged)
-  - `target_name` → `display_name` (unchanged)
-  - `target_type` → `location` (unchanged)
-- **Geographic Targets** (city/latlong):
-  - Parse coordinates from `target_name`: "30.26715,-97.74306,5"
-  - Extract: `latitude=30.26715`, `longitude=-97.74306`, `radius_miles=5`
-  - Generate `display_name` from reverse geocoding or format coordinates
-  - Set `target_type='geographic'`
-- **Data Validation**: Verify all coordinates are valid
-- **Conflict Resolution**: Handle any duplicate geographic targets
+#### ❌ Phase 4: Alembic Baseline Creation
 
-#### 2.3 Import Pipeline
+- **Fresh Start Approach**: Remove all existing migration files
+- Generate new baseline migration from current `models.py`
+- Create comprehensive initial migration with all constraints
+- Test baseline migration on empty database
 
-- **File**: `scripts/import_new_schema.py`
-- Create new database with new schema
-- Import transformed data with validation
-- Run integrity checks and constraint validation
-- Generate import report with statistics
+#### ❌ Phase 5: Documentation & Cleanup
 
-#### 2.4 Rollback Procedures
+- **File**: `docs/DATABASE.md` - Update schema documentation
+- **File**: `USER_DOCUMENTATION.md` - Verify examples still work
+- **File**: `docs/DEVELOPER_HANDBOOK.md` - Update architecture docs
+- Clean up temporary files (`models_new.py`, etc.)
+- Update directory-specific `CLAUDE.md` files
 
-- **File**: `scripts/rollback_schema.py`
-- Export data from new schema back to old format
-- Create emergency rollback database
-- Document rollback procedures
+## Fresh Database Deployment Strategy
 
-### Phase 3: Code Refactoring (5 days)
+### Production Deployment Process
 
-#### 3.1 Database Layer Updates
+1. **Pre-Deployment**:
+   - Ensure all tests pass with new schema
+   - Generate fresh Alembic baseline migration
+   - Create deployment checklist
 
-- **File**: `src/database.py`
-- Update all CRUD operations for new schema
-- Add helper methods for coordinate handling
-- Update target retrieval to use appropriate fields
-- Add validation for coordinate inputs
-
-#### 3.2 Model Updates
-
-- **File**: `src/models.py`
-- Replace with new schema models
-- Add validation methods
-- Add helper methods for coordinate formatting
-
-#### 3.3 Command Handler Refactoring
-
-- **File**: `src/cogs/command_handler.py`
-- **Add Commands**:
-  - Location: Use `location_id` and `display_name`
-  - City: Geocode and create geographic target (not city!)
-  - Coordinates: Use numeric `latitude`, `longitude`, `radius_miles`
-- **List Command**: Format display using `display_name` for all targets
-- **Remove Command**: Update to work with new schema
-- **Export Command**: Generate commands using new field structure
-
-#### 3.4 Runner Logic Updates
-
-- **File**: `src/cogs/runner.py`
-- Remove all 'city' target type handling (should not exist)
-- Update coordinate parsing to use numeric fields
-- Simplify target processing with consistent data access
-- Update API calls to use appropriate fields
-
-#### 3.5 API Integration Updates
-
-- **File**: `src/api.py`
-- Update coordinate-based API calls to use numeric fields
-- Update location-based API calls to use `location_id`
-- Remove coordinate string parsing logic
-
-### Phase 4: Testing & Integration (4 days)
-
-#### 4.1 Unit Test Updates
-
-- Update all existing tests for new schema
-- Add tests for new constraint validations
-- Test coordinate validation and edge cases
-- Test data access patterns
-
-#### 4.2 Integration Testing
-
-- **File**: `tests/integration/test_schema_e2e.py`
-- End-to-end testing with transformed production data
-- Test all command flows with new schema
-- Test runner functionality with real data
-- Verify API integrations work correctly
-
-#### 4.3 User Journey Testing
-
-- **File**: `tests/simulation/test_new_schema_journeys.py`
-- Test complete user workflows with new schema
-- Verify all commands work as documented in USER_DOCUMENTATION.md
-- Test edge cases and error handling
-
-#### 4.4 Performance Testing
-
-- Compare query performance between old and new schema
-- Test geographic coordinate queries
-- Validate that all operations are at least as fast as before
-
-### Phase 5: Documentation & Deployment (2 days)
-
-#### 5.1 Documentation Updates
-
-- **File**: `docs/DATABASE.md`
-  - Update schema documentation
-  - Add new constraint explanations
-  - Update example queries
-- **File**: `USER_DOCUMENTATION.md`
-  - Verify all examples still work
-  - Update any changes in command behavior
-- **File**: `docs/DEVELOPER_HANDBOOK.md`
-  - Update architecture documentation
-  - Add new data access patterns
-
-#### 5.2 Migration Documentation
-
-- **File**: `docs/SCHEMA_MIGRATION.md`
-  - Document the migration process
-  - Include rollback procedures
-  - Add troubleshooting guide
-
-#### 5.3 Deployment Preparation
-
-- Create deployment checklist
-- Prepare monitoring for migration
-- Create validation scripts for production deployment
-- Document post-deployment verification steps
-
-## Data Migration Strategy
-
-### Production Migration Process
-
-1. **Pre-Migration**:
-   - Download latest production backup
-   - Run full transformation pipeline on copy
-   - Validate all data transforms correctly
-   - Create rollback database
-
-2. **Migration Execution**:
+2. **Deployment Execution**:
    - Stop bot temporarily (maintenance mode)
-   - Export current production data
-   - Transform data using validated pipeline
-   - Create new database with new schema
-   - Import transformed data
-   - Validate data integrity
-
-3. **Post-Migration**:
-   - Start bot with new schema
-   - Monitor for errors or issues
+   - **Wipe existing database completely**
+   - Create fresh database with new schema using Alembic
+   - Start bot with empty database (fresh start)
    - Verify all functionality works
-   - Keep rollback database available for 48 hours
 
-### Validation Criteria
+3. **Post-Deployment**:
+   - Monitor for errors or issues
+   - Verify all commands work correctly
+   - Users can re-add their monitoring targets as needed
 
-- **Data Completeness**: All targets successfully migrated
-- **Functionality**: All commands work as before
-- **Performance**: No performance degradation
-- **Data Integrity**: All constraints and validations work
-- **User Experience**: No changes visible to users
+### Fresh Start Benefits
+
+- **No Data Migration Complexity**: Eliminates transformation pipeline risks
+- **Clean Slate**: No legacy data inconsistencies
+- **Simplified Deployment**: Single step database creation
+- **User Re-engagement**: Users re-add targets using improved commands
 
 ## Risk Mitigation
 
@@ -302,18 +185,18 @@ CREATE TABLE monitoring_targets (
 
 ### Technical Success
 
-- [ ] All production data successfully migrated
-- [ ] All existing functionality preserved
+- [ ] All existing functionality preserved with new schema
 - [ ] New schema constraints working correctly
 - [ ] No performance degradation
-- [ ] All tests passing
+- [ ] All tests passing (unit, integration, migration)
+- [ ] Fresh Alembic baseline migration created
 
 ### User Experience Success
 
 - [ ] All commands work as documented
-- [ ] No user-visible changes in behavior
-- [ ] All existing monitoring targets continue working
+- [ ] No user-visible changes in command behavior
 - [ ] Export/import functionality works with new schema
+- [ ] Users can seamlessly re-add monitoring targets
 
 ### Code Quality Success
 
@@ -323,30 +206,84 @@ CREATE TABLE monitoring_targets (
 - [ ] Comprehensive test coverage
 - [ ] Updated documentation
 
-## Timeline Summary
+## Revised Timeline Summary
 
-| Phase                         | Duration    | Dependencies         |
-| ----------------------------- | ----------- | -------------------- |
-| 1. Test Development           | 3 days      | None                 |
-| 2. Migration Pipeline         | 3 days      | Phase 1 complete     |
-| 3. Code Refactoring           | 5 days      | Phase 2 complete     |
-| 4. Testing & Integration      | 4 days      | Phase 3 complete     |
-| 5. Documentation & Deployment | 2 days      | Phase 4 complete     |
-| **Total**                     | **17 days** | Sequential execution |
+| Phase                      | Status     | Duration     | Agent Assignment     |
+| -------------------------- | ---------- | ------------ | -------------------- |
+| 1-2. Schema & Code         | ✅ DONE    | 5 days       | Completed            |
+| 3.1. Unit Test Updates     | 🟡 ACTIVE  | 2-3 days     | Agent 1: Unit Tests  |
+| 3.2. Integration Tests     | ❌ PENDING | 2-3 days     | Agent 2: Integration |
+| 3.3. Migration Tests       | ❌ PENDING | 1 day        | Agent 2: Integration |
+| 4. Alembic Baseline        | ❌ PENDING | 1 day        | Agent 3: Alembic     |
+| 5. Documentation & Cleanup | ❌ PENDING | 1-2 days     | Agent 4: Docs        |
+| **Remaining**              | **ACTIVE** | **5-7 days** | **Multi-agent**      |
+
+## Multi-Agent Work Division
+
+### Agent 1: Unit Test Specialist (CURRENT)
+
+**Duration:** 2-3 days  
+**Files:** All `tests/unit/*.py` files (15 files need updates) **Tasks:**
+
+- ✅ `tests/unit/test_database_models.py` - Updated for new schema
+- 🟡 `tests/unit/test_command_handler.py` - Fix field name changes
+- ❌ Remaining 13 unit test files - systematic schema updates
+- Update mock data structures and test fixtures
+- Ensure 100% unit test coverage passes
+
+### Agent 2: Integration Test Specialist
+
+**Duration:** 2-3 days (starts after Agent 1 ~80% complete) **Files:** All
+`tests/integration/*.py` and `tests/migration/*.py` **Tasks:**
+
+- Update integration tests for new schema fields and constraints
+- Fix end-to-end workflows with new coordinate handling
+- Update API integration tests for geographic vs location targets
+- Update/simplify migration tests for fresh database approach
+- Test runner functionality with new data patterns
+
+### Agent 3: Alembic Baseline Specialist
+
+**Duration:** 1 day (can work in parallel) **Files:** `alembic/` directory
+**Tasks:**
+
+- **Reset Alembic completely**: Remove all existing migration files
+- Generate fresh baseline migration from current `models.py`
+- Create comprehensive initial migration with all constraints
+- Test baseline migration creation and application on empty database
+- Document fresh-start database approach
+
+### Agent 4: Documentation & Cleanup Specialist
+
+**Duration:** 1-2 days (can work in parallel) **Files:** Documentation, cleanup
+**Tasks:**
+
+- Update `docs/DATABASE.md` with new schema documentation
+- Update any affected user documentation
+- Clean up temporary files (`models_new.py`, etc.)
+- Update directory-specific `CLAUDE.md` files with new patterns
+- Create deployment notes for fresh database setup
+
+## Coordination Strategy
+
+- Agent 1 provides foundation for Agent 2 (unit tests validate integration)
+- Agents 3 & 4 work independently in parallel
+- Final verification requires all agents coordinating on full test suite
+- Ready for fresh database deployment once all agents complete
 
 ## Commit Strategy
 
 Following conventional commits and small, atomic changes:
 
-- `feat: add new schema models with validation constraints`
-- `test: add data transformation pipeline tests`
-- `feat: implement data export/transform/import pipeline`
-- `refactor: update database layer for new schema`
-- `refactor: update command handlers for new schema`
-- `refactor: update runner logic for new schema`
-- `test: add comprehensive integration tests for new schema`
-- `docs: update documentation for new schema`
-- `feat: complete schema redesign migration`
+- ✅ `feat: add new schema models with validation constraints`
+- ✅ `refactor: update database layer for new schema`
+- ✅ `refactor: update command handlers for new schema`
+- ✅ `refactor: update runner logic for new schema`
+- 🟡 `test: update unit tests for new schema`
+- ❌ `test: update integration tests for new schema`
+- ❌ `feat: create fresh Alembic baseline migration`
+- ❌ `docs: update documentation for new schema`
+- ❌ `feat: complete schema redesign with fresh database`
 
 Each commit will be small, focused, and independently testable following the
 project's TDD principles.

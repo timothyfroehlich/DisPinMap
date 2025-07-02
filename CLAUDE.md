@@ -64,7 +64,7 @@ area.**
 ### Infrastructure Status
 
 - **GCP Deployment**: ✅ **FULLY OPERATIONAL**
-- **Service URL**: https://dispinmap-bot-wos45oz7vq-uc.a.run.app
+- **Service URL**: <https://dispinmap-bot-wos45oz7vq-uc.a.run.app>
 - **Status**: Bot successfully deployed and running on Google Cloud Run
 - **Production Status**: ⚠️ **NOT YET IN PRODUCTION USE** - Blocked by critical
   command failures
@@ -93,6 +93,82 @@ area.**
 
 _Update this section if your environment setup changes or if additional
 assumptions should be made for automation or agent work._
+
+## Python Development Environment
+
+**CRITICAL: Always use the Python virtual environment located in `venv/` (not
+`.venv`).**
+
+### Setting Up the Environment
+
+If the `venv/` directory doesn't exist, create it:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -e .[dev]
+```
+
+### Activating the Environment
+
+Always activate the virtual environment before running any Python commands:
+
+```bash
+source venv/bin/activate
+```
+
+### Code Quality Tools
+
+This project uses **Ruff** for both linting and formatting, plus **Prettier**
+for markdown/YAML files.
+
+#### Quick Commands
+
+```bash
+# Activate environment first
+source venv/bin/activate
+
+# Format and lint Python code
+ruff format .           # Format Python code
+ruff check .            # Lint Python code
+ruff check --fix .      # Auto-fix linting issues
+
+# Format markdown and YAML
+prettier --write "**/*.{md,yml,yaml}" --ignore-path .gitignore
+
+# Run tests
+pytest tests/ --ignore=tests/simulation -v
+```
+
+#### VS Code Tasks (Recommended)
+
+Use the pre-configured VS Code tasks (accessible via `Ctrl+Shift+P` → "Tasks:
+Run Task"):
+
+- **Format Code**: Runs `ruff format .`
+- **Lint Code**: Runs `ruff check .`
+- **Run Tests**: Runs pytest with coverage
+- **Install Dependencies**: Sets up the virtual environment
+
+#### Pre-Commit Workflow
+
+Before committing changes:
+
+1. **Format**: `ruff format .`
+2. **Lint**: `ruff check --fix .`
+3. **Test**: `pytest tests/ --ignore=tests/simulation -v`
+4. **Format Docs**:
+   `prettier --write "**/*.{md,yml,yaml}" --ignore-path .gitignore`
+
+#### CI/CD Integration
+
+The GitHub Actions workflows automatically run:
+
+- `ruff check .` (linting)
+- `ruff format --check .` (format checking)
+- `prettier --check "**/*.{md,yml,yaml}"` (markdown/YAML checking)
+- Full test suite with coverage
 
 For detailed project lessons learned and historical context, load
 `@project-lessons.md`. When you solve a tricky problem or we end up taking a
