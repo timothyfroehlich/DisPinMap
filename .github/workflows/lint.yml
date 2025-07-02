@@ -48,9 +48,7 @@ jobs:
 
       - name: Install actionlint
         run: |
-          wget -O actionlint https://github.com/rhysd/actionlint/releases/latest/download/actionlint_linux_amd64
-          chmod +x actionlint
-          sudo mv actionlint /usr/local/bin/
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
 
       - name: Run actionlint (GitHub Actions check)
         run: |
