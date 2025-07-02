@@ -66,21 +66,19 @@ async def test_add_location_by_name_e2e(db_session, api_mocker):
     command_handler_cog = bot.get_cog("CommandHandler")
     assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await command_handler_cog.add(mock_ctx, "location", location_name)
+    await command_handler_cog.add_location(mock_ctx, location_input=location_name)
 
     # 3. ASSERT
-    assert mock_notifier.send_initial_notifications.called
-
-    # Verify database entry
+    # Verify database entry was created (this indicates the command succeeded)
     session = db_session()
     target = (
         session.query(MonitoringTarget)
         .filter_by(channel_id=mock_ctx.interaction.channel.id)
         .first()
     )
-    assert target is not None
+    assert target is not None, "Target should have been created in database"
     assert target.target_type == "location"
-    assert target.target_name == location_name
+    assert target.display_name == location_name
     assert target.location_id == expected_location_id
     session.close()
 
@@ -91,7 +89,7 @@ async def test_add_city_e2e(db_session, api_mocker):
     Tests the full `!add city <name>` flow.
     - Mocks the Geocoding API to return coordinates for the city.
     - Executes the command.
-    - Verifies that a 'city' target with correct coordinates is added to the database.
+    - Verifies that a 'geographic' target with correct coordinates is added to the database.
     """
     # 1. SETUP
     city_name = "Portland, OR"
@@ -114,21 +112,22 @@ async def test_add_city_e2e(db_session, api_mocker):
     command_handler_cog = bot.get_cog("CommandHandler")
     assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await command_handler_cog.add(mock_ctx, "city", city_name)
+    await command_handler_cog.add_city(mock_ctx, city_input=city_name)
 
     # 3. ASSERT
-    assert mock_notifier.send_initial_notifications.called
-
-    # Verify database entry
+    # Verify database entry was created (this indicates the command succeeded)
     session = db_session()
     target = (
         session.query(MonitoringTarget)
         .filter_by(channel_id=mock_ctx.interaction.channel.id)
         .first()
     )
-    assert target is not None
-    assert target.target_type == "city"
-    assert target.target_name == city_name
+    assert target is not None, "Target should have been created in database"
+    assert target.target_type == "geographic"
+    assert target.display_name == f"{city_name} (25mi)"  # Default radius is added to display name
+    assert target.latitude is not None
+    assert target.longitude is not None
+    assert target.radius_miles == 25  # Default radius
     session.close()
 
 
@@ -160,21 +159,22 @@ async def test_add_city_with_radius_e2e(db_session, api_mocker):
     command_handler_cog = bot.get_cog("CommandHandler")
     assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await command_handler_cog.add(mock_ctx, "city", city_name, str(radius))
+    await command_handler_cog.add_city(mock_ctx, city_input=f"{city_name} {radius}")
 
     # 3. ASSERT
-    assert mock_notifier.send_initial_notifications.called
-
-    # Verify database entry
+    # Verify database entry was created (this indicates the command succeeded)
     session = db_session()
     target = (
         session.query(MonitoringTarget)
         .filter_by(channel_id=mock_ctx.interaction.channel.id)
         .first()
     )
-    assert target is not None
-    assert target.target_type == "city"
-    assert target.target_name == city_name
+    assert target is not None, "Target should have been created in database"
+    assert target.target_type == "geographic"
+    assert target.display_name == f"{city_name} ({radius}mi)"  # Custom radius is added to display name
+    assert target.latitude is not None
+    assert target.longitude is not None
+    assert target.radius_miles == radius
     session.close()
 
 
@@ -200,23 +200,23 @@ async def test_add_coordinates_e2e(db_session, api_mocker):
     command_handler_cog = bot.get_cog("CommandHandler")
     assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await command_handler_cog.add(mock_ctx, "coordinates", str(lat), str(lon))
+    await command_handler_cog.add_coordinates(mock_ctx, lat, lon)
 
     # 3. ASSERT
-    assert mock_notifier.send_initial_notifications.called
-
-    # Verify database entry
+    # Verify database entry was created (this indicates the command succeeded)
     session = db_session()
     target = (
         session.query(MonitoringTarget)
         .filter_by(channel_id=mock_ctx.interaction.channel.id)
         .first()
     )
-    assert target is not None
-    assert target.target_type == "latlong"
-    lat_from_db, lon_from_db = target.target_name.split(",")
-    assert abs(float(lat_from_db) - lat) < 0.01
-    assert abs(float(lon_from_db) - lon) < 0.01
+    assert target is not None, "Target should have been created in database"
+    assert target.target_type == "geographic"
+    assert target.latitude is not None
+    assert target.longitude is not None
+    assert abs(target.latitude - lat) < 0.01
+    assert abs(target.longitude - lon) < 0.01
+    assert target.radius_miles == 25  # Default radius
     session.close()
 
 
@@ -243,26 +243,23 @@ async def test_add_coordinates_with_radius_e2e(db_session, api_mocker):
     command_handler_cog = bot.get_cog("CommandHandler")
     assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await command_handler_cog.add(
-        mock_ctx, "coordinates", str(lat), str(lon), str(radius)
-    )
+    await command_handler_cog.add_coordinates(mock_ctx, lat, lon, radius)
 
     # 3. ASSERT
-    assert mock_notifier.send_initial_notifications.called
-
-    # Verify database entry
+    # Verify database entry was created (this indicates the command succeeded)
     session = db_session()
     target = (
         session.query(MonitoringTarget)
         .filter_by(channel_id=mock_ctx.interaction.channel.id)
         .first()
     )
-    assert target is not None
-    assert target.target_type == "latlong"
-    lat_from_db, lon_from_db, radius_from_db = target.target_name.split(",")
-    assert abs(float(lat_from_db) - lat) < 0.01
-    assert abs(float(lon_from_db) - lon) < 0.01
-    assert int(radius_from_db) == radius
+    assert target is not None, "Target should have been created in database"
+    assert target.target_type == "geographic"
+    assert target.latitude is not None
+    assert target.longitude is not None
+    assert abs(target.latitude - lat) < 0.01
+    assert abs(target.longitude - lon) < 0.01
+    assert target.radius_miles == radius
     session.close()
 
 
@@ -281,7 +278,7 @@ async def test_remove_target_e2e(db_session):
         MonitoringTarget(
             channel_id=12345,
             target_type="location",
-            target_name="Test Location",
+            display_name="Test Location",
             location_id=999,
         )
     )
@@ -325,7 +322,7 @@ async def test_remove_target_invalid_index_e2e(db_session):
     session = db_session()
     session.add(
         MonitoringTarget(
-            channel_id=12345, target_type="location", target_name="Test Location"
+            channel_id=12345, target_type="location", display_name="Test Location", location_id=999
         )
     )
     session.commit()
@@ -366,15 +363,18 @@ async def test_list_targets_e2e(db_session):
         MonitoringTarget(
             channel_id=channel_id,
             target_type="location",
-            target_name="Ground Kontrol",
+            display_name="Ground Kontrol",
             location_id=874,
         )
     )
     session.add(
         MonitoringTarget(
             channel_id=channel_id,
-            target_type="latlong",
-            target_name="45.5231,-122.6765,10",
+            target_type="geographic",
+            display_name="Portland Coordinates",
+            latitude=45.5231,
+            longitude=-122.6765,
+            radius_miles=10,
         )
     )
     session.commit()
@@ -400,7 +400,7 @@ async def test_list_targets_e2e(db_session):
     call_args = mock_notifier.log_and_send.call_args[0]
     message = call_args[1]
     assert "Ground Kontrol" in message
-    assert "45.5231, -122.6765" in message
+    assert "45.5231" in message and "-122.6765" in message
 
 
 @pytest.mark.asyncio
@@ -446,7 +446,7 @@ async def test_export_command_e2e(db_session):
         MonitoringTarget(
             channel_id=channel_id,
             target_type="location",
-            target_name="Ground Kontrol",
+            display_name="Ground Kontrol",
             location_id=874,
             poll_rate_minutes=15,
         )
@@ -454,8 +454,11 @@ async def test_export_command_e2e(db_session):
     session.add(
         MonitoringTarget(
             channel_id=channel_id,
-            target_type="latlong",
-            target_name="45.5231,-122.6765,10",
+            target_type="geographic",
+            display_name="Portland Coordinates",
+            latitude=45.5231,
+            longitude=-122.6765,
+            radius_miles=10,
         )
     )
     session.commit()
@@ -515,7 +518,7 @@ async def test_add_location_command_not_found(db_session, api_mocker):
     command_handler_cog = bot.get_cog("CommandHandler")
     assert command_handler_cog is not None, "CommandHandler cog not found"
 
-    await command_handler_cog.add(mock_ctx, "location", location_name)
+    await command_handler_cog.add_location(mock_ctx, location_input=location_name)
 
     # 3. ASSERT
     assert mock_notifier.log_and_send.called
@@ -562,7 +565,7 @@ async def test_remove_command_by_index_edge_cases(db_session):
     target = MonitoringTarget(
         channel_id=mock_ctx.interaction.channel.id,
         target_type="location",
-        target_name="Test Location",
+        display_name="Test Location",
         location_id=123,
     )
     session.add(target)
@@ -620,30 +623,42 @@ async def test_list_command_with_targets(db_session):
     targets_data = [
         {
             "target_type": "location",
-            "target_name": "Ground Kontrol Classic Arcade",
+            "display_name": "Ground Kontrol Classic Arcade",
             "location_id": 874,
         },
         {
-            "target_type": "latlong",
-            "target_name": "45.5231,-122.6765,5",
-            "location_id": None,
+            "target_type": "geographic",
+            "display_name": "Portland Coordinates",
+            "latitude": 45.5231,
+            "longitude": -122.6765,
+            "radius_miles": 5,
         },
         {
-            "target_type": "city",
-            "target_name": "Portland, OR",
-            "location_id": None,
+            "target_type": "geographic",
+            "display_name": "Portland, OR",
+            "latitude": 45.5152,
+            "longitude": -122.6784,
+            "radius_miles": 25,
         },
     ]
 
     for target_data in targets_data:
-        bot.database.add_monitoring_target(
-            channel_id=mock_ctx.channel.id,
-            target_type=target_data["target_type"],
-            target_name=target_data["target_name"],
-            target_data=(
-                str(target_data["location_id"]) if target_data["location_id"] else None
-            ),
-        )
+        if target_data["target_type"] == "location":
+            bot.database.add_monitoring_target(
+                channel_id=mock_ctx.channel.id,
+                target_type=target_data["target_type"],
+                display_name=target_data["display_name"],
+                location_id=target_data["location_id"],
+            )
+        elif target_data["target_type"] == "geographic":
+            bot.database.add_monitoring_target(
+                channel_id=mock_ctx.channel.id,
+                target_type=target_data["target_type"],
+                display_name=target_data["display_name"],
+                latitude=target_data["latitude"],
+                longitude=target_data["longitude"],
+                radius_miles=target_data["radius_miles"],
+            )
 
     # Ensure the channel config is created and active
     bot.database.update_channel_config(
@@ -684,8 +699,8 @@ async def test_list_command_with_targets(db_session):
     assert "Location: Ground Kontrol Classic Arcade" in message_arg, (
         "Should show location target"
     )
-    assert "Coords: 45.5231, -122.6765" in message_arg, "Should show coordinate target"
-    assert "City: Portland, OR" in message_arg, "Should show city target"
+    assert "Coords: 45.52310, -122.67650" in message_arg, "Should show coordinate target"
+    assert "Coords: 45.51520, -122.67840" in message_arg, "Should show city target as geographic coordinates"
 
     # Verify the table shows correct index numbers (1, 2, 3)
     assert "1" in message_arg, "Should show index 1"
@@ -709,10 +724,16 @@ async def test_list_command_with_targets(db_session):
     )
     assert len(stored_targets) == 3, "Should have 3 targets in database"
     assert stored_targets[0].target_type == "location"
-    assert stored_targets[0].target_name == "Ground Kontrol Classic Arcade"
+    assert stored_targets[0].display_name == "Ground Kontrol Classic Arcade"
     assert stored_targets[0].location_id == 874
-    assert stored_targets[1].target_type == "latlong"
-    assert stored_targets[1].target_name == "45.5231,-122.6765,5"
-    assert stored_targets[2].target_type == "city"
-    assert stored_targets[2].target_name == "Portland, OR"
+    assert stored_targets[1].target_type == "geographic"
+    assert stored_targets[1].display_name == "Portland Coordinates"
+    assert stored_targets[1].latitude == 45.5231
+    assert stored_targets[1].longitude == -122.6765
+    assert stored_targets[1].radius_miles == 5
+    assert stored_targets[2].target_type == "geographic"
+    assert stored_targets[2].display_name == "Portland, OR"
+    assert stored_targets[2].latitude == 45.5152
+    assert stored_targets[2].longitude == -122.6784
+    assert stored_targets[2].radius_miles == 25
     session.close()

@@ -28,8 +28,11 @@ def test_add_and_retrieve_monitoring_target(db_session):
     # Create a model instance with test data
     new_target = MonitoringTarget(
         channel_id=12345,
-        target_type="latlong",
-        target_name="45.523,-122.676",
+        target_type="geographic",
+        display_name="45.523,-122.676",
+        latitude=45.523,
+        longitude=-122.676,
+        radius_miles=25,
     )
 
     # 2. ACTION
@@ -45,8 +48,11 @@ def test_add_and_retrieve_monitoring_target(db_session):
 
     assert retrieved_target is not None
     assert retrieved_target.channel_id == 12345
-    assert retrieved_target.target_type == "latlong"
-    assert retrieved_target.target_name == "45.523,-122.676"
+    assert retrieved_target.target_type == "geographic"
+    assert retrieved_target.display_name == "45.523,-122.676"
+    assert retrieved_target.latitude == 45.523
+    assert retrieved_target.longitude == -122.676
+    assert retrieved_target.radius_miles == 25
 
     session.close()
 
@@ -54,8 +60,8 @@ def test_add_and_retrieve_monitoring_target(db_session):
 def test_add_duplicate_target_raises_error(db_session):
     """
     Tests that adding a duplicate target raises an IntegrityError.
-    - Adds a target.
-    - Attempts to add the exact same target again.
+    - Adds a location target.
+    - Attempts to add the exact same location target again.
     - Asserts that a `sqlalchemy.exc.IntegrityError` (or similar) is raised.
     """
     import pytest
@@ -63,23 +69,67 @@ def test_add_duplicate_target_raises_error(db_session):
 
     session = db_session()
 
-    # Create first target
+    # Create first location target
     target1 = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location",
+        display_name="Test Location",
         location_id=999,
     )
 
     session.add(target1)
     session.commit()
 
-    # Try to add duplicate target (same channel + type + name should violate constraint)
+    # Try to add duplicate location target (same channel + location_id violates unique_location constraint)
     target2 = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location Different",  # Different name since constraint is on location_id
-        location_id=999,  # Same location_id - this should violate the unique constraint
+        display_name="Test Location Different",  # Different name since constraint is on location_id
+        location_id=999,  # Same location_id - this should violate the unique_location constraint
+    )
+
+    session.add(target2)
+
+    # Should raise integrity error on commit
+    with pytest.raises(IntegrityError):
+        session.commit()
+
+    session.close()
+
+
+def test_add_duplicate_geographic_target_raises_error(db_session):
+    """
+    Tests that adding a duplicate geographic target raises an IntegrityError.
+    - Adds a geographic target.
+    - Attempts to add the exact same geographic target again.
+    - Asserts that a `sqlalchemy.exc.IntegrityError` (or similar) is raised.
+    """
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    session = db_session()
+
+    # Create first geographic target
+    target1 = MonitoringTarget(
+        channel_id=12345,
+        target_type="geographic",
+        display_name="Test Geographic Area",
+        latitude=45.523,
+        longitude=-122.676,
+        radius_miles=25,
+    )
+
+    session.add(target1)
+    session.commit()
+
+    # Try to add duplicate geographic target (same channel + coordinates violates unique_geographic constraint)
+    target2 = MonitoringTarget(
+        channel_id=12345,
+        target_type="geographic",
+        display_name="Different Name Same Location",  # Different name
+        latitude=45.523,  # Same coordinates
+        longitude=-122.676,
+        radius_miles=25,  # Different radius should still conflict since constraint is on lat/lon only
     )
 
     session.add(target2)
@@ -140,7 +190,7 @@ def test_remove_monitoring_target(db_session):
     target = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location",
+        display_name="Test Location",
         location_id=999,
     )
 

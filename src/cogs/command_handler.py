@@ -207,7 +207,7 @@ Example:
                 ctx,
                 Messages.Command.Remove.SUCCESS.format(
                     target_type=display_type,
-                    target_name=display_name,
+                    display_name=display_name,
                 ),
             )
 
