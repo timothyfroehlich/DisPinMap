@@ -36,9 +36,9 @@ def create_async_notifier_mock() -> AsyncMock:
     mock = AsyncMock(spec=Notifier)
 
     # Validate that log_and_send is properly awaitable
-    assert asyncio.iscoroutinefunction(
-        mock.log_and_send
-    ), "log_and_send mock is not recognized as a coroutine function"
+    assert asyncio.iscoroutinefunction(mock.log_and_send), (
+        "log_and_send mock is not recognized as a coroutine function"
+    )
 
     return mock
 
@@ -160,9 +160,9 @@ def validate_async_mock(mock: AsyncMock, method_name: str) -> None:
         AssertionError: If the method is not properly awaitable
     """
     method = getattr(mock, method_name)
-    assert asyncio.iscoroutinefunction(
-        method
-    ), f"{method_name} is not recognized as a coroutine function"
+    assert asyncio.iscoroutinefunction(method), (
+        f"{method_name} is not recognized as a coroutine function"
+    )
 
 
 def create_requests_response_mock(
@@ -210,6 +210,6 @@ def validate_mock_spec(mock: Any, expected_spec: type) -> None:
         AssertionError: If the mock doesn't have the expected spec
     """
     assert hasattr(mock, "_mock_methods"), "Object is not a mock"
-    assert (
-        mock._spec_class == expected_spec
-    ), f"Mock spec is {mock._spec_class}, expected {expected_spec}"
+    assert mock._spec_class == expected_spec, (
+        f"Mock spec is {mock._spec_class}, expected {expected_spec}"
+    )
