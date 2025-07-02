@@ -52,8 +52,15 @@ async def test_monitoring_loop_finds_new_submission_and_notifies(
         json_fixture_path="pinballmap_submissions/location_874_recent.json",
     )
 
-    # In a real test, we would trigger the monitoring loop
-    # For this test, we'll verify the database setup and API mocking work
+    # Mock Discord bot and channel for notifications
+    from unittest.mock import AsyncMock
+
+    mock_bot = AsyncMock()
+    mock_channel = AsyncMock()
+    mock_bot.get_channel.return_value = mock_channel
+
+    # TODO: Add actual runner execution here when implementing full monitoring loop
+    # For now, verify the setup is correct for notification testing
 
     # Verify target is set up correctly
     targets = session.query(MonitoringTarget).filter_by(channel_id=12345).all()
@@ -63,6 +70,9 @@ async def test_monitoring_loop_finds_new_submission_and_notifies(
     # Verify no seen submissions initially
     seen_count = session.query(SeenSubmission).filter_by(channel_id=12345).count()
     assert seen_count == 0
+
+    # TODO: Add actual monitoring loop execution and verify notifications are sent
+    # This would include checking mock_channel.send was called with expected content
 
     session.close()
 
@@ -249,7 +259,10 @@ async def test_run_checks_handles_location_id_field(db_session):
             mock_target, is_manual_check=True
         )
         # If we get here without KeyError, the fix worked
-        assert True, "Successfully handled location_id field without KeyError"
+        assert (
+            submissions is not None
+        ), "Should return submissions data without KeyError"
+        assert isinstance(submissions, list), "Submissions should be a list"
     except KeyError as e:
         if "target_data" in str(e):
             pytest.fail(
@@ -363,9 +376,11 @@ async def test_monitoring_loop_handles_api_errors_gracefully(db_session, api_moc
             result1 = await fetch_submissions_for_location(999)
             # Should return empty list on error
             assert result1 == []
-        except Exception:
-            # Or should handle the exception gracefully
-            assert True  # Error handling is acceptable
+        except Exception as e:
+            # Should handle the exception gracefully without crashing
+            assert (
+                "API" in str(e) or "connection" in str(e) or "timeout" in str(e)
+            ), f"Unexpected exception type: {e}"
 
     # Mock API success for location 874
     api_mocker.add_response(

@@ -122,6 +122,6 @@ def test_journey_with_invalid_commands(db_session):
     else:
         # Expected path - no targets to remove
         # In real implementation, command handler would return appropriate message
-        assert True  # This represents successful graceful handling
+        assert targets == [], "Should have no targets when none exist to remove"
 
     session.close()

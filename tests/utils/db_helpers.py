@@ -28,30 +28,34 @@ async def setup_monitoring_target(
     from src.models import ChannelConfig, MonitoringTarget
 
     session = db_session()
-
-    # Create channel config if it doesn't exist
-    channel_config = session.query(ChannelConfig).filter_by(channel_id=67890).first()
-    if not channel_config:
-        channel_config = ChannelConfig(
-            channel_id=67890,  # Default mock channel ID
-            guild_id=12345,  # Default mock guild ID
-            is_active=True,
+    try:
+        # Create channel config if it doesn't exist
+        channel_config = (
+            session.query(ChannelConfig).filter_by(channel_id=user_id).first()
         )
-        session.add(channel_config)
+        if not channel_config:
+            channel_config = ChannelConfig(
+                channel_id=user_id,  # Use provided user_id
+                guild_id=12345,  # Default mock guild ID
+                is_active=True,
+            )
+            session.add(channel_config)
+            session.commit()
+
+        # Create monitoring target with user_id association
+        new_target = MonitoringTarget(
+            channel_id=user_id,  # Associate with provided user_id
+            target_type="location",
+            target_name=location_name,
+            location_id=location_id,
+        )
+        session.add(new_target)
         session.commit()
+        session.refresh(new_target)
 
-    # Create monitoring target
-    new_target = MonitoringTarget(
-        channel_id=67890,  # Default mock channel ID
-        target_type="location",
-        target_name=location_name,
-        location_id=location_id,
-    )
-    session.add(new_target)
-    session.commit()
-    session.refresh(new_target)
-
-    return new_target
+        return new_target
+    finally:
+        session.close()
 
 
 async def get_target_by_location_id(db_session, location_id: int):
@@ -64,4 +68,9 @@ async def get_target_by_location_id(db_session, location_id: int):
     from src.models import MonitoringTarget
 
     session = db_session()
-    return session.query(MonitoringTarget).filter_by(location_id=location_id).first()
+    try:
+        return (
+            session.query(MonitoringTarget).filter_by(location_id=location_id).first()
+        )
+    finally:
+        session.close()
