@@ -46,25 +46,31 @@ class Notifier:
     async def send_initial_notifications(
         self,
         ctx,
-        target_name: str,
-        target_data: str,
+        display_name: str,
         target_type: str,
-        target_details: Optional[dict] = None,
+        location_id: Optional[int] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        radius_miles: Optional[int] = None,
     ):
         """Fetches and posts initial submissions for a new target."""
         submissions: List[Dict[str, Any]] = []
         try:
-            if target_type == "location":
+            if target_type == "location" and location_id is not None:
                 submissions = await fetch_submissions_for_location(
-                    location_id=int(target_data)
+                    location_id=location_id
                 )
-            elif target_type in ["city", "latlong"]:
-                parts = target_data.split(",")
-                lat, lon = float(parts[0]), float(parts[1])
-                radius = int(parts[2]) if len(parts) > 2 else 25
-                submissions = await fetch_submissions_for_coordinates(lat, lon, radius)
+            elif (
+                target_type == "geographic"
+                and latitude is not None
+                and longitude is not None
+            ):
+                radius = radius_miles or 25
+                submissions = await fetch_submissions_for_coordinates(
+                    latitude, longitude, radius
+                )
         except Exception as e:
-            logger.error(f"Error fetching initial submissions for {target_name}: {e}")
+            logger.error(f"Error fetching initial submissions for {display_name}: {e}")
             # Optionally, notify the user that fetching failed.
             # For now, we'll just log and proceed with no submissions.
             submissions = []
@@ -82,13 +88,14 @@ class Notifier:
             await self.log_and_send(
                 ctx,
                 Messages.Notification.Initial.FOUND.format(
-                    count=len(latest_submissions), target_name=target_name
+                    count=len(latest_submissions), display_name=display_name
                 ),
             )
             await self.post_submissions(ctx, latest_submissions, channel_config)
         else:
             await self.log_and_send(
-                ctx, Messages.Notification.Initial.NONE.format(target_name=target_name)
+                ctx,
+                Messages.Notification.Initial.NONE.format(display_name=display_name),
             )
 
     async def post_submissions(

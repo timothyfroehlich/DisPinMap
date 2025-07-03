@@ -11,7 +11,7 @@ database, simplifying common setup and assertion steps in tests.
 
 
 async def setup_monitoring_target(
-    db_session, user_id: int, location_id: int, location_name: str
+    db_session, user_id: int, location_id: int, display_name: str
 ):
     """
     A helper to create and save a new monitoring target to the database.
@@ -20,7 +20,7 @@ async def setup_monitoring_target(
         db_session: The SQLAlchemy session fixture.
         user_id: The Discord user ID to associate with the target.
         location_id: The PinballMap location ID.
-        location_name: The human-readable name of the location.
+        display_name: The human-readable name of the location.
 
     Returns:
         The newly created Target object.
@@ -46,7 +46,7 @@ async def setup_monitoring_target(
         new_target = MonitoringTarget(
             channel_id=user_id,  # Associate with provided user_id
             target_type="location",
-            target_name=location_name,
+            display_name=display_name,
             location_id=location_id,
         )
         session.add(new_target)

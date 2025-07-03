@@ -43,7 +43,7 @@ async def test_monitoring_recovers_from_api_failure(db_session, api_mocker):
     target = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location",
+        display_name="Test Location",
         location_id=874,
     )
     session.add(target)

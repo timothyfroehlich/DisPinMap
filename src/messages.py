@@ -48,10 +48,10 @@ class Messages:
         class Add:
             """Messages for the add command."""
 
-            SUCCESS = "✅ Added {target_type}: **{target_name}** - Monitoring started!"
+            SUCCESS = "✅ Added {target_type}: **{display_name}** - Monitoring started!"
             """Format parameters:
             - target_type: str - Type of target (location, coordinates, city)
-            - target_name: str - Name or identifier of the target
+            - display_name: str - Name or identifier of the target
             """
 
             ERROR = "❌ Error adding {target_type}: {error_message}"
@@ -106,26 +106,32 @@ class Messages:
             - search_term: str - The search term that yielded no results
             """
 
-            NOT_FOUND = "❌ {target_type} '{target_name}' not found"
+            RADIUS_UPDATED = "✅ Updated radius to {radius} miles for existing coordinates: **{display_name}**"
             """Format parameters:
-            - target_type: str - Type of target (location, coordinates, city)
-            - target_name: str - Name of the target that was not found
+            - radius: int - The new radius in miles
+            - display_name: str - The display name of the target
             """
 
-            MULTIPLE_RESULTS = "Multiple {target_type} found for '{target_name}'. Please be more specific:\n{results}"
+            NOT_FOUND = "❌ {target_type} '{display_name}' not found"
             """Format parameters:
             - target_type: str - Type of target (location, coordinates, city)
-            - target_name: str - Name of the target that was searched
+            - display_name: str - Name of the target that was not found
+            """
+
+            MULTIPLE_RESULTS = "Multiple {target_type} found for '{display_name}'. Please be more specific:\n{results}"
+            """Format parameters:
+            - target_type: str - Type of target (location, coordinates, city)
+            - display_name: str - Name of the target that was searched
             - results: str - List of matching results
             """
 
         class Remove:
             """Remove command messages."""
 
-            SUCCESS = "✅ Removed {target_type} target: {target_name}"
+            SUCCESS = "✅ Removed {target_type} target: {display_name}"
             """Format parameters:
             - target_type: str - The type of target being removed
-            - target_name: str - The name of the target being removed
+            - display_name: str - The name of the target being removed
             """
 
             MISSING_INDEX = "❌ Please provide an index number. Usage: `!rm <index>`\nUse `!list` to see target indices."
@@ -295,15 +301,15 @@ class Messages:
         class Initial:
             """Initial notification messages."""
 
-            FOUND = "✅ Found {count} recent submission(s) for **{target_name}**:"
+            FOUND = "✅ Found {count} recent submission(s) for **{display_name}**:"
             """Format parameters:
             - count: int - Number of submissions found
-            - target_name: str - Name or identifier of the target
+            - display_name: str - Name or identifier of the target
             """
 
-            NONE = "ℹ️ No recent submissions found for **{target_name}**."
+            NONE = "ℹ️ No recent submissions found for **{display_name}**."
             """Format parameters:
-            - target_name: str - Name or identifier of the target
+            - display_name: str - Name or identifier of the target
             """
 
     class System:

@@ -43,6 +43,9 @@ where = ["src"]
 line-length = 88
 target-version = "py313"
 
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["sqlalchemy.orm.DeclarativeBase"]
+
 [tool.coverage.run]
 source = ["src"]
 omit = [

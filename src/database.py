@@ -14,17 +14,17 @@ from sqlalchemy.orm import Session, sessionmaker
 
 logger = logging.getLogger(__name__)
 try:
-    from .models import (  # type: ignore
+    from .models import (
         Base,
         ChannelConfig,
-        MonitoringTarget,
+        MonitoringTarget,  # type: ignore
         SeenSubmission,
     )
 except ImportError:
-    from models import (  # type: ignore
+    from models import (
         Base,
         ChannelConfig,
-        MonitoringTarget,
+        MonitoringTarget,  # type: ignore
         SeenSubmission,
     )
 
@@ -249,12 +249,15 @@ class Database:
         self,
         channel_id: int,
         target_type: str,
-        target_name: str,
-        target_data: Optional[str] = None,
+        display_name: str,
+        location_id: Optional[int] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        radius_miles: Optional[int] = None,
         poll_rate_minutes: Optional[int] = None,
         notification_types: Optional[str] = None,
-    ) -> None:
-        """Add a monitoring target for a channel"""
+    ) -> Optional[Dict[str, Any]]:
+        """Add a monitoring target for a channel with new schema"""
         with self.get_session() as session:
             # Get channel config for defaults
             config = session.get(ChannelConfig, channel_id)
@@ -275,15 +278,34 @@ class Database:
             if notification_types is None:
                 notification_types = config.notification_types  # type: ignore[assignment]
 
+            # Validate target data integrity
+            if target_type == "location":
+                if location_id is None:
+                    raise ValueError("Location targets must have a location_id")
+                if latitude is not None or longitude is not None:
+                    raise ValueError("Location targets cannot have coordinates")
+            elif target_type == "geographic":
+                if latitude is None or longitude is None:
+                    raise ValueError(
+                        "Geographic targets must have latitude and longitude"
+                    )
+                if location_id is not None:
+                    raise ValueError("Geographic targets cannot have a location_id")
+                if radius_miles is None:
+                    radius_miles = 25  # Default radius
+            else:
+                raise ValueError(
+                    f"Invalid target_type: {target_type}. Must be 'location' or 'geographic'"
+                )
+
             target = MonitoringTarget(
                 channel_id=channel_id,
                 target_type=target_type,
-                target_name=target_name,
-                location_id=(
-                    int(target_data)
-                    if target_type == "location" and target_data
-                    else None
-                ),
+                display_name=display_name,
+                location_id=location_id,
+                latitude=latitude,
+                longitude=longitude,
+                radius_miles=radius_miles,
                 poll_rate_minutes=poll_rate_minutes,
                 notification_types=notification_types,
             )
@@ -291,41 +313,116 @@ class Database:
 
             try:
                 session.commit()
+                return None  # Success, no special handling needed
             except IntegrityError:
                 session.rollback()
+
+                # For geographic targets, check if we should update the radius instead
+                if target_type == "geographic":
+                    # Check if there's an existing target with the same coordinates
+                    existing_target = session.scalar(
+                        select(MonitoringTarget).where(
+                            MonitoringTarget.channel_id == channel_id,
+                            MonitoringTarget.latitude == latitude,
+                            MonitoringTarget.longitude == longitude,
+                            MonitoringTarget.target_type == "geographic",
+                        )
+                    )
+
+                    if existing_target and radius_miles is not None:
+                        # Get current values before update
+                        old_radius = existing_target.radius_miles
+                        current_display_name = existing_target.display_name
+
+                        # Update the radius using SQL update statement
+                        stmt = (
+                            update(MonitoringTarget)
+                            .where(MonitoringTarget.id == existing_target.id)
+                            .values(radius_miles=radius_miles)
+                        )
+                        session.execute(stmt)
+                        session.commit()
+
+                        return {
+                            "updated_radius": True,
+                            "old_radius": old_radius,
+                            "new_radius": radius_miles,
+                            "display_name": current_display_name,
+                        }
+
                 raise Exception(
-                    f"Target '{target_name}' of type '{target_type}' is already being monitored"
+                    f"Target '{display_name}' of type '{target_type}' is already being monitored"
                 )
 
-    def remove_monitoring_target(
-        self, channel_id: int, target_type: str, target_name: str
-    ) -> None:
-        """Remove a monitoring target for a channel"""
+    def remove_monitoring_target(self, channel_id: int, target_id: int) -> None:
+        """Remove a monitoring target for a channel by target ID"""
         with self.get_session() as session:
             stmt = delete(MonitoringTarget).where(
                 MonitoringTarget.channel_id == channel_id,
-                MonitoringTarget.target_type == target_type,
-                MonitoringTarget.target_name == target_name,
+                MonitoringTarget.id == target_id,
             )
-            session.execute(stmt)
+            result = session.execute(stmt)
             session.commit()
+            if result.rowcount == 0:
+                raise ValueError(
+                    f"No target found with ID {target_id} in channel {channel_id}"
+                )
+
+    def remove_monitoring_target_by_location(
+        self, channel_id: int, location_id: int
+    ) -> None:
+        """Remove a location monitoring target for a channel by location ID"""
+        with self.get_session() as session:
+            stmt = delete(MonitoringTarget).where(
+                MonitoringTarget.channel_id == channel_id,
+                MonitoringTarget.target_type == "location",
+                MonitoringTarget.location_id == location_id,
+            )
+            result = session.execute(stmt)
+            session.commit()
+            if result.rowcount == 0:
+                raise ValueError(
+                    f"No location target found with location_id {location_id} in channel {channel_id}"
+                )
+
+    def remove_monitoring_target_by_coordinates(
+        self, channel_id: int, latitude: float, longitude: float, radius_miles: int
+    ) -> None:
+        """Remove a geographic monitoring target for a channel by coordinates"""
+        with self.get_session() as session:
+            stmt = delete(MonitoringTarget).where(
+                MonitoringTarget.channel_id == channel_id,
+                MonitoringTarget.target_type == "geographic",
+                MonitoringTarget.latitude == latitude,
+                MonitoringTarget.longitude == longitude,
+                MonitoringTarget.radius_miles == radius_miles,
+            )
+            result = session.execute(stmt)
+            session.commit()
+            if result.rowcount == 0:
+                raise ValueError(
+                    f"No geographic target found at {latitude}, {longitude} ({radius_miles}mi) in channel {channel_id}"
+                )
 
     def update_monitoring_target(
-        self, channel_id: int, target_type: str, target_name: str, **kwargs
+        self, channel_id: int, target_id: int, **kwargs
     ) -> None:
-        """Update a monitoring target's settings"""
+        """Update a monitoring target's settings by target ID"""
         with self.get_session() as session:
             stmt = (
                 update(MonitoringTarget)
                 .where(
                     MonitoringTarget.channel_id == channel_id,
-                    MonitoringTarget.target_type == target_type,
-                    MonitoringTarget.target_name == target_name,
+                    MonitoringTarget.id == target_id,
                 )
                 .values(**kwargs)
             )
-            session.execute(stmt)
+            result = session.execute(stmt)
             session.commit()
+            if result.rowcount == 0:
+                raise ValueError(
+                    f"No target found with ID {target_id} in channel {channel_id}"
+                )
 
     def get_monitoring_targets(self, channel_id: int) -> List[Dict[str, Any]]:
         """Get all monitoring targets for a channel"""
@@ -340,20 +437,73 @@ class Database:
                 .all()
             )
 
-            return [
-                {
-                    "id": target.id,
-                    "channel_id": target.channel_id,
-                    "target_type": target.target_type,
-                    "target_name": target.target_name,
-                    "location_id": target.location_id,
-                    "poll_rate_minutes": target.poll_rate_minutes,
-                    "notification_types": target.notification_types,
-                    "last_checked_at": target.last_checked_at,
-                    "created_at": target.created_at,
-                }
-                for target in targets
-            ]
+            return [target.to_dict() for target in targets]
+
+    def find_monitoring_target_by_location(
+        self, channel_id: int, location_id: int
+    ) -> Optional[Dict[str, Any]]:
+        """Find a location monitoring target by location ID"""
+        with self.get_session() as session:
+            target = session.execute(
+                select(MonitoringTarget).where(
+                    MonitoringTarget.channel_id == channel_id,
+                    MonitoringTarget.target_type == "location",
+                    MonitoringTarget.location_id == location_id,
+                )
+            ).scalar_one_or_none()
+
+            return target.to_dict() if target else None
+
+    def find_monitoring_target_by_coordinates(
+        self, channel_id: int, latitude: float, longitude: float, radius_miles: int
+    ) -> Optional[Dict[str, Any]]:
+        """Find a geographic monitoring target by coordinates"""
+        with self.get_session() as session:
+            target = session.execute(
+                select(MonitoringTarget).where(
+                    MonitoringTarget.channel_id == channel_id,
+                    MonitoringTarget.target_type == "geographic",
+                    MonitoringTarget.latitude == latitude,
+                    MonitoringTarget.longitude == longitude,
+                    MonitoringTarget.radius_miles == radius_miles,
+                )
+            ).scalar_one_or_none()
+
+            return target.to_dict() if target else None
+
+    def get_location_targets(self, channel_id: int) -> List[Dict[str, Any]]:
+        """Get all location-based monitoring targets for a channel"""
+        with self.get_session() as session:
+            targets = (
+                session.execute(
+                    select(MonitoringTarget)
+                    .where(
+                        MonitoringTarget.channel_id == channel_id,
+                        MonitoringTarget.target_type == "location",
+                    )
+                    .order_by(MonitoringTarget.id)
+                )
+                .scalars()
+                .all()
+            )
+            return [target.to_dict() for target in targets]
+
+    def get_geographic_targets(self, channel_id: int) -> List[Dict[str, Any]]:
+        """Get all geographic coordinate-based monitoring targets for a channel"""
+        with self.get_session() as session:
+            targets = (
+                session.execute(
+                    select(MonitoringTarget)
+                    .where(
+                        MonitoringTarget.channel_id == channel_id,
+                        MonitoringTarget.target_type == "geographic",
+                    )
+                    .order_by(MonitoringTarget.id)
+                )
+                .scalars()
+                .all()
+            )
+            return [target.to_dict() for target in targets]
 
     def clear_monitoring_targets(self, channel_id: int) -> None:
         """Remove all monitoring targets for a channel"""

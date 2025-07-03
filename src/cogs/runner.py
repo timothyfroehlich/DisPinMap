@@ -298,28 +298,18 @@ class Runner(commands.Cog, name="Runner"):
             target_id = target["id"]
             target_type = target["target_type"]
 
-            if target_type == "city":
-                logger.error(
-                    f"Skipping target with unsupported type 'city': id={target_id}. "
-                    f"This target should be re-added using the add command to geocode it correctly."
-                )
-                return [], False  # Not an API failure, just invalid config
+            if target_type == "geographic":
+                # Get coordinates from new schema fields
+                lat = target.get("latitude")
+                lon = target.get("longitude")
+                radius = target.get("radius_miles")
 
-            elif target_type == "latlong":
-                source_data = target.get("target_name")
-                if not source_data:
+                if lat is None or lon is None:
                     logger.warning(
-                        f"Skipping target with missing data: id={target_id}, type={target_type}"
+                        f"Skipping geographic target with missing coordinates: id={target_id}"
                     )
                     return [], False  # Not an API failure, just invalid config
-                parts = source_data.split(",")
-                if len(parts) < 2:
-                    logger.warning(
-                        f"Skipping target with malformed data: id={target_id}, type={target_type}, data={source_data}"
-                    )
-                    return [], False  # Not an API failure, just invalid config
-                lat, lon = float(parts[0]), float(parts[1])
-                radius = int(parts[2]) if len(parts) >= 3 else None
+
                 submissions = await fetch_submissions_for_coordinates(
                     lat, lon, radius, use_min_date=not is_manual_check
                 )

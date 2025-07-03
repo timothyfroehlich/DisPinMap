@@ -27,7 +27,7 @@ def test_monitoring_target_representation():
         id=1,
         channel_id=12345,
         target_type="location",
-        target_name="Ground Kontrol",
+        display_name="Ground Kontrol",
         location_id=874,
         poll_rate_minutes=60,
         notification_types="machines",
@@ -101,11 +101,14 @@ def test_model_initialization_defaults():
     assert config.guild_id == 11111
 
     target = MonitoringTarget(
-        channel_id=12345, target_type="location", target_name="Test Location"
+        channel_id=12345,
+        target_type="location",
+        display_name="Test Location",
+        location_id=123,
     )
     assert target.channel_id == 12345
     assert target.target_type == "location"
-    assert target.target_name == "Test Location"
+    assert target.display_name == "Test Location"
 
 
 def test_monitoring_target_model_has_expected_columns():
@@ -129,8 +132,14 @@ def test_monitoring_target_model_has_expected_columns():
     assert "target_type" in columns
     assert isinstance(columns["target_type"].type, String)
 
-    assert "target_name" in columns
-    assert isinstance(columns["target_name"].type, String)
+    assert "display_name" in columns
+    assert isinstance(columns["display_name"].type, String)
+
+    # Check new geographic fields
+    assert "latitude" in columns
+    assert "longitude" in columns
+    assert "radius_miles" in columns
+    assert "location_id" in columns
 
     assert "last_checked_at" in columns
     assert isinstance(columns["last_checked_at"].type, DateTime)

@@ -1,14 +1,15 @@
 # Database Schema Redesign Plan
 
 **Issues**: #78, #81 **Branch**: `feature/schema-redesign-issues-78-81`
-**Approach**: Complete schema redesign with fresh database start
+**Approach**: Complete schema redesign with fresh database start (no data
+migration)
 
 ## Overview
 
 This plan implements a comprehensive database schema redesign to resolve
 architectural issues with data overloading in the `target_name` field and
 inconsistent data access patterns. We will create a new, properly normalized
-schema and migrate existing production data.
+schema and start with a fresh database (no data migration required).
 
 ## Current Problems Being Solved
 
@@ -78,209 +79,198 @@ CREATE TABLE monitoring_targets (
 4. **Extensibility**: Easy to add new target types or geographic features
 5. **Data Integrity**: Comprehensive constraints prevent invalid data
 
-## Implementation Phases
+## Current Status Analysis (as of 2025-07-02)
 
-### Phase 1: Test Development & Schema Validation (3 days)
+The schema redesign is well underway. The core application logic in `src/` has
+been successfully updated to reflect the new, normalized schema as per the plan.
 
-#### 1.1 Create New Model Classes
+**The project is currently blocked in the testing phase.** Unit and integration
+tests have not been fully updated to work with the new schema, which prevents
+the final phases (Alembic baseline creation and documentation updates) from
+starting.
 
-- **File**: `src/models_new.py` (temporary)
-- Create new SQLAlchemy models with proper constraints
-- Include validation methods and helper functions
+- **Core Logic (`src/`)**: ✅ **Complete**. `models.py`, `database.py`, and
+  `cogs/command_handler.py` align with the new schema.
+- **Unit Tests (`tests/unit/`)**: 🟡 **In Progress but Blocked**. Files need
+  systematic updates. Mocks and assertions are outdated.
+- **Integration Tests (`tests/integration/`)**: ❌ **Pending/Blocked**. These
+  tests are not aligned with the new schema or command structure and require
+  significant updates. `test_commands_e2e.py` is the primary blocker.
+- **Alembic Migrations (`alembic/`)**: ❌ **Pending**. Blocked by failing tests.
+  The old migration files are still in place.
+- **Documentation (`docs/`)**: ❌ **Pending**. Blocked by the incomplete
+  implementation. `DATABASE.md` still describes the old schema.
 
-#### 1.2 Data Transformation Pipeline Tests
+The immediate priority is to update the test suite to unblock the rest of the
+project.
 
-- **File**: `tests/migration/test_data_transformation.py`
-- Test export from current schema
-- Test transformation logic for each target type
-- Test import to new schema with validation
+## Implementation Status
 
-#### 1.3 Schema Validation Tests
+### ✅ COMPLETED PHASES
 
-- **File**: `tests/migration/test_new_schema.py`
-- Test all constraints work correctly
-- Test data integrity rules
-- Test edge cases and invalid data rejection
+#### ✅ Phase 1: Schema Models & Validation
 
-#### 1.4 Production Data Copy Testing
+- **File**: `src/models.py` - ✅ **Verified**. New SQLAlchemy models with
+  comprehensive constraints are correctly implemented.
 
-- Download latest production database backup
-- Run transformation pipeline on real data
-- Validate all targets can be converted successfully
-- Document any data quality issues found
+#### ✅ Phase 2: Code Refactoring
 
-### Phase 2: Data Migration Pipeline (3 days)
+- **File**: `src/database.py` - ✅ **Verified**. Database layer is updated for
+  the new schema.
+- **File**: `src/cogs/command_handler.py` - ✅ **Verified**. Commands are
+  refactored for the new schema.
+- **Files**: `src/cogs/runner.py`, `src/notifier.py` - ✅ Assumed complete as
+  per plan.
 
-#### 2.1 Export Pipeline
+### 🔴 BLOCKED PHASE: Testing
 
-- **File**: `scripts/export_current_data.py`
-- Export all monitoring targets to JSON format
-- Include metadata for validation
-- Create data integrity checksums
+The testing phase is the primary bottleneck. The existing tests are failing and
+must be updated before proceeding.
 
-#### 2.2 Transformation Pipeline
+#### 🟡 Phase 3.1: Unit Test Updates (In Progress)
 
-- **File**: `scripts/transform_schema_data.py`
-- **Location Targets**:
-  - `location_id` → `location_id` (unchanged)
-  - `target_name` → `display_name` (unchanged)
-  - `target_type` → `location` (unchanged)
-- **Geographic Targets** (city/latlong):
-  - Parse coordinates from `target_name`: "30.26715,-97.74306,5"
-  - Extract: `latitude=30.26715`, `longitude=-97.74306`, `radius_miles=5`
-  - Generate `display_name` from reverse geocoding or format coordinates
-  - Set `target_type='geographic'`
-- **Data Validation**: Verify all coordinates are valid
-- **Conflict Resolution**: Handle any duplicate geographic targets
+- **Status**: Partially complete, but requires systematic review.
+- **Task**: Update all `tests/unit/*.py` files to align with the new schema.
+  This includes fixing field name changes (`target_name` → `display_name`),
+  updating mock data structures, and aligning database operation tests with new
+  method signatures.
 
-#### 2.3 Import Pipeline
+#### ❌ Phase 3.2: Integration Test Updates (Pending)
 
-- **File**: `scripts/import_new_schema.py`
-- Create new database with new schema
-- Import transformed data with validation
-- Run integrity checks and constraint validation
-- Generate import report with statistics
+- **Status**: Not started. This is a critical blocker.
+- **Task**: Update all `tests/integration/*.py` files. `test_commands_e2e.py`
+  requires a major rewrite to use the new `!add <subcommand>` structure and
+  validate against the new schema.
 
-#### 2.4 Rollback Procedures
+#### ❌ Phase 3.3: Migration Test Updates (Pending)
 
-- **File**: `scripts/rollback_schema.py`
-- Export data from new schema back to old format
-- Create emergency rollback database
-- Document rollback procedures
+- **Status**: Not started.
+- **Task**: Update `tests/migration/*.py` to focus on fresh schema validation
+  rather than data transformation.
 
-### Phase 3: Code Refactoring (5 days)
+### ❌ REMAINING PHASES (Blocked by Testing)
 
-#### 3.1 Database Layer Updates
+#### ❌ Phase 4: Alembic Baseline Creation
 
-- **File**: `src/database.py`
-- Update all CRUD operations for new schema
-- Add helper methods for coordinate handling
-- Update target retrieval to use appropriate fields
-- Add validation for coordinate inputs
+- **Status**: Pending.
+- **Task**: Remove all existing migration files and generate a new baseline from
+  the completed `src/models.py`.
 
-#### 3.2 Model Updates
+#### ❌ Phase 5: Documentation & Cleanup
 
-- **File**: `src/models.py`
-- Replace with new schema models
-- Add validation methods
-- Add helper methods for coordinate formatting
+- **Status**: Pending.
+- **Task**: Update `docs/DATABASE.md`, `USER_DOCUMENTATION.md`, and other
+  relevant documentation.
 
-#### 3.3 Command Handler Refactoring
+## Parallel Work-streams for Independent Contributors
 
-- **File**: `src/cogs/command_handler.py`
-- **Add Commands**:
-  - Location: Use `location_id` and `display_name`
-  - City: Geocode and create geographic target (not city!)
-  - Coordinates: Use numeric `latitude`, `longitude`, `radius_miles`
-- **List Command**: Format display using `display_name` for all targets
-- **Remove Command**: Update to work with new schema
-- **Export Command**: Generate commands using new field structure
+To accelerate the completion of the schema redesign, the remaining work has been
+broken down into the following independent work-streams. Contributors can claim
+a task and work on it in a separate feature branch.
 
-#### 3.4 Runner Logic Updates
+---
 
-- **File**: `src/cogs/runner.py`
-- Remove all 'city' target type handling (should not exist)
-- Update coordinate parsing to use numeric fields
-- Simplify target processing with consistent data access
-- Update API calls to use appropriate fields
+#### **Task 1: Update Unit Tests (`tests/unit/`)**
 
-#### 3.5 API Integration Updates
+- **Objective**: Ensure all unit tests pass by aligning them with the new schema
+  and application logic.
+- **Files to Modify**: All files within `tests/unit/`.
+- **Key Activities**:
+  1.  Create a new branch: `feature/fix-unit-tests`
+  2.  Systematically update each test file in `tests/unit/`.
+  3.  Modify mock objects to return data in the new schema format (e.g.,
+      `display_name`, `location_id`, `latitude`, `longitude`).
+  4.  Update assertions to check for the new fields.
+  5.  Ensure that tests for `database.py` and `command_handler.py` correctly
+      reflect the new method signatures and command structures.
+- **Risk of Conflict**: **Low**. This task is self-contained within the
+  `tests/unit/` directory.
 
-- **File**: `src/api.py`
-- Update coordinate-based API calls to use numeric fields
-- Update location-based API calls to use `location_id`
-- Remove coordinate string parsing logic
+---
 
-### Phase 4: Testing & Integration (4 days)
+#### **Task 2: Update Integration & Migration Tests (`tests/integration/` & `tests/migration/`)**
 
-#### 4.1 Unit Test Updates
+- **Objective**: Rewrite integration tests to validate the end-to-end
+  functionality of the new schema and commands.
+- **Files to Modify**: All files within `tests/integration/` and
+  `tests/migration/`.
+- **Key Activities**:
+  1.  Create a new branch: `feature/fix-integration-tests`
+  2.  Rewrite `tests/integration/test_commands_e2e.py` to use the new
+      `!add <subcommand>` format.
+  3.  Update database assertions to validate the new `MonitoringTarget` schema.
+  4.  Ensure the `api_mocker` is used correctly to test interactions with
+      external APIs.
+  5.  Update `tests/migration/` to test the creation of a fresh database schema,
+      removing any old data migration logic.
+- **Risk of Conflict**: **Low**. This task is self-contained within the
+  `tests/integration/` and `tests/migration/` directories.
 
-- Update all existing tests for new schema
-- Add tests for new constraint validations
-- Test coordinate validation and edge cases
-- Test data access patterns
+---
 
-#### 4.2 Integration Testing
+#### **Task 3: Create Alembic Baseline (`alembic/`)**
 
-- **File**: `tests/integration/test_schema_e2e.py`
-- End-to-end testing with transformed production data
-- Test all command flows with new schema
-- Test runner functionality with real data
-- Verify API integrations work correctly
+- **Objective**: Reset the database migration history and create a single, clean
+  baseline migration that reflects the new schema.
+- **Files to Modify**: All files within `alembic/versions/`.
+- **Key Activities**:
+  1.  Create a new branch: `feature/create-alembic-baseline`
+  2.  Delete all existing migration files in `alembic/versions/`.
+  3.  Run
+      `alembic revision --autogenerate -m "Create initial baseline from new schema"`
+      to generate a new baseline migration.
+  4.  Verify that the generated migration script correctly creates all tables
+      and constraints as defined in `src/models.py`.
+- **Risk of Conflict**: **Low**. This task is isolated to the `alembic/`
+  directory. It can be done in parallel with the testing tasks but should only
+  be merged after the tests are passing.
 
-#### 4.3 User Journey Testing
+---
 
-- **File**: `tests/simulation/test_new_schema_journeys.py`
-- Test complete user workflows with new schema
-- Verify all commands work as documented in USER_DOCUMENTATION.md
-- Test edge cases and error handling
+#### **Task 4: Update Documentation (`docs/`)**
 
-#### 4.4 Performance Testing
+- **Objective**: Update all project documentation to reflect the new database
+  schema and any changes to user-facing commands.
+- **Files to Modify**: `docs/DATABASE.md`, `USER_DOCUMENTATION.md`, and any
+  other relevant files in `docs/`.
+- **Key Activities**:
+  1.  Create a new branch: `feature/update-documentation`
+  2.  Update the schema diagram and descriptions in `docs/DATABASE.md`.
+  3.  Review and update command examples in `USER_DOCUMENTATION.md` to ensure
+      they are correct.
+  4.  Update any architectural diagrams or descriptions in the developer
+      handbook.
+- **Risk of Conflict**: **Low**. This task is isolated to the `docs/` directory.
 
-- Compare query performance between old and new schema
-- Test geographic coordinate queries
-- Validate that all operations are at least as fast as before
+---
 
-### Phase 5: Documentation & Deployment (2 days)
+## Fresh Database Deployment Strategy
 
-#### 5.1 Documentation Updates
+### Production Deployment Process
 
-- **File**: `docs/DATABASE.md`
-  - Update schema documentation
-  - Add new constraint explanations
-  - Update example queries
-- **File**: `USER_DOCUMENTATION.md`
-  - Verify all examples still work
-  - Update any changes in command behavior
-- **File**: `docs/DEVELOPER_HANDBOOK.md`
-  - Update architecture documentation
-  - Add new data access patterns
+1. **Pre-Deployment**:
+   - Ensure all tests pass with new schema
+   - Generate fresh Alembic baseline migration
+   - Create deployment checklist
 
-#### 5.2 Migration Documentation
-
-- **File**: `docs/SCHEMA_MIGRATION.md`
-  - Document the migration process
-  - Include rollback procedures
-  - Add troubleshooting guide
-
-#### 5.3 Deployment Preparation
-
-- Create deployment checklist
-- Prepare monitoring for migration
-- Create validation scripts for production deployment
-- Document post-deployment verification steps
-
-## Data Migration Strategy
-
-### Production Migration Process
-
-1. **Pre-Migration**:
-   - Download latest production backup
-   - Run full transformation pipeline on copy
-   - Validate all data transforms correctly
-   - Create rollback database
-
-2. **Migration Execution**:
+2. **Deployment Execution**:
    - Stop bot temporarily (maintenance mode)
-   - Export current production data
-   - Transform data using validated pipeline
-   - Create new database with new schema
-   - Import transformed data
-   - Validate data integrity
-
-3. **Post-Migration**:
-   - Start bot with new schema
-   - Monitor for errors or issues
+   - **Wipe existing database completely**
+   - Create fresh database with new schema using Alembic
+   - Start bot with empty database (fresh start)
    - Verify all functionality works
-   - Keep rollback database available for 48 hours
 
-### Validation Criteria
+3. **Post-Deployment**:
+   - Monitor for errors or issues
+   - Verify all commands work correctly
+   - Users can re-add their monitoring targets as needed
 
-- **Data Completeness**: All targets successfully migrated
-- **Functionality**: All commands work as before
-- **Performance**: No performance degradation
-- **Data Integrity**: All constraints and validations work
-- **User Experience**: No changes visible to users
+### Fresh Start Benefits
+
+- **No Data Migration Complexity**: Eliminates transformation pipeline risks
+- **Clean Slate**: No legacy data inconsistencies
+- **Simplified Deployment**: Single step database creation
+- **User Re-engagement**: Users re-add targets using improved commands
 
 ## Risk Mitigation
 
@@ -302,18 +292,18 @@ CREATE TABLE monitoring_targets (
 
 ### Technical Success
 
-- [ ] All production data successfully migrated
-- [ ] All existing functionality preserved
+- [ ] All existing functionality preserved with new schema
 - [ ] New schema constraints working correctly
 - [ ] No performance degradation
-- [ ] All tests passing
+- [ ] All tests passing (unit, integration, migration)
+- [ ] Fresh Alembic baseline migration created
 
 ### User Experience Success
 
 - [ ] All commands work as documented
-- [ ] No user-visible changes in behavior
-- [ ] All existing monitoring targets continue working
+- [ ] No user-visible changes in command behavior
 - [ ] Export/import functionality works with new schema
+- [ ] Users can seamlessly re-add monitoring targets
 
 ### Code Quality Success
 
@@ -323,30 +313,95 @@ CREATE TABLE monitoring_targets (
 - [ ] Comprehensive test coverage
 - [ ] Updated documentation
 
-## Timeline Summary
+## Revised Timeline Summary
 
-| Phase                         | Duration    | Dependencies         |
-| ----------------------------- | ----------- | -------------------- |
-| 1. Test Development           | 3 days      | None                 |
-| 2. Migration Pipeline         | 3 days      | Phase 1 complete     |
-| 3. Code Refactoring           | 5 days      | Phase 2 complete     |
-| 4. Testing & Integration      | 4 days      | Phase 3 complete     |
-| 5. Documentation & Deployment | 2 days      | Phase 4 complete     |
-| **Total**                     | **17 days** | Sequential execution |
+| Phase                      | Status     | Duration     | Agent Assignment     |
+| -------------------------- | ---------- | ------------ | -------------------- |
+| 1-2. Schema & Code         | ✅ DONE    | 5 days       | Completed            |
+| 3.1. Unit Test Updates     | 🟡 ACTIVE  | 2-3 days     | Agent 1: Unit Tests  |
+| 3.2. Integration Tests     | ❌ PENDING | 2-3 days     | Agent 2: Integration |
+| 3.3. Migration Tests       | ❌ PENDING | 1 day        | Agent 2: Integration |
+| 4. Alembic Baseline        | ❌ PENDING | 1 day        | Agent 3: Alembic     |
+| 5. Documentation & Cleanup | ❌ PENDING | 1-2 days     | Agent 4: Docs        |
+| **Remaining**              | **ACTIVE** | **5-7 days** | **Multi-agent**      |
+
+## Multi-Agent Work Division
+
+### Agent 1: Unit Test Specialist (CURRENT)
+
+**Duration:** 2-3 days **Files:** All `tests/unit/*.py` files (15 files need
+updates) **Tasks:**
+
+- ✅ `tests/unit/test_database_models.py` - Updated for new schema
+- 🟡 `tests/unit/test_command_handler.py` - Fix field name changes
+- ❌ Remaining 13 unit test files - systematic schema updates
+- Update mock data structures and test fixtures
+- Ensure 100% unit test coverage passes
+
+### Agent 2: Integration Test Specialist
+
+**Duration:** 2-3 days (starts after Agent 1 ~80% complete) **Files:** All
+`tests/integration/*.py` and `tests/migration/*.py` **Tasks:**
+
+- Update integration tests for new schema fields and constraints
+- Fix end-to-end workflows with new coordinate handling
+- Update API integration tests for geographic vs location targets
+- Update/simplify migration tests for fresh database approach
+- Test runner functionality with new data patterns
+- Integration test `tests/integration/test_commands_e2e.py` needs further
+  changes:
+  - Update all command invocations to use the correct subcommand methods or
+    simulate Discord command invocation as appropriate for the test framework.
+  - Replace all references to the old schema field `target_name` with
+    `display_name` and update any other schema field usages to match the new
+    schema.
+  - Ensure all test code that instantiates `MonitoringTarget` or calls
+    `add_monitoring_target` uses the new schema fields.
+  - Review and update any other test logic that assumes the old schema or
+    command structure.
+
+### Agent 3: Alembic Baseline Specialist
+
+**Duration:** 1 day (can work in parallel) **Files:** `alembic/` directory
+**Tasks:**
+
+- **Reset Alembic completely**: Remove all existing migration files
+- Generate fresh baseline migration from current `models.py`
+- Create comprehensive initial migration with all constraints
+- Test baseline migration creation and application on empty database
+- Document fresh-start database approach
+
+### Agent 4: Documentation & Cleanup Specialist
+
+**Duration:** 1-2 days (can work in parallel) **Files:** Documentation, cleanup
+**Tasks:**
+
+- Update `docs/DATABASE.md` with new schema documentation
+- Update any affected user documentation
+- Clean up temporary files (`models_new.py`, etc.)
+- Update directory-specific `CLAUDE.md` files with new patterns
+- Create deployment notes for fresh database setup
+
+## Coordination Strategy
+
+- Agent 1 provides foundation for Agent 2 (unit tests validate integration)
+- Agents 3 & 4 work independently in parallel
+- Final verification requires all agents coordinating on full test suite
+- Ready for fresh database deployment once all agents complete
 
 ## Commit Strategy
 
 Following conventional commits and small, atomic changes:
 
-- `feat: add new schema models with validation constraints`
-- `test: add data transformation pipeline tests`
-- `feat: implement data export/transform/import pipeline`
-- `refactor: update database layer for new schema`
-- `refactor: update command handlers for new schema`
-- `refactor: update runner logic for new schema`
-- `test: add comprehensive integration tests for new schema`
-- `docs: update documentation for new schema`
-- `feat: complete schema redesign migration`
+- ✅ `feat: add new schema models with validation constraints`
+- ✅ `refactor: update database layer for new schema`
+- ✅ `refactor: update command handlers for new schema`
+- ✅ `refactor: update runner logic for new schema`
+- 🟡 `test: update unit tests for new schema`
+- ❌ `test: update integration tests for new schema`
+- ❌ `feat: create fresh Alembic baseline migration`
+- ❌ `docs: update documentation for new schema`
+- ❌ `feat: complete schema redesign with fresh database`
 
 Each commit will be small, focused, and independently testable following the
 project's TDD principles.

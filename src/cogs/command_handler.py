@@ -5,7 +5,7 @@ Cog for all user-facing commands
 import logging
 import traceback
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -55,86 +55,99 @@ class CommandHandler(commands.Cog, name="CommandHandler"):
                     embed.add_field(name=command.name, value=summary, inline=False)
             await ctx.send(embed=embed)
 
-    # Monitoring Commands
-    @commands.command(
+    # Monitoring Commands - Command Group for Add
+    @commands.group(
         name="add",
-        help="""Add a new monitoring target for pinball location updates.
+        help="Add new monitoring targets for pinball location updates.",
+        invoke_without_command=True,
+    )
+    async def add(self, ctx):
+        """Add a new monitoring target. Use subcommands: location, city, coordinates"""
+        if ctx.invoked_subcommand is None:
+            await self.notifier.log_and_send(
+                ctx, Messages.Command.Add.INVALID_SUBCOMMAND
+            )
 
-Monitors a specific location, city, or geographic area for new machine submissions and condition updates on PinballMap.com.
+    @add.command(
+        name="location",
+        help="""Monitor a specific pinball location by name or ID.
 
 Usage:
   !add location "Arcade Name" - Monitor by location name
   !add location 123 - Monitor by location ID
-  !add city "Portland, OR" [radius] - Monitor city area
-  !add coordinates 45.52 -122.67 [radius] - Monitor coordinates
 
 Examples:
   !add location "Ground Kontrol"
-  !add location 874
-  !add city "Seattle" 10
-  !add coordinates 45.515 -122.678 5""",
+  !add location 874""",
     )
-    async def add(self, ctx, target_type: str | None = None, *args):
-        """Add a new monitoring target. Usage: /add <location|coordinates|city> <args>"""
+    async def add_location(self, ctx, *, location_input: str):
+        """Add a location monitoring target by name or ID."""
         try:
-            # Handle missing or invalid target_type
-            if target_type is None or target_type not in (
-                "location",
-                "coordinates",
-                "city",
-            ):
-                await self.notifier.log_and_send(
-                    ctx, Messages.Command.Add.INVALID_SUBCOMMAND
-                )
-                return
-            if target_type == "location":
-                if not args:
-                    await self.notifier.log_and_send(
-                        ctx, Messages.Command.Add.MISSING_LOCATION
-                    )
-                    return
-                await self._handle_location_add(ctx, " ".join(args))
-            elif target_type == "coordinates":
-                if len(args) < 2:
-                    await self.notifier.log_and_send(
-                        ctx, Messages.Command.Add.MISSING_COORDS
-                    )
-                    return
-                try:
-                    lat, lon = float(args[0]), float(args[1])
-                    radius = int(args[2]) if len(args) > 2 else None
-                    await self._handle_coordinates_add(ctx, lat, lon, radius)
-                except ValueError:
-                    await self.notifier.log_and_send(
-                        ctx, Messages.Command.Add.INVALID_COORDS_FORMAT
-                    )
-            elif target_type == "city":
-                if not args:
-                    await self.notifier.log_and_send(
-                        ctx, Messages.Command.Add.MISSING_CITY
-                    )
-                    return
-
-                city_name_parts: List[str] = []
-                radius = None
-
-                if len(args) > 1 and args[-1].isdigit():
-                    radius = int(args[-1])
-                    city_name_parts = list(args[:-1])
-                else:
-                    city_name_parts = list(args)
-
-                city_name = " ".join(city_name_parts)
-                await self._handle_city_add(ctx, city_name, radius)
-            else:
-                await self.notifier.log_and_send(
-                    ctx, Messages.Command.Add.INVALID_SUBCOMMAND
-                )
+            await self._handle_location_add(ctx, location_input)
         except Exception as e:
             await self.notifier.log_and_send(
                 ctx,
                 Messages.Command.Add.ERROR.format(
-                    target_type=target_type, error_message=str(e)
+                    target_type="location", error_message=str(e)
+                ),
+            )
+
+    @add.command(
+        name="coordinates",
+        help="""Monitor a geographic area by latitude/longitude coordinates.
+
+Usage:
+  !add coordinates <lat> <lon> [radius] - Monitor coordinates with optional radius
+
+Examples:
+  !add coordinates 45.515 -122.678 5
+  !add coordinates 30.2672 -97.7431""",
+    )
+    async def add_coordinates(
+        self, ctx, lat: float, lon: float, radius: Optional[int] = None
+    ):
+        """Add a coordinate-based monitoring target."""
+        try:
+            await self._handle_coordinates_add(ctx, lat, lon, radius)
+        except Exception as e:
+            await self.notifier.log_and_send(
+                ctx,
+                Messages.Command.Add.ERROR.format(
+                    target_type="coordinates", error_message=str(e)
+                ),
+            )
+
+    @add.command(
+        name="city",
+        help="""Monitor a city area by geocoding the city name.
+
+Usage:
+  !add city "City Name" [radius] - Monitor city area with optional radius
+
+Examples:
+  !add city "Portland, OR" 10
+  !add city "Seattle" 25""",
+    )
+    async def add_city(self, ctx, *, city_input: str):
+        """Add a city-based monitoring target (geocoded to coordinates)."""
+        try:
+            # Parse city name and optional radius
+            parts = city_input.strip().split()
+
+            # Check if last part is a radius (numeric)
+            radius = None
+            if len(parts) > 1 and parts[-1].isdigit():
+                radius = int(parts[-1])
+                city_name = " ".join(parts[:-1])
+            else:
+                city_name = city_input.strip()
+
+            await self._handle_city_add(ctx, city_name, radius)
+        except Exception as e:
+            await self.notifier.log_and_send(
+                ctx,
+                Messages.Command.Add.ERROR.format(
+                    target_type="city", error_message=str(e)
                 ),
             )
 
@@ -173,27 +186,30 @@ Example:
                 return
 
             target = targets[index_int - 1]
-            self.db.remove_monitoring_target(
-                ctx.channel.id, target["target_type"], target["target_name"]
-            )
+            self.db.remove_monitoring_target(ctx.channel.id, target["id"])
 
-            if target["target_type"] == "latlong":
-                coords = target["target_name"].split(",")
-                await self.notifier.log_and_send(
-                    ctx,
-                    Messages.Command.Remove.SUCCESS.format(
-                        target_type="coordinates",
-                        target_name=f"{coords[0]}, {coords[1]}",
-                    ),
-                )
+            # Format the target name for display
+            if target["target_type"] == "geographic":
+                display_type = "coordinates"
+                if target["latitude"] is not None and target["longitude"] is not None:
+                    display_name = (
+                        f"{target['latitude']:.5f}, {target['longitude']:.5f}"
+                    )
+                    if target["radius_miles"]:
+                        display_name += f" ({target['radius_miles']}mi)"
+                else:
+                    display_name = target["display_name"]
             else:
-                await self.notifier.log_and_send(
-                    ctx,
-                    Messages.Command.Remove.SUCCESS.format(
-                        target_type=target["target_type"],
-                        target_name=target["target_name"],
-                    ),
-                )
+                display_type = target["target_type"]
+                display_name = target["display_name"]
+
+            await self.notifier.log_and_send(
+                ctx,
+                Messages.Command.Remove.SUCCESS.format(
+                    target_type=display_type,
+                    display_name=display_name,
+                ),
+            )
 
         except ValueError:
             await self.notifier.log_and_send(
@@ -240,14 +256,18 @@ Use the index numbers with !rm to remove targets.""",
         rows = []
 
         for i, target in enumerate(targets, 1):
-            if target["target_type"] == "latlong":
-                coords = target["target_name"].split(",")
-                target_name = f"Coords: {coords[0]}, {coords[1]}"
-                if len(coords) > 2:
-                    target_name += f" ({coords[2]}mi)"
+            if target["target_type"] == "geographic":
+                if target["latitude"] is not None and target["longitude"] is not None:
+                    target_name = (
+                        f"Coords: {target['latitude']:.5f}, {target['longitude']:.5f}"
+                    )
+                    if target["radius_miles"]:
+                        target_name += f" ({target['radius_miles']}mi)"
+                else:
+                    target_name = f"Geographic: {target['display_name']}"
             else:
                 target_name = (
-                    f"{target['target_type'].title()}: {target['target_name']}"
+                    f"{target['target_type'].title()}: {target['display_name']}"
                 )
 
             poll_rate = target.get(
@@ -326,17 +346,22 @@ Useful for backup or setting up identical monitoring in another channel.""",
         target_commands = []
         for i, target in enumerate(targets, 1):
             if target["target_type"] == "location":
-                # Use location_id if available, otherwise fall back to target_name
+                # Use location_id if available, otherwise fall back to display_name
                 if target.get("location_id"):
                     target_commands.append(f"!add location {target['location_id']}")
                 else:
-                    target_commands.append(f'!add location "{target["target_name"]}"')
-            elif target["target_type"] == "city":
-                target_commands.append(f'!add city "{target["target_name"]}"')
-            elif target["target_type"] == "latlong":
-                lat, lon, *rest = target["target_name"].split(",")
-                radius_str = f" {rest[0]}" if rest else ""
-                target_commands.append(f"!add coordinates {lat} {lon}{radius_str}")
+                    target_commands.append(f'!add location "{target["display_name"]}"')
+            elif target["target_type"] == "geographic":
+                if (
+                    target.get("latitude") is not None
+                    and target.get("longitude") is not None
+                ):
+                    lat, lon = target["latitude"], target["longitude"]
+                    radius = target.get("radius_miles", 25)
+                    target_commands.append(f"!add coordinates {lat} {lon} {radius}")
+                else:
+                    # Fallback for geographic targets without coordinates (shouldn't happen with new schema)
+                    target_commands.append(f'!add city "{target["display_name"]}"')
 
             if target.get("poll_rate_minutes"):
                 target_commands.append(f"!poll_rate {target['poll_rate_minutes']} {i}")
@@ -443,10 +468,9 @@ Examples:
                         )
                         return
                     target = targets[target_id - 1]
-                    self.db.update_monitoring_target(
+                    self.db.update_monitoring_target(  # Use the correct primary key for the target
                         ctx.channel.id,
-                        target["target_type"],
-                        target["target_name"],
+                        target["id"],
                         poll_rate_minutes=minutes_int,
                     )
                     await self.notifier.log_and_send(
@@ -518,10 +542,9 @@ Examples:
                     )
                     return
                 target = targets[target_id - 1]
-                self.db.update_monitoring_target(
+                self.db.update_monitoring_target(  # Use the correct primary key for the target
                     ctx.channel.id,
-                    target["target_type"],
-                    target["target_name"],
+                    target["id"],
                     notification_types=notification_type,
                 )
                 await self.notifier.log_and_send(
@@ -570,17 +593,60 @@ Examples:
         self,
         ctx,
         target_type: str,
-        target_name: str,
-        target_data: str,
-        target_details: Optional[dict] = None,
+        display_name: str,
+        location_id: Optional[int] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        radius_miles: Optional[int] = None,
     ):
         """Helper to add a target to DB and send initial notifications."""
-        self.db.add_monitoring_target(
-            ctx.channel.id, target_type, target_name, target_data
-        )
+        try:
+            result = self.db.add_monitoring_target(
+                ctx.channel.id,
+                target_type,
+                display_name,
+                location_id=location_id,
+                latitude=latitude,
+                longitude=longitude,
+                radius_miles=radius_miles,
+            )
+
+            # Check if this was a radius update
+            if result and result.get("updated_radius"):
+                await ctx.send(
+                    Messages.Command.Add.RADIUS_UPDATED.format(
+                        radius=result["new_radius"], display_name=result["display_name"]
+                    )
+                )
+                # Return early for radius updates - no need for initial notifications or config updates
+                return
+            else:
+                # Normal success message
+                await ctx.send(
+                    Messages.Command.Add.SUCCESS.format(
+                        target_type=target_type, display_name=display_name
+                    )
+                )
+
+        except Exception as e:
+            await ctx.send(
+                Messages.Command.Add.ERROR.format(
+                    target_type=target_type, error_message=str(e)
+                )
+            )
+            return
+
+        # Only execute these steps for new targets, not radius updates
         self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
+
         await self.notifier.send_initial_notifications(
-            ctx, target_name, target_data, target_type, target_details
+            ctx,
+            display_name=display_name,
+            target_type=target_type,
+            location_id=location_id,
+            latitude=latitude,
+            longitude=longitude,
+            radius_miles=radius_miles,
         )
         self.db.update_channel_last_poll_time(
             ctx.channel.id, datetime.now(timezone.utc)
@@ -627,8 +693,7 @@ Examples:
             ctx,
             "location",
             location_details["name"],
-            str(location_id),
-            location_details,
+            location_id=location_id,
         )
 
     async def _handle_search_result(self, ctx, search_result: dict, search_term: str):
@@ -666,8 +731,7 @@ Examples:
             ctx,
             "location",
             location_details["name"],
-            str(location_id),
-            location_details,
+            location_id=location_id,
         )
 
     async def _add_single_suggestion(self, ctx, location_data: dict):
@@ -678,8 +742,7 @@ Examples:
             ctx,
             "location",
             location_details["name"],
-            str(location_id),
-            location_details,
+            location_id=location_id,
         )
 
     async def _show_multiple_suggestions(self, ctx, locations: list, search_term: str):
@@ -717,12 +780,21 @@ Examples:
                 )
                 return
 
-            target_name = f"{lat},{lon}"
-            if radius:
-                target_name += f",{radius}"
-            target_data = target_name
+            # Set default radius if not provided
+            if radius is None:
+                radius = 25
 
-            await self._add_target_and_notify(ctx, "latlong", target_name, target_data)
+            # Create display name for coordinates
+            display_name = f"Coordinates {lat:.5f}, {lon:.5f} ({radius}mi)"
+
+            await self._add_target_and_notify(
+                ctx,
+                "geographic",
+                display_name,
+                latitude=lat,
+                longitude=lon,
+                radius_miles=radius,
+            )
         except Exception as e:
             logger.error(
                 f"Error handling coordinates add for '{lat}, {lon}, {radius}': {e}"
@@ -744,12 +816,21 @@ Examples:
             lat = result["lat"]
             lon = result["lon"]
 
-            target_name = f"{city_name}"
-            target_data = f"{lat},{lon}"
-            if radius:
-                target_data += f",{radius}"
+            # Set default radius if not provided
+            if radius is None:
+                radius = 25
 
-            await self._add_target_and_notify(ctx, "city", target_name, target_data)
+            # Use city name as display name for geographic target
+            display_name = f"{city_name} ({radius}mi)"
+
+            await self._add_target_and_notify(
+                ctx,
+                "geographic",  # City targets are now geographic targets
+                display_name,
+                latitude=lat,
+                longitude=lon,
+                radius_miles=radius,
+            )
 
         elif status == "error":
             error_message = result.get("message", "Unknown error occurred")

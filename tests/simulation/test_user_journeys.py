@@ -7,6 +7,9 @@ of steps, verifying that the system as a whole behaves as expected.
 
 # To be migrated from `tests_backup/simulation/test_user_journeys.py`
 
+import pytest
+import sqlalchemy.exc
+
 
 def test_full_user_journey_add_and_monitor(db_session, api_mocker):
     """
@@ -47,7 +50,7 @@ def test_full_user_journey_add_and_monitor(db_session, api_mocker):
     target = MonitoringTarget(
         channel_id=456,
         target_type="location",
-        target_name="Ground Kontrol Classic Arcade",
+        display_name="Ground Kontrol Classic Arcade",
         location_id=874,
     )
     session.add(target)
@@ -56,7 +59,7 @@ def test_full_user_journey_add_and_monitor(db_session, api_mocker):
     # Step 6: Verify target exists (simulating list command)
     targets = session.query(MonitoringTarget).filter_by(channel_id=456).all()
     assert len(targets) == 1
-    assert targets[0].target_name == "Ground Kontrol Classic Arcade"
+    assert targets[0].display_name == "Ground Kontrol Classic Arcade"
     assert targets[0].location_id == 874
 
     # Step 7 & 8: Remove target (simulating remove command)
@@ -87,26 +90,27 @@ def test_journey_with_invalid_commands(db_session):
     session.add(channel_config)
     session.commit()
 
-    # Step 1 & 2: Test that the database accepts the target
-    # Note: Type validation is typically done at the command level, not DB level
-    # The database models just store the string values
+    # Step 1 & 2: Test that invalid target types are rejected by database constraints
+    # Note: The new schema has CHECK constraints that prevent invalid target types
+
+    # Try to create a target with invalid type - should raise IntegrityError
     test_target = MonitoringTarget(
         channel_id=456,
-        target_type="invalid_type",  # This will be stored as-is
-        target_name="Test",
+        target_type="invalid_type",  # This violates CHECK constraint
+        display_name="Test",
         location_id=123,
     )
     session.add(test_target)
-    session.commit()
 
-    # Verify the target was added (validation would happen in command handler)
-    targets = session.query(MonitoringTarget).filter_by(channel_id=456).all()
-    assert len(targets) == 1
-    assert targets[0].target_type == "invalid_type"
+    # This should raise an IntegrityError due to CHECK constraint
+    with pytest.raises(sqlalchemy.exc.IntegrityError) as exc_info:
+        session.commit()
 
-    # Clean up this test target
-    session.delete(targets[0])
-    session.commit()
+    # Verify it's the target_type check constraint that failed
+    assert "target_data_check" in str(exc_info.value)
+
+    # Rollback the failed transaction
+    session.rollback()
 
     # Step 3 & 4: Test removing non-existent target
     # Verify no targets exist

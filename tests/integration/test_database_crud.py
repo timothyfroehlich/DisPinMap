@@ -28,8 +28,11 @@ def test_add_and_retrieve_monitoring_target(db_session):
     # Create a model instance with test data
     new_target = MonitoringTarget(
         channel_id=12345,
-        target_type="latlong",
-        target_name="45.523,-122.676",
+        target_type="geographic",
+        display_name="45.523,-122.676",
+        latitude=45.523,
+        longitude=-122.676,
+        radius_miles=25,
     )
 
     # 2. ACTION
@@ -45,8 +48,11 @@ def test_add_and_retrieve_monitoring_target(db_session):
 
     assert retrieved_target is not None
     assert retrieved_target.channel_id == 12345
-    assert retrieved_target.target_type == "latlong"
-    assert retrieved_target.target_name == "45.523,-122.676"
+    assert retrieved_target.target_type == "geographic"
+    assert retrieved_target.display_name == "45.523,-122.676"
+    assert retrieved_target.latitude == 45.523
+    assert retrieved_target.longitude == -122.676
+    assert retrieved_target.radius_miles == 25
 
     session.close()
 
@@ -54,8 +60,8 @@ def test_add_and_retrieve_monitoring_target(db_session):
 def test_add_duplicate_target_raises_error(db_session):
     """
     Tests that adding a duplicate target raises an IntegrityError.
-    - Adds a target.
-    - Attempts to add the exact same target again.
+    - Adds a location target.
+    - Attempts to add the exact same location target again.
     - Asserts that a `sqlalchemy.exc.IntegrityError` (or similar) is raised.
     """
     import pytest
@@ -63,23 +69,23 @@ def test_add_duplicate_target_raises_error(db_session):
 
     session = db_session()
 
-    # Create first target
+    # Create first location target
     target1 = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location",
+        display_name="Test Location",
         location_id=999,
     )
 
     session.add(target1)
     session.commit()
 
-    # Try to add duplicate target (same channel + type + name should violate constraint)
+    # Try to add duplicate location target (same channel + location_id violates unique_location constraint)
     target2 = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location Different",  # Different name since constraint is on location_id
-        location_id=999,  # Same location_id - this should violate the unique constraint
+        display_name="Test Location Different",  # Different name since constraint is on location_id
+        location_id=999,  # Same location_id - this should violate the unique_location constraint
     )
 
     session.add(target2)
@@ -87,6 +93,117 @@ def test_add_duplicate_target_raises_error(db_session):
     # Should raise integrity error on commit
     with pytest.raises(IntegrityError):
         session.commit()
+
+    session.close()
+
+
+def test_add_duplicate_geographic_target_raises_error(db_session):
+    """
+    Tests that adding a duplicate geographic target raises an IntegrityError.
+    - Adds a geographic target.
+    - Attempts to add the exact same geographic target again.
+    - Asserts that a `sqlalchemy.exc.IntegrityError` (or similar) is raised.
+    """
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    session = db_session()
+
+    # Create first geographic target
+    target1 = MonitoringTarget(
+        channel_id=12345,
+        target_type="geographic",
+        display_name="Test Geographic Area",
+        latitude=45.523,
+        longitude=-122.676,
+        radius_miles=25,
+    )
+
+    session.add(target1)
+    session.commit()
+
+    # Try to add duplicate geographic target (same channel + coordinates violates unique_geographic constraint)
+    target2 = MonitoringTarget(
+        channel_id=12345,
+        target_type="geographic",
+        display_name="Different Name Same Location",  # Different name
+        latitude=45.523,  # Same coordinates
+        longitude=-122.676,
+        radius_miles=25,  # Different radius should still conflict since constraint is on lat/lon only
+    )
+
+    session.add(target2)
+
+    # Should raise integrity error on commit
+    with pytest.raises(IntegrityError):
+        session.commit()
+
+    session.close()
+
+
+def test_add_geographic_target_updates_radius(db_session):
+    """
+    Tests that adding a geographic target with the same coordinates but a different
+    radius updates the existing target's radius instead of creating a new one.
+    """
+    from src.database import Database
+
+    db = Database(db_session)
+    session = db_session()
+
+    # 1. ARRANGE
+    # Add an initial geographic target
+    db.add_monitoring_target(
+        channel_id=12345,
+        target_type="geographic",
+        display_name="Test Area",
+        latitude=45.5,
+        longitude=-122.5,
+        radius_miles=10,
+    )
+
+    # 2. ACT
+    # Add the same target with a different radius
+    result = db.add_monitoring_target(
+        channel_id=12345,
+        target_type="geographic",
+        display_name="Test Area",
+        latitude=45.5,
+        longitude=-122.5,
+        radius_miles=20,
+    )
+
+    # 3. ASSERT
+    # Check that the radius was updated
+    updated_target = (
+        session.query(MonitoringTarget)
+        .filter_by(
+            channel_id=12345,
+            latitude=45.5,
+            longitude=-122.5,
+        )
+        .one()
+    )
+    assert updated_target.radius_miles == 20
+
+    # Check that the result from add_monitoring_target indicates an update
+    assert result is not None
+    assert result["updated_radius"] is True
+    assert result["old_radius"] == 10
+    assert result["new_radius"] == 20
+    assert result["display_name"] == "Test Area"
+
+    # Verify only one target exists for these coordinates
+    count = (
+        session.query(MonitoringTarget)
+        .filter_by(
+            channel_id=12345,
+            latitude=45.5,
+            longitude=-122.5,
+        )
+        .count()
+    )
+    assert count == 1
 
     session.close()
 
@@ -140,7 +257,7 @@ def test_remove_monitoring_target(db_session):
     target = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location",
+        display_name="Test Location",
         location_id=999,
     )
 
@@ -214,5 +331,105 @@ def test_filter_new_submissions(db_session):
     assert 100 not in new_submission_ids
     assert 200 not in new_submission_ids
     assert 300 not in new_submission_ids
+
+    session.close()
+
+
+def test_remove_monitoring_target_by_location_and_coordinates(db_session):
+    """
+    Tests the `remove_monitoring_target_by_location` and
+    `remove_monitoring_target_by_coordinates` methods.
+    """
+    from src.database import Database
+    import pytest
+
+    db = Database(db_session)
+    session = db_session()
+
+    # 1. ARRANGE
+    # Add a location target and a geographic target
+    db.add_monitoring_target(
+        channel_id=12345,
+        target_type="location",
+        display_name="Test Location",
+        location_id=999,
+    )
+    db.add_monitoring_target(
+        channel_id=12345,
+        target_type="geographic",
+        display_name="Test Area",
+        latitude=45.5,
+        longitude=-122.5,
+        radius_miles=10,
+    )
+
+    # 2. ACT & ASSERT
+    # Test remove_monitoring_target_by_location
+    db.remove_monitoring_target_by_location(12345, 999)
+    assert db.find_monitoring_target_by_location(12345, 999) is None
+    with pytest.raises(ValueError):
+        db.remove_monitoring_target_by_location(12345, 111)
+
+    # Test remove_monitoring_target_by_coordinates
+    db.remove_monitoring_target_by_coordinates(12345, 45.5, -122.5, 10)
+    assert db.find_monitoring_target_by_coordinates(12345, 45.5, -122.5, 10) is None
+    with pytest.raises(ValueError):
+        db.remove_monitoring_target_by_coordinates(12345, 1.1, 2.2, 3)
+
+    session.close()
+
+
+def test_find_and_get_targets(db_session):
+    """
+    Tests the various find and get methods for monitoring targets.
+    - `find_monitoring_target_by_location`
+    - `find_monitoring_target_by_coordinates`
+    - `get_location_targets`
+    - `get_geographic_targets`
+    """
+    from src.database import Database
+
+    db = Database(db_session)
+    session = db_session()
+
+    # 1. ARRANGE
+    # Add a location target and a geographic target
+    db.add_monitoring_target(
+        channel_id=12345,
+        target_type="location",
+        display_name="Test Location",
+        location_id=999,
+    )
+    db.add_monitoring_target(
+        channel_id=12345,
+        target_type="geographic",
+        display_name="Test Area",
+        latitude=45.5,
+        longitude=-122.5,
+        radius_miles=10,
+    )
+
+    # 2. ACT & ASSERT
+    # Test find_monitoring_target_by_location
+    found_location = db.find_monitoring_target_by_location(12345, 999)
+    assert found_location is not None
+    assert found_location["location_id"] == 999
+    assert db.find_monitoring_target_by_location(12345, 111) is None
+
+    # Test find_monitoring_target_by_coordinates
+    found_geo = db.find_monitoring_target_by_coordinates(12345, 45.5, -122.5, 10)
+    assert found_geo is not None
+    assert found_geo["latitude"] == 45.5
+    assert db.find_monitoring_target_by_coordinates(12345, 1.1, 2.2, 3) is None
+
+    # Test get_location_targets
+    location_targets = db.get_location_targets(12345)
+    assert len(location_targets) == 1
+    assert location_targets[0]["target_type"] == "location"
+
+    # Test get_geographic_targets
+    geographic_targets = db.get_geographic_targets(12345)
+    assert len(geographic_targets) == 1
+    assert geographic_targets[0]["target_type"] == "geographic"
 
     session.close()

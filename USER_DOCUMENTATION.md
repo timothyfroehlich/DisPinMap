@@ -44,8 +44,9 @@ Adds a new target to monitor. This command has three variations:
     - **By Name**: `!add location "My Favorite Arcade"`
     - **By ID**: `!add location 123`
 
-2.  **`!add city <name> [radius]`**: Monitor a city. You can optionally provide
-    a radius in miles.
+2.  **`!add city <name> [radius]`**: A convenient alias for `!add coordinates`.
+    It geocodes the city name to get coordinates and then monitors that
+    geographic area.
     - **Without Radius**: `!add city "Portland, OR"` (uses a default radius of
       25 miles)
     - **With Radius**: `!add city "Seattle, WA" 15`
@@ -55,6 +56,20 @@ Adds a new target to monitor. This command has three variations:
     - **Without Radius**: `!add coordinates 45.5231 -122.6765` (uses a default
       radius of 25 miles)
     - **With Radius**: `!add coordinates 47.6062 -122.3321 5`
+
+**Special Behavior for Geographic Targets:**
+
+When adding coordinates or city targets, if you specify the same coordinates
+that are already being monitored but with a different radius, the bot will
+update the existing target's radius instead of creating a duplicate. You'll see
+a message like:
+
+```text
+✅ Updated radius to 30 miles for existing coordinates: Downtown Austin
+```
+
+This prevents duplicate monitoring of the same geographic area and allows you to
+easily adjust your monitoring radius.
 
 #### `!list` (or `!ls`, `!status`)
 
@@ -90,6 +105,21 @@ recent previously seen submissions.
 ```
 !check
 ```
+
+#### `!monitor_health`
+
+Displays health status of the monitoring service, including current status,
+performance metrics, and any issues with the background monitoring system. This
+is useful for troubleshooting or checking if the bot is working correctly.
+
+**Example:**
+
+```
+!monitor_health
+```
+
+This command shows system status information to help diagnose any monitoring
+issues.
 
 #### `!notifications <type> [target_index]`
 

@@ -125,8 +125,8 @@ class TestNotifier:
         ) as mock_post:
             await notifier.send_initial_notifications(
                 ctx=mock_ctx,
-                target_name="Test Location",
-                target_data="123",
+                display_name="Test Location",
+                location_id=123,
                 target_type="location",
             )
 
@@ -151,9 +151,11 @@ class TestNotifier:
         ) as mock_post:
             await notifier.send_initial_notifications(
                 ctx=mock_ctx,
-                target_name="Test City",
-                target_data="45.5,-122.6",
-                target_type="city",
+                display_name="Test City",
+                latitude=45.5,
+                longitude=-122.6,
+                radius_miles=25,
+                target_type="geographic",
             )
 
             mock_fetch.assert_called_once_with(45.5, -122.6, 25)
@@ -180,8 +182,8 @@ class TestNotifier:
         ) as mock_post:
             await notifier.send_initial_notifications(
                 ctx=mock_ctx,
-                target_name="Test Location",
-                target_data="123",
+                display_name="Test Location",
+                location_id=123,
                 target_type="location",
             )
 

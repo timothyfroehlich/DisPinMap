@@ -74,10 +74,11 @@ jobs:
             if [ -n "$(git status --porcelain)" ]; then
               git config --local user.email "action@github.com"
               git config --local user.name "GitHub Action"
-              git checkout -b "update-fixtures-$(date +%Y%m%d)"
+              BRANCH_NAME="update-fixtures-$(date +%Y%m%d)"
+              git checkout -b "$BRANCH_NAME"
               git add tests/fixtures/
               git commit -m "chore: Update API fixtures (automated)"
-              git push --set-upstream origin "update-fixtures-$(date +%Y%m%d)"
+              git push --set-upstream origin "$BRANCH_NAME"
 
               # This would need GitHub CLI or REST API to create PR
               echo "Created branch with updated fixtures"

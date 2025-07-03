@@ -40,7 +40,7 @@ async def test_monitoring_loop_finds_new_submission_and_notifies(
     target = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location",
+        display_name="Test Location",
         location_id=874,
     )
     session.add(target)
@@ -103,7 +103,7 @@ async def test_monitoring_loop_ignores_seen_submission(db_session, api_mocker):
     target = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Test Location",
+        display_name="Test Location",
         location_id=874,
     )
     session.add(target)
@@ -240,8 +240,8 @@ async def test_run_checks_handles_location_id_field(db_session):
     mock_target = {
         "id": 1,
         "target_type": "location",
-        "location_id": "123",  # This is the NEW field name
-        "target_name": "Test Location",
+        "location_id": 123,  # This is the NEW field name
+        "display_name": "Test Location",
     }
 
     mock_database.get_monitoring_targets.return_value = [mock_target]
@@ -298,12 +298,12 @@ async def test_run_checks_for_channel_with_invalid_city_target_is_handled(caplog
     channel_id = 12345
     config = {"channel_id": channel_id}
 
-    # This is the problematic target
+    # This is the problematic target - should be 'geographic' not 'city'
     targets = [
         {
             "id": 1,
-            "target_type": "city",
-            "target_name": "Austin",
+            "target_type": "city",  # Invalid type - should cause error
+            "display_name": "Austin",
             "location_id": None,
         }
     ]
@@ -311,15 +311,11 @@ async def test_run_checks_for_channel_with_invalid_city_target_is_handled(caplog
 
     # Act
     # This should no longer raise a ValueError but handle it gracefully.
-    caplog.set_level(logging.ERROR)
+    caplog.set_level(logging.WARNING)  # The runner logs at WARNING level
     await runner.run_checks_for_channel(channel_id, config, is_manual_check=True)
 
     # Assert
-    assert "Skipping target with unsupported type 'city': id=1" in caplog.text
-    assert (
-        "This target should be re-added using the add command to geocode it correctly."
-        in caplog.text
-    )
+    assert "Skipping unhandled target: id=1, type=city" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -350,7 +346,7 @@ async def test_monitoring_loop_handles_api_errors_gracefully(db_session, api_moc
     target1 = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Failing Location",
+        display_name="Failing Location",
         location_id=999,
     )
     session.add(target1)
@@ -359,7 +355,7 @@ async def test_monitoring_loop_handles_api_errors_gracefully(db_session, api_moc
     target2 = MonitoringTarget(
         channel_id=12345,
         target_type="location",
-        target_name="Working Location",
+        display_name="Working Location",
         location_id=874,
     )
     session.add(target2)
