@@ -618,6 +618,8 @@ Examples:
                         radius=result["new_radius"], display_name=result["display_name"]
                     )
                 )
+                # Return early for radius updates - no need for initial notifications or config updates
+                return
             else:
                 # Normal success message
                 await ctx.send(
@@ -634,6 +636,7 @@ Examples:
             )
             return
 
+        # Only execute these steps for new targets, not radius updates
         self.db.update_channel_config(ctx.channel.id, ctx.guild.id, is_active=True)
 
         await self.notifier.send_initial_notifications(

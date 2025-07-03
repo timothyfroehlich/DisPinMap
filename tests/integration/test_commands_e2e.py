@@ -737,3 +737,120 @@ async def test_list_command_with_targets(db_session):
     assert stored_targets[2].longitude == -122.6784
     assert stored_targets[2].radius_miles == 25
     session.close()
+
+
+@pytest.mark.asyncio
+async def test_add_command_no_subcommand(db_session):
+    """
+    Tests that calling `!add` without a subcommand returns the invalid subcommand message.
+    """
+    # 1. SETUP
+    mock_notifier = create_async_notifier_mock()
+    validate_async_mock(mock_notifier, "log_and_send")
+
+    bot = await create_bot(db_session, notifier=mock_notifier)
+    mock_ctx = create_discord_context_mock()
+    mock_ctx.invoked_subcommand = None  # Simulate no subcommand being called
+
+    # 2. ACTION
+    command_handler_cog = bot.get_cog("CommandHandler")
+    await command_handler_cog.add(mock_ctx)
+
+    # 3. ASSERT
+    from src.messages import Messages
+
+    mock_notifier.log_and_send.assert_called_once_with(
+        mock_ctx, Messages.Command.Add.INVALID_SUBCOMMAND
+    )
+
+
+@pytest.mark.asyncio
+async def test_add_location_not_found(db_session, api_mocker):
+    """
+    Tests that `!add location` with a name that returns no results
+    sends the correct error message.
+    """
+    # 1. SETUP
+    location_name = "A Place That Doesn't Exist"
+
+    api_mocker.add_response(
+        url_substring="by_location_name",
+        json_fixture_path="pinballmap_search/search_nonexistent_location_name.json",
+    )
+
+    mock_notifier = create_async_notifier_mock()
+    validate_async_mock(mock_notifier, "log_and_send")
+
+    bot = await create_bot(db_session, notifier=mock_notifier)
+    mock_ctx = create_discord_context_mock()
+
+    # 2. ACTION
+    command_handler_cog = bot.get_cog("CommandHandler")
+    await command_handler_cog.add_location(mock_ctx, location_input=location_name)
+
+    # 3. ASSERT
+    from src.messages import Messages
+
+    mock_notifier.log_and_send.assert_called_once_with(
+        mock_ctx,
+        Messages.Command.Add.NO_LOCATIONS.format(search_term=location_name),
+    )
+
+
+@pytest.mark.asyncio
+async def test_add_city_not_found(db_session, api_mocker):
+    """
+    Tests that `!add city` with a name that returns no results
+    sends the correct error message.
+    """
+    # 1. SETUP
+    city_name = "A City That Doesn't Exist"
+
+    api_mocker.add_response(
+        url_substring="v1/search",
+        json_fixture_path="geocoding/city_nonexistent.json",
+    )
+
+    mock_notifier = create_async_notifier_mock()
+    validate_async_mock(mock_notifier, "log_and_send")
+
+    bot = await create_bot(db_session, notifier=mock_notifier)
+    mock_ctx = create_discord_context_mock()
+
+    # 2. ACTION
+    command_handler_cog = bot.get_cog("CommandHandler")
+    await command_handler_cog.add_city(mock_ctx, city_input=city_name)
+
+    # 3. ASSERT
+    from src.messages import Messages
+
+    mock_notifier.log_and_send.assert_called_once_with(
+        mock_ctx,
+        Messages.Command.Add.CITY_NOT_FOUND.format(city_name=city_name),
+    )
+
+
+@pytest.mark.asyncio
+async def test_add_invalid_coordinates(db_session):
+    """
+    Tests that `!add coordinates` with invalid lat/lon values
+    sends the correct error message.
+    """
+    # 1. SETUP
+    mock_notifier = create_async_notifier_mock()
+    validate_async_mock(mock_notifier, "log_and_send")
+
+    bot = await create_bot(db_session, notifier=mock_notifier)
+    mock_ctx = create_discord_context_mock()
+
+    # 2. ACTION
+    command_handler_cog = bot.get_cog("CommandHandler")
+    await command_handler_cog.add_coordinates(mock_ctx, lat=200.0, lon=-200.0)
+
+    # 3. ASSERT
+    # Invalid coordinates should send an error message, not raise an exception
+    from src.messages import Messages
+
+    mock_notifier.log_and_send.assert_called_once_with(
+        mock_ctx, Messages.Command.Shared.INVALID_COORDS
+    )
