@@ -622,7 +622,7 @@ Examples:
                 # Normal success message
                 await ctx.send(
                     Messages.Command.Add.SUCCESS.format(
-                        target_type=target_type, target_name=display_name
+                        target_type=target_type, display_name=display_name
                     )
                 )
 

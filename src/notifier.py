@@ -88,13 +88,13 @@ class Notifier:
             await self.log_and_send(
                 ctx,
                 Messages.Notification.Initial.FOUND.format(
-                    count=len(latest_submissions), target_name=display_name
+                    count=len(latest_submissions), display_name=display_name
                 ),
             )
             await self.post_submissions(ctx, latest_submissions, channel_config)
         else:
             await self.log_and_send(
-                ctx, Messages.Notification.Initial.NONE.format(target_name=display_name)
+                ctx, Messages.Notification.Initial.NONE.format(display_name=display_name)
             )
 
     async def post_submissions(

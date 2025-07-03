@@ -147,14 +147,14 @@ def test_format_export_message_no_channel_config():
 
 def test_format_remove_confirmation():
     """Test formatting remove target confirmation message"""
-    target_name = "Ground Kontrol Classic Arcade"
+    display_name = "Ground Kontrol Classic Arcade"
     target_type = "location"
 
     result = Messages.Command.Remove.SUCCESS.format(
-        target_name=target_name, target_type=target_type
+        display_name=display_name, target_type=target_type
     )
 
-    assert target_name in result
+    assert display_name in result
     assert target_type in result
     assert "removed" in result.lower()
 
@@ -198,46 +198,46 @@ def test_format_check_no_new_submissions():
 def test_format_add_success():
     """Test formatting add command success message"""
     target_type = "location"
-    target_name = "Ground Kontrol Classic Arcade"
+    display_name = "Ground Kontrol Classic Arcade"
 
     result = Messages.Command.Add.SUCCESS.format(
-        target_type=target_type, target_name=target_name
+        target_type=target_type, display_name=display_name
     )
 
     assert target_type in result
-    assert target_name in result
+    assert display_name in result
     assert "added" in result.lower()
 
 
 def test_format_add_not_found():
     """Test formatting add command not found message"""
     target_type = "location"
-    target_name = "Nonexistent Location"
+    display_name = "Nonexistent Location"
 
     result = Messages.Command.Add.NOT_FOUND.format(
-        target_type=target_type, target_name=target_name
+        target_type=target_type, display_name=display_name
     )
 
     assert target_type in result
-    assert target_name in result
+    assert display_name in result
     assert "not found" in result.lower() or "could not find" in result.lower()
 
 
 def test_format_add_multiple_results():
     """Test formatting add command when multiple results found"""
     target_type = "location"
-    target_name = "Dave and Busters"
+    display_name = "Dave and Busters"
     results = [
         {"name": "Dave & Buster's - Portland", "id": 123},
         {"name": "Dave & Buster's - Seattle", "id": 456},
     ]
 
     result = Messages.Command.Add.MULTIPLE_RESULTS.format(
-        target_type=target_type, target_name=target_name, results=results
+        target_type=target_type, display_name=display_name, results=results
     )
 
     assert target_type in result
-    assert target_name in result
+    assert display_name in result
     assert "multiple" in result.lower() or "several" in result.lower()
     assert "Portland" in result
     assert "Seattle" in result
