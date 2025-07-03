@@ -10,10 +10,8 @@
 
 ## Code Style
 
-- We use Black for code formatting (line length: 88)
-- We use isort for import sorting
-- We use mypy for type checking
-- We use flake8 for linting
+- We use Ruff for code formatting and linting (line length: 88)
+- We use Prettier for markdown and YAML formatting
 
 ## Testing
 
@@ -25,17 +23,16 @@
 
 Before committing, the following checks will run automatically:
 
-- Code formatting (Black)
-- Import sorting (isort)
-- Linting (flake8)
-- Type checking (mypy)
+- Code formatting (Ruff)
+- Linting (Ruff)
+- Markdown/YAML formatting (Prettier)
 - Basic file checks (trailing whitespace, etc.)
 
 ## VS Code Integration
 
 This project includes VS Code settings for:
 
-- Automatic formatting on save
+- Automatic formatting on save (using Ruff)
 - Test discovery
 - Recommended extensions
 - Useful tasks (Run bot, tests, formatting, etc.)

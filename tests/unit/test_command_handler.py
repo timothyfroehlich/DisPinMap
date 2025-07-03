@@ -54,8 +54,10 @@ class TestCommandHandler:
         """Test setting poll rate for channel successfully"""
         mock_db.get_monitoring_targets.return_value = [
             {
+                "id": 1,
                 "target_type": "location",
-                "target_name": "Test Location",
+                "display_name": "Test Location",
+                "location_id": 123,
                 "poll_rate_minutes": 5,
             }
         ]
@@ -80,8 +82,10 @@ class TestCommandHandler:
         """Test setting poll rate for specific target successfully"""
         mock_db.get_monitoring_targets.return_value = [
             {
+                "id": 1,
                 "target_type": "location",
-                "target_name": "Test Location",
+                "display_name": "Test Location",
+                "location_id": 123,
                 "poll_rate_minutes": 5,
             }
         ]
@@ -89,9 +93,9 @@ class TestCommandHandler:
         # Call the underlying callback function directly
         await command_handler.poll_rate.callback(command_handler, mock_ctx, "15", "1")
 
-        # Should update specific target
+        # Should update specific target by ID
         mock_db.update_monitoring_target.assert_called_with(
-            123456, "location", "Test Location", poll_rate_minutes=15
+            123456, 1, poll_rate_minutes=15
         )
         # Should send success message
         mock_notifier.log_and_send.assert_called_once()
@@ -113,7 +117,12 @@ class TestCommandHandler:
     ):
         """Test setting poll rate with invalid target index"""
         mock_db.get_monitoring_targets.return_value = [
-            {"target_type": "location", "target_name": "Test Location"}
+            {
+                "id": 1,
+                "target_type": "location",
+                "display_name": "Test Location",
+                "location_id": 123,
+            }
         ]
 
         # Call the underlying callback function directly
@@ -155,8 +164,10 @@ class TestCommandHandler:
         """Test setting notification type for channel successfully"""
         mock_db.get_monitoring_targets.return_value = [
             {
+                "id": 1,
                 "target_type": "location",
-                "target_name": "Test Location",
+                "display_name": "Test Location",
+                "location_id": 123,
                 "notification_types": "all",
             }
         ]
@@ -183,8 +194,10 @@ class TestCommandHandler:
         """Test setting notification type for specific target successfully"""
         mock_db.get_monitoring_targets.return_value = [
             {
+                "id": 1,
                 "target_type": "location",
-                "target_name": "Test Location",
+                "display_name": "Test Location",
+                "location_id": 123,
                 "notification_types": "all",
             }
         ]
@@ -194,9 +207,9 @@ class TestCommandHandler:
             command_handler, mock_ctx, "comments", "1"
         )
 
-        # Should update specific target
+        # Should update specific target by ID
         mock_db.update_monitoring_target.assert_called_with(
-            123456, "location", "Test Location", notification_types="comments"
+            123456, 1, notification_types="comments"
         )
         # Should send success message
         mock_notifier.log_and_send.assert_called_once()
@@ -222,7 +235,12 @@ class TestCommandHandler:
     ):
         """Test setting notification type with invalid target index"""
         mock_db.get_monitoring_targets.return_value = [
-            {"target_type": "location", "target_name": "Test Location"}
+            {
+                "id": 1,
+                "target_type": "location",
+                "display_name": "Test Location",
+                "location_id": 123,
+            }
         ]
 
         # Call the underlying callback function directly
@@ -278,12 +296,18 @@ class TestAddCommand(TestCommandHandler):
 
     @pytest.mark.asyncio
     async def test_add_location_by_id(
-        self, command_handler, mock_ctx, mock_notifier, api_mocker
+        self, command_handler, mock_ctx, mock_db, mock_notifier, api_mocker
     ):
         """Test parsing location by ID using a real fixture."""
         # 1. SETUP
         # Test that location ID is correctly identified
         location_input = "874"  # Use an ID that has a corresponding fixture
+
+        mock_db.add_monitoring_target.return_value = {
+            "display_name": "Cidercade Austin",
+            "target_type": "location",
+            "location_id": 874,
+        }
 
         # Configure the API mocker to serve the location details from a fixture
         api_mocker.add_response(
@@ -291,9 +315,9 @@ class TestAddCommand(TestCommandHandler):
             json_fixture_path="pinballmap_locations/location_874_details.json",
         )
 
-        # 2. ACTION
-        await command_handler.add.callback(
-            command_handler, mock_ctx, "location", location_input
+        # 2. ACTION - Use new command group structure
+        await command_handler.add_location.callback(
+            command_handler, mock_ctx, location_input=location_input
         )
 
         # 3. ASSERT
@@ -304,10 +328,13 @@ class TestAddCommand(TestCommandHandler):
     async def test_add_missing_arguments(
         self, command_handler, mock_ctx, mock_notifier
     ):
-        """Test add command with no arguments shows helpful error"""
+        """Test add command with no subcommand shows helpful error"""
         from src.messages import Messages
 
-        # Call add with no target_type (None)
+        # Mock the ctx.invoked_subcommand attribute for command groups
+        mock_ctx.invoked_subcommand = None
+
+        # Call add group without subcommand
         await command_handler.add.callback(command_handler, mock_ctx)
 
         # Should send invalid subcommand message
@@ -316,19 +343,18 @@ class TestAddCommand(TestCommandHandler):
         )
 
     @pytest.mark.asyncio
-    async def test_add_invalid_target_type(
+    async def test_add_coordinate_validation(
         self, command_handler, mock_ctx, mock_notifier
     ):
-        """Test add command with invalid target_type shows helpful error"""
-        from src.messages import Messages
-
-        # Call add with invalid target_type
-        await command_handler.add.callback(command_handler, mock_ctx, "invalid_type")
-
-        # Should send invalid subcommand message
-        mock_notifier.log_and_send.assert_called_once_with(
-            mock_ctx, Messages.Command.Add.INVALID_SUBCOMMAND
+        """Test add coordinates command with coordinate validation"""
+        # Test that coordinates subcommand properly validates input
+        await command_handler.add_coordinates.callback(
+            command_handler, mock_ctx, lat=45.5, lon=-122.7, radius=10
         )
+
+        # Should handle coordinates without error (assuming valid coordinates)
+        # The actual validation happens in _handle_coordinates_add
+        mock_notifier.log_and_send.assert_not_called()
 
 
 class TestRemoveCommand(TestCommandHandler):
@@ -338,7 +364,12 @@ class TestRemoveCommand(TestCommandHandler):
     async def test_remove_valid_index(self, command_handler, mock_ctx, mock_db):
         """Test parsing valid index for remove command"""
         mock_db.get_monitoring_targets.return_value = [
-            {"target_type": "location", "target_name": "Test Location"}
+            {
+                "id": 1,
+                "target_type": "location",
+                "display_name": "Test Location",
+                "location_id": 123,
+            }
         ]
 
         await command_handler.remove.callback(command_handler, mock_ctx, index="1")
@@ -351,7 +382,12 @@ class TestRemoveCommand(TestCommandHandler):
     ):
         """Test parsing invalid index for remove command"""
         mock_db.get_monitoring_targets.return_value = [
-            {"target_type": "location", "target_name": "Test Location"}
+            {
+                "id": 1,
+                "target_type": "location",
+                "display_name": "Test Location",
+                "location_id": 123,
+            }
         ]
 
         await command_handler.remove.callback(command_handler, mock_ctx, index="2")
@@ -408,8 +444,9 @@ class TestExportCommand(TestCommandHandler):
         """Test export command with existing targets"""
         mock_db.get_monitoring_targets.return_value = [
             {
+                "id": 1,
                 "target_type": "location",
-                "target_name": "Ground Kontrol Classic Arcade",
+                "display_name": "Ground Kontrol Classic Arcade",
                 "location_id": 874,
                 "poll_rate_minutes": 15,
                 "notification_types": "machines",

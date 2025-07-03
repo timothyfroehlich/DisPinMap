@@ -102,15 +102,15 @@ class TestTargetTypeValidation:
 
     def test_valid_target_types(self):
         """Test valid target types"""
-        valid_types = ["location", "coordinates", "city"]
+        valid_types = ["location", "geographic"]
 
         for target_type in valid_types:
             assert target_type in valid_types, f"Invalid target type: {target_type}"
 
     def test_invalid_target_types(self):
         """Test invalid target types"""
-        invalid_types = ["foobar", "location_id", "coords", "town"]
-        valid_types = ["location", "coordinates", "city"]
+        invalid_types = ["foobar", "location_id", "coords", "town", "city", "coordinates"]
+        valid_types = ["location", "geographic"]
 
         for target_type in invalid_types:
             assert target_type not in valid_types, (

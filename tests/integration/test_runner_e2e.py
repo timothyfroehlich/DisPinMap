@@ -311,15 +311,11 @@ async def test_run_checks_for_channel_with_invalid_city_target_is_handled(caplog
 
     # Act
     # This should no longer raise a ValueError but handle it gracefully.
-    caplog.set_level(logging.ERROR)
+    caplog.set_level(logging.WARNING)  # The runner logs at WARNING level
     await runner.run_checks_for_channel(channel_id, config, is_manual_check=True)
 
     # Assert
-    assert "Skipping target with unsupported type 'city': id=1" in caplog.text
-    assert (
-        "This target should be re-added using the add command to geocode it correctly."
-        in caplog.text
-    )
+    assert "Skipping unhandled target: id=1, type=city" in caplog.text
 
 
 @pytest.mark.asyncio
