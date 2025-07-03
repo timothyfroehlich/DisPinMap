@@ -10,13 +10,6 @@
 - **messages.py** - Response templates and formatting functions
 - **log_config.py** - Centralized logging configuration
 
-## CRITICAL: Database Field Migration
-
-**IMPORTANT**: Recent migration renamed fields - always use new names:
-
-- ✅ Use `location_id`
-- ❌ NEVER use `target_data` (causes KeyError - see Issue #68)
-
 ## Command Architecture
 
 - **Handler**: `cogs/command_handler.py` - Discord command processing

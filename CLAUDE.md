@@ -59,25 +59,6 @@ area.**
 6. **Use descriptive branch names that clearly indicate the purpose**
 7. **GitHub branch protection rules require passing status checks before merge**
 
-## Current Status
-
-### Infrastructure Status
-
-- **GCP Deployment**: ✅ **FULLY OPERATIONAL**
-- **Service URL**: <https://dispinmap-bot-wos45oz7vq-uc.a.run.app>
-- **Status**: Bot successfully deployed and running on Google Cloud Run
-- **Production Status**: ⚠️ **NOT YET IN PRODUCTION USE** - Blocked by critical
-  command failures
-
-### Deployment Strategy
-
-- **Deploy on PR Changes**: Deploy all PR changes to Cloud Run service for full
-  end-to-end testing
-- **Test in Production Environment**: Use production Cloud Run deployment for
-  comprehensive testing before merge
-- **Rationale**: Allows testing full Discord bot functionality in real Cloud Run
-  environment
-
 ## Environment Assumptions for Automation
 
 - **Assume GCP, Docker, and Terraform are already installed and authenticated.**

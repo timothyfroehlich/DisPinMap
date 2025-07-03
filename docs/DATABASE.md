@@ -70,10 +70,6 @@ gcloud run services proxy dispinmap-bot --port=8080
 
 ## Normalized Schema (Current Implementation)
 
-### Fresh Database Approach
-
-As of the schema redesign, this project uses a **fresh database start** approach. The old schema has been completely replaced with a normalized design that resolves previous data overloading and constraint issues. No data migration is performed; users re-add their monitoring targets using the improved command structure.
-
 ### Database Tables
 
 #### ChannelConfig Table
@@ -189,28 +185,6 @@ VALUES (1377474127648133130, 'geographic', 'Austin, TX', 30.26715, -97.74306, 25
 INSERT INTO monitoring_targets (channel_id, target_type, display_name, latitude, longitude, radius_miles)
 VALUES (1377474127648133130, 'geographic', 'Downtown Portland', 45.5152, -122.6784, 10);
 ```
-
-### Resolved Schema Issues
-
-#### ✅ Data Overloading Eliminated
-- **Previous Issue**: `target_name` stored different data types (names vs coordinates)
-- **Solution**: Separate fields (`display_name`, `latitude`, `longitude`, `location_id`) with clear purposes
-
-#### ✅ Type Confusion Resolved  
-- **Previous Issue**: 'city' targets caused crashes, should be 'geographic'
-- **Solution**: Only two valid target types: 'location' and 'geographic' with proper validation
-
-#### ✅ Coordinate Validation Added
-- **Previous Issue**: String-based coordinates prevented proper validation
-- **Solution**: Numeric latitude/longitude fields with range constraints
-
-#### ✅ Consistent Data Access
-- **Previous Issue**: Different fields used for different target types
-- **Solution**: Standardized field usage enforced by database constraints
-
-#### ✅ Duplicate Prevention
-- **Previous Issue**: Duplicate geographic targets possible
-- **Solution**: Unique constraints on (channel_id, location_id) and (channel_id, latitude, longitude)
 
 ## Migration Management
 

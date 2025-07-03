@@ -44,8 +44,7 @@ Adds a new target to monitor. This command has three variations:
     - **By Name**: `!add location "My Favorite Arcade"`
     - **By ID**: `!add location 123`
 
-2.  **`!add city <name> [radius]`**: Monitor a city. You can optionally provide
-    a radius in miles.
+2.  **`!add city <name> [radius]`**: A convenient alias for `!add coordinates`. It geocodes the city name to get coordinates and then monitors that geographic area.
     - **Without Radius**: `!add city "Portland, OR"` (uses a default radius of
       25 miles)
     - **With Radius**: `!add city "Seattle, WA" 15`
