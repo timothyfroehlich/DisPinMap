@@ -94,7 +94,8 @@ class Notifier:
             await self.post_submissions(ctx, latest_submissions, channel_config)
         else:
             await self.log_and_send(
-                ctx, Messages.Notification.Initial.NONE.format(display_name=display_name)
+                ctx,
+                Messages.Notification.Initial.NONE.format(display_name=display_name),
             )
 
     async def post_submissions(

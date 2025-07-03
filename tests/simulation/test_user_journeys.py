@@ -92,7 +92,7 @@ def test_journey_with_invalid_commands(db_session):
 
     # Step 1 & 2: Test that invalid target types are rejected by database constraints
     # Note: The new schema has CHECK constraints that prevent invalid target types
-    
+
     # Try to create a target with invalid type - should raise IntegrityError
     test_target = MonitoringTarget(
         channel_id=456,
@@ -101,14 +101,14 @@ def test_journey_with_invalid_commands(db_session):
         location_id=123,
     )
     session.add(test_target)
-    
+
     # This should raise an IntegrityError due to CHECK constraint
     with pytest.raises(sqlalchemy.exc.IntegrityError) as exc_info:
         session.commit()
-    
+
     # Verify it's the target_type check constraint that failed
     assert "target_data_check" in str(exc_info.value)
-    
+
     # Rollback the failed transaction
     session.rollback()
 

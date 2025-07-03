@@ -81,17 +81,28 @@ CREATE TABLE monitoring_targets (
 
 ## Current Status Analysis (as of 2025-07-02)
 
-The schema redesign is well underway. The core application logic in `src/` has been successfully updated to reflect the new, normalized schema as per the plan.
+The schema redesign is well underway. The core application logic in `src/` has
+been successfully updated to reflect the new, normalized schema as per the plan.
 
-**The project is currently blocked in the testing phase.** Unit and integration tests have not been fully updated to work with the new schema, which prevents the final phases (Alembic baseline creation and documentation updates) from starting.
+**The project is currently blocked in the testing phase.** Unit and integration
+tests have not been fully updated to work with the new schema, which prevents
+the final phases (Alembic baseline creation and documentation updates) from
+starting.
 
-- **Core Logic (`src/`)**: ✅ **Complete**. `models.py`, `database.py`, and `cogs/command_handler.py` align with the new schema.
-- **Unit Tests (`tests/unit/`)**: 🟡 **In Progress but Blocked**. Files need systematic updates. Mocks and assertions are outdated.
-- **Integration Tests (`tests/integration/`)**: ❌ **Pending/Blocked**. These tests are not aligned with the new schema or command structure and require significant updates. `test_commands_e2e.py` is the primary blocker.
-- **Alembic Migrations (`alembic/`)**: ❌ **Pending**. Blocked by failing tests. The old migration files are still in place.
-- **Documentation (`docs/`)**: ❌ **Pending**. Blocked by the incomplete implementation. `DATABASE.md` still describes the old schema.
+- **Core Logic (`src/`)**: ✅ **Complete**. `models.py`, `database.py`, and
+  `cogs/command_handler.py` align with the new schema.
+- **Unit Tests (`tests/unit/`)**: 🟡 **In Progress but Blocked**. Files need
+  systematic updates. Mocks and assertions are outdated.
+- **Integration Tests (`tests/integration/`)**: ❌ **Pending/Blocked**. These
+  tests are not aligned with the new schema or command structure and require
+  significant updates. `test_commands_e2e.py` is the primary blocker.
+- **Alembic Migrations (`alembic/`)**: ❌ **Pending**. Blocked by failing tests.
+  The old migration files are still in place.
+- **Documentation (`docs/`)**: ❌ **Pending**. Blocked by the incomplete
+  implementation. `DATABASE.md` still describes the old schema.
 
-The immediate priority is to update the test suite to unblock the rest of the project.
+The immediate priority is to update the test suite to unblock the rest of the
+project.
 
 ## Implementation Status
 
@@ -99,102 +110,137 @@ The immediate priority is to update the test suite to unblock the rest of the pr
 
 #### ✅ Phase 1: Schema Models & Validation
 
-- **File**: `src/models.py` - ✅ **Verified**. New SQLAlchemy models with comprehensive constraints are correctly implemented.
+- **File**: `src/models.py` - ✅ **Verified**. New SQLAlchemy models with
+  comprehensive constraints are correctly implemented.
 
 #### ✅ Phase 2: Code Refactoring
 
-- **File**: `src/database.py` - ✅ **Verified**. Database layer is updated for the new schema.
-- **File**: `src/cogs/command_handler.py` - ✅ **Verified**. Commands are refactored for the new schema.
-- **Files**: `src/cogs/runner.py`, `src/notifier.py` - ✅ Assumed complete as per plan.
+- **File**: `src/database.py` - ✅ **Verified**. Database layer is updated for
+  the new schema.
+- **File**: `src/cogs/command_handler.py` - ✅ **Verified**. Commands are
+  refactored for the new schema.
+- **Files**: `src/cogs/runner.py`, `src/notifier.py` - ✅ Assumed complete as
+  per plan.
 
 ### 🔴 BLOCKED PHASE: Testing
 
-The testing phase is the primary bottleneck. The existing tests are failing and must be updated before proceeding.
+The testing phase is the primary bottleneck. The existing tests are failing and
+must be updated before proceeding.
 
 #### 🟡 Phase 3.1: Unit Test Updates (In Progress)
 
 - **Status**: Partially complete, but requires systematic review.
-- **Task**: Update all `tests/unit/*.py` files to align with the new schema. This includes fixing field name changes (`target_name` → `display_name`), updating mock data structures, and aligning database operation tests with new method signatures.
+- **Task**: Update all `tests/unit/*.py` files to align with the new schema.
+  This includes fixing field name changes (`target_name` → `display_name`),
+  updating mock data structures, and aligning database operation tests with new
+  method signatures.
 
 #### ❌ Phase 3.2: Integration Test Updates (Pending)
 
 - **Status**: Not started. This is a critical blocker.
-- **Task**: Update all `tests/integration/*.py` files. `test_commands_e2e.py` requires a major rewrite to use the new `!add <subcommand>` structure and validate against the new schema.
+- **Task**: Update all `tests/integration/*.py` files. `test_commands_e2e.py`
+  requires a major rewrite to use the new `!add <subcommand>` structure and
+  validate against the new schema.
 
 #### ❌ Phase 3.3: Migration Test Updates (Pending)
 
 - **Status**: Not started.
-- **Task**: Update `tests/migration/*.py` to focus on fresh schema validation rather than data transformation.
+- **Task**: Update `tests/migration/*.py` to focus on fresh schema validation
+  rather than data transformation.
 
 ### ❌ REMAINING PHASES (Blocked by Testing)
 
 #### ❌ Phase 4: Alembic Baseline Creation
 
 - **Status**: Pending.
-- **Task**: Remove all existing migration files and generate a new baseline from the completed `src/models.py`.
+- **Task**: Remove all existing migration files and generate a new baseline from
+  the completed `src/models.py`.
 
 #### ❌ Phase 5: Documentation & Cleanup
 
 - **Status**: Pending.
-- **Task**: Update `docs/DATABASE.md`, `USER_DOCUMENTATION.md`, and other relevant documentation.
+- **Task**: Update `docs/DATABASE.md`, `USER_DOCUMENTATION.md`, and other
+  relevant documentation.
 
 ## Parallel Work-streams for Independent Contributors
 
-To accelerate the completion of the schema redesign, the remaining work has been broken down into the following independent work-streams. Contributors can claim a task and work on it in a separate feature branch.
+To accelerate the completion of the schema redesign, the remaining work has been
+broken down into the following independent work-streams. Contributors can claim
+a task and work on it in a separate feature branch.
 
 ---
 
 #### **Task 1: Update Unit Tests (`tests/unit/`)**
 
-*   **Objective**: Ensure all unit tests pass by aligning them with the new schema and application logic.
-*   **Files to Modify**: All files within `tests/unit/`.
-*   **Key Activities**:
-    1.  Create a new branch: `feature/fix-unit-tests`
-    2.  Systematically update each test file in `tests/unit/`.
-    3.  Modify mock objects to return data in the new schema format (e.g., `display_name`, `location_id`, `latitude`, `longitude`).
-    4.  Update assertions to check for the new fields.
-    5.  Ensure that tests for `database.py` and `command_handler.py` correctly reflect the new method signatures and command structures.
-*   **Risk of Conflict**: **Low**. This task is self-contained within the `tests/unit/` directory.
+- **Objective**: Ensure all unit tests pass by aligning them with the new schema
+  and application logic.
+- **Files to Modify**: All files within `tests/unit/`.
+- **Key Activities**:
+  1.  Create a new branch: `feature/fix-unit-tests`
+  2.  Systematically update each test file in `tests/unit/`.
+  3.  Modify mock objects to return data in the new schema format (e.g.,
+      `display_name`, `location_id`, `latitude`, `longitude`).
+  4.  Update assertions to check for the new fields.
+  5.  Ensure that tests for `database.py` and `command_handler.py` correctly
+      reflect the new method signatures and command structures.
+- **Risk of Conflict**: **Low**. This task is self-contained within the
+  `tests/unit/` directory.
 
 ---
 
 #### **Task 2: Update Integration & Migration Tests (`tests/integration/` & `tests/migration/`)**
 
-*   **Objective**: Rewrite integration tests to validate the end-to-end functionality of the new schema and commands.
-*   **Files to Modify**: All files within `tests/integration/` and `tests/migration/`.
-*   **Key Activities**:
-    1.  Create a new branch: `feature/fix-integration-tests`
-    2.  Rewrite `tests/integration/test_commands_e2e.py` to use the new `!add <subcommand>` format.
-    3.  Update database assertions to validate the new `MonitoringTarget` schema.
-    4.  Ensure the `api_mocker` is used correctly to test interactions with external APIs.
-    5.  Update `tests/migration/` to test the creation of a fresh database schema, removing any old data migration logic.
-*   **Risk of Conflict**: **Low**. This task is self-contained within the `tests/integration/` and `tests/migration/` directories.
+- **Objective**: Rewrite integration tests to validate the end-to-end
+  functionality of the new schema and commands.
+- **Files to Modify**: All files within `tests/integration/` and
+  `tests/migration/`.
+- **Key Activities**:
+  1.  Create a new branch: `feature/fix-integration-tests`
+  2.  Rewrite `tests/integration/test_commands_e2e.py` to use the new
+      `!add <subcommand>` format.
+  3.  Update database assertions to validate the new `MonitoringTarget` schema.
+  4.  Ensure the `api_mocker` is used correctly to test interactions with
+      external APIs.
+  5.  Update `tests/migration/` to test the creation of a fresh database schema,
+      removing any old data migration logic.
+- **Risk of Conflict**: **Low**. This task is self-contained within the
+  `tests/integration/` and `tests/migration/` directories.
 
 ---
 
 #### **Task 3: Create Alembic Baseline (`alembic/`)**
 
-*   **Objective**: Reset the database migration history and create a single, clean baseline migration that reflects the new schema.
-*   **Files to Modify**: All files within `alembic/versions/`.
-*   **Key Activities**:
-    1.  Create a new branch: `feature/create-alembic-baseline`
-    2.  Delete all existing migration files in `alembic/versions/`.
-    3.  Run `alembic revision --autogenerate -m "Create initial baseline from new schema"` to generate a new baseline migration.
-    4.  Verify that the generated migration script correctly creates all tables and constraints as defined in `src/models.py`.
-*   **Risk of Conflict**: **Low**. This task is isolated to the `alembic/` directory. It can be done in parallel with the testing tasks but should only be merged after the tests are passing.
+- **Objective**: Reset the database migration history and create a single, clean
+  baseline migration that reflects the new schema.
+- **Files to Modify**: All files within `alembic/versions/`.
+- **Key Activities**:
+  1.  Create a new branch: `feature/create-alembic-baseline`
+  2.  Delete all existing migration files in `alembic/versions/`.
+  3.  Run
+      `alembic revision --autogenerate -m "Create initial baseline from new schema"`
+      to generate a new baseline migration.
+  4.  Verify that the generated migration script correctly creates all tables
+      and constraints as defined in `src/models.py`.
+- **Risk of Conflict**: **Low**. This task is isolated to the `alembic/`
+  directory. It can be done in parallel with the testing tasks but should only
+  be merged after the tests are passing.
 
 ---
 
 #### **Task 4: Update Documentation (`docs/`)**
 
-*   **Objective**: Update all project documentation to reflect the new database schema and any changes to user-facing commands.
-*   **Files to Modify**: `docs/DATABASE.md`, `USER_DOCUMENTATION.md`, and any other relevant files in `docs/`.
-*   **Key Activities**:
-    1.  Create a new branch: `feature/update-documentation`
-    2.  Update the schema diagram and descriptions in `docs/DATABASE.md`.
-    3.  Review and update command examples in `USER_DOCUMENTATION.md` to ensure they are correct.
-    4.  Update any architectural diagrams or descriptions in the developer handbook.
-*   **Risk of Conflict**: **Low**. This task is isolated to the `docs/` directory.
+- **Objective**: Update all project documentation to reflect the new database
+  schema and any changes to user-facing commands.
+- **Files to Modify**: `docs/DATABASE.md`, `USER_DOCUMENTATION.md`, and any
+  other relevant files in `docs/`.
+- **Key Activities**:
+  1.  Create a new branch: `feature/update-documentation`
+  2.  Update the schema diagram and descriptions in `docs/DATABASE.md`.
+  3.  Review and update command examples in `USER_DOCUMENTATION.md` to ensure
+      they are correct.
+  4.  Update any architectural diagrams or descriptions in the developer
+      handbook.
+- **Risk of Conflict**: **Low**. This task is isolated to the `docs/` directory.
 
 ---
 
@@ -283,8 +329,8 @@ To accelerate the completion of the schema redesign, the remaining work has been
 
 ### Agent 1: Unit Test Specialist (CURRENT)
 
-**Duration:** 2-3 days
-**Files:** All `tests/unit/*.py` files (15 files need updates) **Tasks:**
+**Duration:** 2-3 days **Files:** All `tests/unit/*.py` files (15 files need
+updates) **Tasks:**
 
 - ✅ `tests/unit/test_database_models.py` - Updated for new schema
 - 🟡 `tests/unit/test_command_handler.py` - Fix field name changes
@@ -302,11 +348,17 @@ To accelerate the completion of the schema redesign, the remaining work has been
 - Update API integration tests for geographic vs location targets
 - Update/simplify migration tests for fresh database approach
 - Test runner functionality with new data patterns
-- Integration test `tests/integration/test_commands_e2e.py` needs further changes:
-  - Update all command invocations to use the correct subcommand methods or simulate Discord command invocation as appropriate for the test framework.
-  - Replace all references to the old schema field `target_name` with `display_name` and update any other schema field usages to match the new schema.
-  - Ensure all test code that instantiates `MonitoringTarget` or calls `add_monitoring_target` uses the new schema fields.
-  - Review and update any other test logic that assumes the old schema or command structure.
+- Integration test `tests/integration/test_commands_e2e.py` needs further
+  changes:
+  - Update all command invocations to use the correct subcommand methods or
+    simulate Discord command invocation as appropriate for the test framework.
+  - Replace all references to the old schema field `target_name` with
+    `display_name` and update any other schema field usages to match the new
+    schema.
+  - Ensure all test code that instantiates `MonitoringTarget` or calls
+    `add_monitoring_target` uses the new schema fields.
+  - Review and update any other test logic that assumes the old schema or
+    command structure.
 
 ### Agent 3: Alembic Baseline Specialist
 

@@ -95,21 +95,21 @@ CREATE TABLE monitoring_targets (
     channel_id BIGINT NOT NULL,
     target_type VARCHAR NOT NULL CHECK (target_type IN ('location', 'geographic')),
     display_name VARCHAR NOT NULL,      -- Always human-readable name for users
-    
+
     -- Location-specific fields (for PinballMap locations)
     location_id INTEGER,               -- PinballMap location ID
-    
+
     -- Geographic fields (for coordinate-based monitoring)
     latitude REAL,                     -- Decimal degrees (-90 to 90)
     longitude REAL,                    -- Decimal degrees (-180 to 180)
     radius_miles INTEGER DEFAULT 25,   -- Search radius (1 to 100)
-    
+
     -- Settings
     poll_rate_minutes INTEGER DEFAULT 60,
     notification_types VARCHAR DEFAULT 'machines',
     last_checked_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     -- Data integrity constraints
     CONSTRAINT target_data_check CHECK (
         (target_type = 'location' AND location_id IS NOT NULL AND latitude IS NULL AND longitude IS NULL)
@@ -119,11 +119,11 @@ CREATE TABLE monitoring_targets (
     CONSTRAINT valid_latitude CHECK (latitude IS NULL OR (latitude >= -90 AND latitude <= 90)),
     CONSTRAINT valid_longitude CHECK (longitude IS NULL OR (longitude >= -180 AND longitude <= 180)),
     CONSTRAINT valid_radius CHECK (radius_miles IS NULL OR (radius_miles >= 1 AND radius_miles <= 100)),
-    
+
     -- Uniqueness constraints
     CONSTRAINT unique_location UNIQUE (channel_id, location_id),
     CONSTRAINT unique_geographic UNIQUE (channel_id, latitude, longitude),
-    
+
     FOREIGN KEY (channel_id) REFERENCES channel_configs (channel_id)
 );
 ```
@@ -136,7 +136,7 @@ CREATE TABLE seen_submissions (
     channel_id BIGINT NOT NULL,
     submission_id BIGINT NOT NULL,
     seen_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     CONSTRAINT unique_channel_submission UNIQUE (channel_id, submission_id),
     FOREIGN KEY (channel_id) REFERENCES channel_configs (channel_id)
 );
@@ -145,28 +145,35 @@ CREATE TABLE seen_submissions (
 ### Schema Design Principles
 
 #### 1. Normalized Data Structure
+
 - **Single Responsibility**: Each field has one clear purpose
-- **Type Safety**: Proper data types with validation constraints  
-- **Clear Semantics**: `display_name` always human-readable, coordinates always numeric
+- **Type Safety**: Proper data types with validation constraints
+- **Clear Semantics**: `display_name` always human-readable, coordinates always
+  numeric
 - **Extensibility**: Easy to add new target types or geographic features
 
 #### 2. Target Type Differentiation
 
 **Location Targets** (`target_type = 'location'`):
+
 - **Purpose**: Monitor specific PinballMap locations
 - **Required Fields**: `location_id`, `display_name`
 - **Null Fields**: `latitude`, `longitude`, `radius_miles`
 - **Example**: "Austin Pinball Collective" (location_id: 26454)
 
 **Geographic Targets** (`target_type = 'geographic'`):
+
 - **Purpose**: Monitor by coordinates and radius
 - **Required Fields**: `latitude`, `longitude`, `radius_miles`, `display_name`
 - **Null Fields**: `location_id`
 - **Example**: "Austin, TX" (30.26715, -97.74306, 25 miles)
 
 #### 3. Data Integrity Constraints
-- **Target Data Validation**: Ensures location targets have location_id, geographic targets have coordinates
-- **Coordinate Validation**: Latitude (-90 to 90), longitude (-180 to 180), radius (1 to 100 miles)
+
+- **Target Data Validation**: Ensures location targets have location_id,
+  geographic targets have coordinates
+- **Coordinate Validation**: Latitude (-90 to 90), longitude (-180 to 180),
+  radius (1 to 100 miles)
 - **Uniqueness**: Prevents duplicate location or geographic targets per channel
 - **Referential Integrity**: Foreign key relationships maintain data consistency
 

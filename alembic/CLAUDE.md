@@ -1,6 +1,7 @@
 # Database Migration Agent Instructions
 
-This document provides instructions for managing database migrations with Alembic.
+This document provides instructions for managing database migrations with
+Alembic.
 
 **For detailed schema information, always refer to `docs/DATABASE.md`.**
 
@@ -12,7 +13,9 @@ This document provides instructions for managing database migrations with Alembi
 
 ## Migration Workflow
 
-From this point forward, all database schema changes must be managed through Alembic migrations. The initial database is created by the application, and subsequent changes are handled by migration scripts.
+From this point forward, all database schema changes must be managed through
+Alembic migrations. The initial database is created by the application, and
+subsequent changes are handled by migration scripts.
 
 ### Common Commands
 
@@ -35,10 +38,14 @@ alembic downgrade -1
 
 ## Migration Best Practices
 
-- **Keep Migrations Atomic**: Each migration script should perform one small, distinct task (e.g., add a column, create a constraint).
-- **Separate Schema and Data Changes**: Do not mix schema changes (like adding a column) and data changes (like populating that column) in the same migration.
-- **Always Test Migrations**: Before applying migrations in production, test them on a copy of the production database.
-- **Verify After Applying**: After running `alembic upgrade head`, manually inspect the database schema to ensure the changes were applied correctly.
+- **Keep Migrations Atomic**: Each migration script should perform one small,
+  distinct task (e.g., add a column, create a constraint).
+- **Separate Schema and Data Changes**: Do not mix schema changes (like adding a
+  column) and data changes (like populating that column) in the same migration.
+- **Always Test Migrations**: Before applying migrations in production, test
+  them on a copy of the production database.
+- **Verify After Applying**: After running `alembic upgrade head`, manually
+  inspect the database schema to ensure the changes were applied correctly.
 
 ## Troubleshooting
 

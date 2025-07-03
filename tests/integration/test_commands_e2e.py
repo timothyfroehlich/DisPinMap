@@ -124,7 +124,9 @@ async def test_add_city_e2e(db_session, api_mocker):
     )
     assert target is not None, "Target should have been created in database"
     assert target.target_type == "geographic"
-    assert target.display_name == f"{city_name} (25mi)"  # Default radius is added to display name
+    assert (
+        target.display_name == f"{city_name} (25mi)"
+    )  # Default radius is added to display name
     assert target.latitude is not None
     assert target.longitude is not None
     assert target.radius_miles == 25  # Default radius
@@ -171,7 +173,9 @@ async def test_add_city_with_radius_e2e(db_session, api_mocker):
     )
     assert target is not None, "Target should have been created in database"
     assert target.target_type == "geographic"
-    assert target.display_name == f"{city_name} ({radius}mi)"  # Custom radius is added to display name
+    assert (
+        target.display_name == f"{city_name} ({radius}mi)"
+    )  # Custom radius is added to display name
     assert target.latitude is not None
     assert target.longitude is not None
     assert target.radius_miles == radius
@@ -322,7 +326,10 @@ async def test_remove_target_invalid_index_e2e(db_session):
     session = db_session()
     session.add(
         MonitoringTarget(
-            channel_id=12345, target_type="location", display_name="Test Location", location_id=999
+            channel_id=12345,
+            target_type="location",
+            display_name="Test Location",
+            location_id=999,
         )
     )
     session.commit()
@@ -699,8 +706,12 @@ async def test_list_command_with_targets(db_session):
     assert "Location: Ground Kontrol Classic Arcade" in message_arg, (
         "Should show location target"
     )
-    assert "Coords: 45.52310, -122.67650" in message_arg, "Should show coordinate target"
-    assert "Coords: 45.51520, -122.67840" in message_arg, "Should show city target as geographic coordinates"
+    assert "Coords: 45.52310, -122.67650" in message_arg, (
+        "Should show coordinate target"
+    )
+    assert "Coords: 45.51520, -122.67840" in message_arg, (
+        "Should show city target as geographic coordinates"
+    )
 
     # Verify the table shows correct index numbers (1, 2, 3)
     assert "1" in message_arg, "Should show index 1"

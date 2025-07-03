@@ -2,11 +2,13 @@
 
 **Schema Redesign Project - Issues #78, #81**
 
-This document outlines the fresh-start database deployment approach for the schema redesign project.
+This document outlines the fresh-start database deployment approach for the
+schema redesign project.
 
 ## Overview
 
-The schema redesign project has adopted a **fresh baseline approach** instead of traditional data migration. This means:
+The schema redesign project has adopted a **fresh baseline approach** instead of
+traditional data migration. This means:
 
 - **Complete database reset**: The existing database is wiped clean
 - **New baseline migration**: A single migration creates the complete new schema
@@ -16,6 +18,7 @@ The schema redesign project has adopted a **fresh baseline approach** instead of
 ## Fresh-Start Benefits
 
 ### Technical Benefits
+
 - **No Migration Complexity**: Eliminates complex data transformation pipelines
 - **Clean Architecture**: New schema is free from legacy constraints
 - **Simplified Deployment**: Single-step database creation process
@@ -23,6 +26,7 @@ The schema redesign project has adopted a **fresh baseline approach** instead of
 - **Validation Enforcement**: All new data follows strict validation rules
 
 ### Operational Benefits
+
 - **Faster Deployment**: No time-consuming data migration process
 - **Lower Risk**: Eliminates data transformation errors
 - **Easier Rollback**: Simple revert to previous version
@@ -33,11 +37,13 @@ The schema redesign project has adopted a **fresh baseline approach** instead of
 The redesigned schema includes three main tables:
 
 ### 1. ChannelConfig
+
 - Channel-specific configuration and settings
 - Polling rates and notification preferences
 - Activity tracking and timestamps
 
 ### 2. MonitoringTarget (Redesigned)
+
 - **Normalized design**: Separate fields for different target types
 - **Type safety**: `target_type` field with enum validation
 - **Clear semantics**: `display_name` always human-readable
@@ -45,12 +51,14 @@ The redesigned schema includes three main tables:
 - **Data integrity**: Comprehensive constraints prevent invalid data
 
 ### 3. SeenSubmission
+
 - Tracks processed submissions to prevent duplicates
 - Channel-specific submission tracking
 
 ## Deployment Process
 
 ### Pre-Deployment Checklist
+
 - [ ] All tests pass with new schema
 - [ ] Fresh baseline migration generated
 - [ ] Backup procedures documented
@@ -60,16 +68,18 @@ The redesigned schema includes three main tables:
 ### Deployment Steps
 
 1. **Preparation**
+
    ```bash
    # Activate virtual environment
    source venv/bin/activate
-   
+
    # Verify migration status
    alembic current
    alembic history
    ```
 
 2. **Database Reset**
+
    ```bash
    # Stop the application
    # Remove existing database file
@@ -77,15 +87,17 @@ The redesigned schema includes three main tables:
    ```
 
 3. **Apply New Schema**
+
    ```bash
    # Apply the baseline migration
    alembic upgrade head
-   
+
    # Verify schema creation
    alembic current
    ```
 
 4. **Application Startup**
+
    ```bash
    # Start application with fresh database
    # All tables are created and ready
@@ -100,6 +112,7 @@ The redesigned schema includes three main tables:
 ### Production Environment Variables
 
 The deployment uses the following configuration:
+
 - `DATABASE_PATH`: Path to the SQLite database file
 - Database URL: Configured automatically via `alembic/env.py`
 
@@ -108,22 +121,26 @@ The deployment uses the following configuration:
 ### Baseline Migration: `9275fe03c648_create_initial_baseline_from_new_schema.py`
 
 This migration creates:
+
 - **channel_configs** table with all configuration fields
 - **monitoring_targets** table with the new normalized schema
 - **seen_submissions** table for duplicate tracking
 - **All constraints**: Check constraints, unique constraints, foreign keys
 - **Proper data types**: BigInteger for Discord IDs, Float for coordinates
-- **Validation rules**: Coordinate ranges, target type validation, data consistency
+- **Validation rules**: Coordinate ranges, target type validation, data
+  consistency
 
 ## User Impact and Communication
 
 ### What Users Need to Know
+
 - **Brief downtime**: During database reset and migration
 - **Re-add targets**: Previous monitoring targets will need to be added again
 - **Improved commands**: New `!add location` and `!add geographic` subcommands
 - **Better validation**: Invalid coordinates or data will be caught early
 
 ### User Communication Template
+
 ```
 🔧 **Database Upgrade Notice**
 
@@ -158,6 +175,7 @@ Thank you for your patience! 🤖
 5. **Re-attempt deployment when ready**
 
 ### Rollback Commands
+
 ```bash
 # Stop current application
 # Restore previous database
@@ -172,17 +190,19 @@ git checkout previous_working_commit
 ## Monitoring and Validation
 
 ### Post-Deployment Monitoring
+
 - Monitor application logs for errors
 - Verify command functionality
 - Check constraint validation
 - Monitor user feedback
 
 ### Validation Tests
+
 ```bash
 # Test location target addition
 !add location "Test Location"
 
-# Test geographic target addition  
+# Test geographic target addition
 !add geographic 40.7128 -74.0060 25
 
 # Test constraint validation (should fail)
@@ -192,6 +212,7 @@ git checkout previous_working_commit
 ## Success Criteria
 
 ### Technical Success
+
 - [ ] Database created successfully from baseline migration
 - [ ] All tables and constraints present
 - [ ] No migration errors or warnings
@@ -199,6 +220,7 @@ git checkout previous_working_commit
 - [ ] Performance meets or exceeds previous version
 
 ### User Experience Success
+
 - [ ] All commands work as documented
 - [ ] Coordinate validation prevents invalid data
 - [ ] Users can successfully re-add monitoring targets
@@ -206,6 +228,10 @@ git checkout previous_working_commit
 
 ## Conclusion
 
-The fresh-start approach provides a clean foundation for the redesigned schema while eliminating the complexity and risks associated with data migration. This approach ensures data integrity, simplifies deployment, and provides a solid foundation for future enhancements.
+The fresh-start approach provides a clean foundation for the redesigned schema
+while eliminating the complexity and risks associated with data migration. This
+approach ensures data integrity, simplifies deployment, and provides a solid
+foundation for future enhancements.
 
-For technical details about the schema design, see the `SCHEMA_REDESIGN_PLAN.md` document.
+For technical details about the schema design, see the `SCHEMA_REDESIGN_PLAN.md`
+document.
