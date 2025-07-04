@@ -1,8 +1,10 @@
 # Local Development and Testing Setup Plan
 
 ## Objectives
+
 1. **Shut down GCP Cloud Run service** to stop burning money during debugging
-2. **Create local development environment** with console-based Discord interaction
+2. **Create local development environment** with console-based Discord
+   interaction
 3. **Download production database** for realistic testing
 4. **Enhanced logging** to monitor long-term operation
 5. **Debug monitoring loop issues** in controlled environment
@@ -12,18 +14,21 @@
 ### Phase 1: Infrastructure Setup
 
 #### 1.1 Shut Down Cloud Run Service
+
 ```bash
 # Scale down to 0 instances to stop costs
 gcloud run services update dispinmap-bot --region=us-central1 --min-instances=0 --max-instances=0
 ```
 
 #### 1.2 Download Production Database
+
 - Create script `scripts/download_production_db.py`
 - Download latest backup from `dispinmap-bot-sqlite-backups` GCS bucket
 - Use Litestream to restore to local file `local_db/pinball_bot.db`
 - Verify database integrity and content
 
 #### 1.3 Local Environment Configuration
+
 - Create `.env.local` file with:
   - `DISCORD_TOKEN` (from user's Discord bot)
   - `DATABASE_PATH=local_db/pinball_bot.db`
@@ -33,6 +38,7 @@ gcloud run services update dispinmap-bot --region=us-central1 --min-instances=0 
 ### Phase 2: Console Discord Interface
 
 #### 2.1 Create Console Discord Simulator
+
 - New file: `src/console_discord.py`
 - Implements a fake Discord channel that:
   - Accepts commands via stdin (like `!add location "Ground Kontrol"`)
@@ -41,6 +47,7 @@ gcloud run services update dispinmap-bot --region=us-central1 --min-instances=0 
   - Integrates with existing command handlers
 
 #### 2.2 Local Development Entry Point
+
 - New file: `src/local_dev.py`
 - Entry point that:
   - Loads local environment variables
@@ -49,6 +56,7 @@ gcloud run services update dispinmap-bot --region=us-central1 --min-instances=0 
   - Provides graceful shutdown
 
 #### 2.3 Console Interface Features
+
 - **Command input**: `> !check` (user types commands)
 - **Bot responses**: Immediate output to console
 - **Background monitoring**: Shows monitoring loop activity
@@ -58,12 +66,14 @@ gcloud run services update dispinmap-bot --region=us-central1 --min-instances=0 
 ### Phase 3: Enhanced Logging
 
 #### 3.1 Single Log File with Rotation
+
 - Use Python's `RotatingFileHandler`
 - Single file: `logs/bot.log` (max 10MB, keep 5 files)
 - All console output also goes to log file
 - Timestamps and log levels for all entries
 
 #### 3.2 Monitoring Loop Debugging
+
 - Enhanced logging in `runner.py` to track:
   - Every monitoring loop iteration
   - Channel processing details
@@ -74,6 +84,7 @@ gcloud run services update dispinmap-bot --region=us-central1 --min-instances=0 
 ### Phase 4: Testing and Debugging
 
 #### 4.1 Long-term Monitoring Test
+
 - Run locally for 24+ hours
 - Monitor log file for:
   - Monitoring loop stability
@@ -83,12 +94,14 @@ gcloud run services update dispinmap-bot --region=us-central1 --min-instances=0 
   - Error patterns
 
 #### 4.2 Interactive Testing
+
 - Test all commands through console interface
 - Verify monitoring targets work correctly
 - Test error conditions and recovery
 - Validate notification logic
 
 ## File Structure
+
 ```
 DisPinMap-Main/
 ├── .env.local                    # Local environment config
@@ -109,6 +122,7 @@ DisPinMap-Main/
 ## Console Interface Design
 
 ### Input Format
+
 ```
 > !add location "Ground Kontrol"
 > !list
@@ -120,6 +134,7 @@ DisPinMap-Main/
 ```
 
 ### Output Format
+
 ```
 [2025-07-04 10:15:32] [CONSOLE] > !add location "Ground Kontrol"
 [2025-07-04 10:15:33] [BOT] ✅ Successfully added location monitoring for "Ground Kontrol"
@@ -155,6 +170,7 @@ DisPinMap-Main/
 ✅ **COMPLETED** - All core functionality is working!
 
 ### What's Working:
+
 - Cloud Run scaled to 0 instances (costs stopped)
 - Production database successfully downloaded and restored using Litestream
 - Local environment with .env.local configuration
@@ -164,6 +180,7 @@ DisPinMap-Main/
 - Bot connects to Discord and processes real channels
 
 ### Test Results:
+
 - Bot starts up in ~3 seconds
 - Monitoring loop begins immediately and polls PinballMap API
 - Database queries work correctly (10 monitoring targets, 5 active channels)
@@ -171,6 +188,7 @@ DisPinMap-Main/
 - All logs captured to both console and rotating file
 
 ### Next Steps:
+
 1. Run extended testing (24+ hours) to identify stability issues
 2. Test console commands interactively
 3. Investigate Cloud Run health check configuration
@@ -179,6 +197,7 @@ DisPinMap-Main/
 ## Cloud Run Issue Investigation (Parallel)
 
 While testing locally, also investigate:
+
 - **Missing health check configuration** in terraform
 - **Startup probe and liveness probe** settings
 - **Container resource limits** and timeout values

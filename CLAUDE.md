@@ -102,7 +102,8 @@ source venv/bin/activate
 
 ## 🖥️ Local Development Mode
 
-**For debugging monitoring issues and cost-effective testing without Cloud Run.**
+**For debugging monitoring issues and cost-effective testing without Cloud
+Run.**
 
 ### Quick Start
 
@@ -119,7 +120,8 @@ python src/local_dev.py
 
 - **Console Discord Interface**: Interact with bot commands via stdin/stdout
 - **File Watcher Interface**: Send commands by appending to `commands.txt` file
-- **Enhanced Logging**: All output to console + rotating log file (`logs/bot.log`)
+- **Enhanced Logging**: All output to console + rotating log file
+  (`logs/bot.log`)
 - **Production Database**: Real data from Cloud Run backups
 - **Monitoring Loop**: Full monitoring functionality with API calls
 - **Cost Savings**: Cloud Run scaled to 0 instances
@@ -127,12 +129,14 @@ python src/local_dev.py
 ### Console Commands
 
 **Discord Bot Commands** (prefix with `!`):
+
 - `!add location "Name"` - Add location monitoring
-- `!list` - Show monitored targets  
+- `!list` - Show monitored targets
 - `!check` - Manual check all targets
 - `!help` - Show command help
 
 **Console Special Commands** (prefix with `.`):
+
 - `.quit` - Exit local development session
 - `.health` - Show bot health status (Discord, DB, monitoring loop)
 - `.status` - Show monitoring status (target counts, recent targets)
@@ -156,6 +160,7 @@ tail -f logs/bot.log
 ```
 
 **Benefits:**
+
 - **No interruption**: Bot keeps running while you send commands
 - **External control**: Control from scripts, other terminals, or automation
 - **Command history**: All commands saved in `commands.txt` file

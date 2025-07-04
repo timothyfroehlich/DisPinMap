@@ -14,7 +14,8 @@
 
 - **local_dev.py** - Local development entry point with console interface
 - **local_logging.py** - Enhanced logging with rotation for local testing
-- **console_discord.py** - Console Discord interface for stdin/stdout interaction
+- **console_discord.py** - Console Discord interface for stdin/stdout
+  interaction
 
 ## Command Architecture
 
@@ -65,6 +66,7 @@ grep -r "target_data" src/  # Should return nothing!
 ## Local Development Patterns
 
 ### Console Interface Usage
+
 ```python
 # In console_discord.py - simulates Discord interactions
 fake_message = FakeMessage(command)
@@ -72,6 +74,7 @@ await self.command_handler.add_location(fake_message, *args)
 ```
 
 ### Enhanced Logging
+
 ```python
 # Use local_logging.py for development
 from src.local_logging import setup_logging, get_logger
@@ -80,6 +83,7 @@ logger = get_logger("module_name")
 ```
 
 ### Database Access in Local Mode
+
 ```python
 # Use the same Database class, but with local SQLite file
 database = Database()  # Reads from .env.local DATABASE_PATH
