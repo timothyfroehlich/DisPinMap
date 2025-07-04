@@ -451,7 +451,7 @@ class Runner(commands.Cog, name="Runner"):
                 f"🔍 Task loop is running: {self.monitor_task_loop.is_running()}"
             )
         except Exception as e:
-            logger.warning(f"⚠️ Could not access bot debug info during startup: {e}")
+            logger.exception("⚠️ Could not access bot debug info during startup")
             logger.info("🔄 Debug info will be available once bot is fully initialized")
 
         # Run immediate first check to avoid waiting 60 minutes on startup
