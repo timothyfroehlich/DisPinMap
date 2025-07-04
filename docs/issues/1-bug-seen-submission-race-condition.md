@@ -1,31 +1,39 @@
 # Seen Submission Race Condition
 
-**Priority**: 1
-**Type**: bug
-**Status**: open
-**Created**: 2025-07-04
+**Priority**: 1 **Type**: bug **Status**: open **Created**: 2025-07-04
 **Updated**: 2025-07-04
 
 ## Description
-Race condition exists between filtering submissions and marking them as seen, potentially allowing duplicate notifications if the monitoring loop runs multiple times rapidly or if API responses change between calls.
+
+Race condition exists between filtering submissions and marking them as seen,
+potentially allowing duplicate notifications if the monitoring loop runs
+multiple times rapidly or if API responses change between calls.
 
 ## Reproduction Steps
-1. Set up monitoring targets with very short poll intervals (difficult to reproduce consistently)
+
+1. Set up monitoring targets with very short poll intervals (difficult to
+   reproduce consistently)
 2. Force multiple rapid checks using `.trigger` command
 3. Monitor for duplicate notifications of the same submission
 4. Check database for timing issues in `seen_submissions` table
 
 ## Expected vs Actual Behavior
-- **Expected**: Each submission should only be notified once, regardless of timing
-- **Actual**: Rapid polling or API inconsistencies could cause duplicate notifications
+
+- **Expected**: Each submission should only be notified once, regardless of
+  timing
+- **Actual**: Rapid polling or API inconsistencies could cause duplicate
+  notifications
 
 ## Technical Details
 
 ### Code Location
+
 - **File**: `src/cogs/runner.py`
-- **Functions**: `filter_new_submissions()` (line 386-398), `post_submissions()`, `mark_submissions_seen()`
+- **Functions**: `filter_new_submissions()` (line 386-398),
+  `post_submissions()`, `mark_submissions_seen()`
 
 ### Race Condition Flow
+
 ```python
 # Time T1: First check starts
 submissions = await fetch_submissions_for_location(...)  # API call
@@ -44,11 +52,14 @@ self.db.mark_submissions_seen(channel_id, submission_ids)  # Second call gets In
 ```
 
 ### Database Protection
-- `seen_submissions` table has unique constraint on `(channel_id, submission_id)`
+
+- `seen_submissions` table has unique constraint on
+  `(channel_id, submission_id)`
 - `mark_submissions_seen()` handles `IntegrityError` gracefully
 - **Problem**: Notifications already sent before constraint violation
 
 ### Potential Triggers
+
 - Multiple rapid manual checks (`.trigger` command)
 - Cloud Run scaling events causing multiple instances
 - API response timing variations
@@ -57,6 +68,7 @@ self.db.mark_submissions_seen(channel_id, submission_ids)  # Second call gets In
 ## Proposed Solutions
 
 ### Option 1: Atomic Transaction
+
 ```python
 async def process_submissions_atomically(self, channel_id, submissions):
     async with self.db.transaction():
@@ -67,20 +79,22 @@ async def process_submissions_atomically(self, channel_id, submissions):
 ```
 
 ### Option 2: Channel-Level Locking
+
 ```python
 class Runner:
     def __init__(self):
         self.channel_locks = {}
-    
+
     async def run_checks_for_channel(self, channel_id, config, is_manual_check=False):
         if channel_id not in self.channel_locks:
             self.channel_locks[channel_id] = asyncio.Lock()
-        
+
         async with self.channel_locks[channel_id]:
             # Existing check logic
 ```
 
 ### Option 3: Submission ID Tracking
+
 ```python
 # Track recently processed submission IDs in memory
 self.recently_processed = {}  # {channel_id: set(submission_ids)}
@@ -93,6 +107,7 @@ async def filter_new_submissions(self, channel_id, submissions):
 ```
 
 ## Acceptance Criteria
+
 - [ ] No duplicate notifications under rapid polling scenarios
 - [ ] Multiple manual checks don't cause duplicates
 - [ ] Database integrity maintained
@@ -101,6 +116,7 @@ async def filter_new_submissions(self, channel_id, submissions):
 - [ ] Test with concurrent `.trigger` commands
 
 ## Notes
+
 - Difficult to reproduce consistently in testing
 - May require load testing to verify fix
 - Related to Cloud Run scaling and multiple instances
