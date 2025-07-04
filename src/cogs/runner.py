@@ -440,13 +440,19 @@ class Runner(commands.Cog, name="Runner"):
         await self.bot.wait_until_ready()
         logger.info("✅ Bot ready, monitor loop will start shortly")
 
-        # Additional debug info
-        logger.info(f"🔍 Bot user: {self.bot.user}")
-        logger.info(f"🔍 Bot guilds: {len(self.bot.guilds)} guilds")
-        logger.info(
-            f"🔍 Task loop current iteration: {self.monitor_task_loop.current_loop}"
-        )
-        logger.info(f"🔍 Task loop is running: {self.monitor_task_loop.is_running()}")
+        # Additional debug info - with error handling for startup timing issues
+        try:
+            logger.info(f"🔍 Bot user: {self.bot.user}")
+            logger.info(f"🔍 Bot guilds: {len(self.bot.guilds)} guilds")
+            logger.info(
+                f"🔍 Task loop current iteration: {self.monitor_task_loop.current_loop}"
+            )
+            logger.info(
+                f"🔍 Task loop is running: {self.monitor_task_loop.is_running()}"
+            )
+        except Exception as e:
+            logger.warning(f"⚠️ Could not access bot debug info during startup: {e}")
+            logger.info("🔄 Debug info will be available once bot is fully initialized")
 
         # Run immediate first check to avoid waiting 60 minutes on startup
         await self._run_startup_checks()
