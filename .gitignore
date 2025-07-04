@@ -267,6 +267,12 @@ simulation_output/
 temp/
 tmp/
 
+# Local development files
+local_db/
+logs/
+.env.local
+commands.txt
+
 # Coverage reports
 coverage.xml
 htmlcov/
