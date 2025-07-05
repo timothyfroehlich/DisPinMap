@@ -10,6 +10,29 @@ Copilot, etc).**
 
 ## This is our repo: <https://github.com/timothyfroehlich/DisPinMap>
 
+## 🚨 Issue Awareness - Read First
+
+**CRITICAL**: Before starting any work, review current issues to understand
+known problems:
+
+```bash
+# 1. List all documented issues
+ls docs/issues/*.md
+
+# 2. Get summary of each issue (first 5 lines)
+head -5 docs/issues/*.md
+
+# 3. Check GitHub issues (requires gh CLI)
+gh issue list --state open
+
+# 4. Review recent closed issues for context
+ls docs/issues/closed/*.md 2>/dev/null || echo "No closed issues yet"
+```
+
+💡 **Always run these commands to understand the full problem landscape before
+starting work. The `head -5` command shows the title and priority/status of each
+documented issue.**
+
 ## 🗂️ Directory-Specific Agent Instructions
 
 **IMPORTANT**: Before working in any directory, consult its specific CLAUDE.md
