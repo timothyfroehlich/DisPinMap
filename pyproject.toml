@@ -40,6 +40,9 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Ruff configuration - our single tool for Python code quality
+# Handles ALL: linting, formatting, type checking, import sorting
+# We do NOT use: mypy, black, flake8, isort
 [tool.ruff]
 line-length = 88
 target-version = "py313"
@@ -51,6 +54,7 @@ runtime-evaluated-base-classes = ["sqlalchemy.orm.DeclarativeBase"]
 source = ["src"]
 omit = [
     "src/__init__.py",
+    "src/local_dev/*",
     "tests/*",
     "*/tests/*",
     "*/test_*",

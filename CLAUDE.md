@@ -113,7 +113,7 @@ source venv/bin/activate
 python scripts/download_production_db.py
 
 # 2. Start local development mode
-python src/local_dev.py
+python local_dev.py
 ```
 
 ### Local Development Features
@@ -148,7 +148,7 @@ python src/local_dev.py
 
 ```bash
 # Terminal 1: Keep bot running
-python src/local_dev.py
+python local_dev.py
 
 # Terminal 2: Send commands
 echo "!list" >> commands.txt
@@ -198,12 +198,28 @@ python scripts/download_production_db.py
 - Restores to `local_db/pinball_bot.db`
 - Verifies database integrity and shows table counts
 
-### Code Quality Tools
+## Code Quality Standards
 
-This project uses **Ruff** for both linting and formatting, plus **Prettier**
-for markdown/YAML files.
+**CRITICAL: We use Ruff exclusively for all Python code quality.**
 
-#### Quick Commands
+### Our Tool Stack
+
+- **Python**: `ruff` for ALL linting, formatting, type checking, and import
+  sorting
+- **Markdown/YAML**: `prettier` for formatting
+- **Tests**: `pytest` with coverage
+- **Git**: `pre-commit` hooks
+
+### Tools We Do NOT Use
+
+We have standardized on Ruff and explicitly **do not use**:
+
+- ❌ `mypy` (Ruff handles type checking)
+- ❌ `black` (Ruff handles formatting)
+- ❌ `flake8` (Ruff handles linting)
+- ❌ `isort` (Ruff handles import sorting)
+
+### Quick Commands
 
 ```bash
 # Activate environment first
@@ -219,6 +235,9 @@ prettier --write "**/*.{md,yml,yaml}" --ignore-path .gitignore
 
 # Run tests
 pytest tests/ --ignore=tests/simulation -v
+
+# Run ALL checks (comprehensive script)
+./scripts/run_all_checks.sh
 ```
 
 #### VS Code Tasks (Recommended)
