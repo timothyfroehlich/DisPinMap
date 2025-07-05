@@ -142,12 +142,14 @@ docs/issues/
 ### Example Closure
 
 ```markdown
-**Status**: closed **Resolved**: 2025-07-05 **Resolution**: Fixed in commit abc123
+**Status**: closed **Resolved**: 2025-07-05 **Resolution**: Fixed in commit
+abc123
 
 ## Resolution
 
-Issue resolved by implementing Discord.py command processing in console interface.
-All commands now work correctly through `bot.process_commands()` integration.
+Issue resolved by implementing Discord.py command processing in console
+interface. All commands now work correctly through `bot.process_commands()`
+integration.
 ```
 
 ## AI Agent Guidelines

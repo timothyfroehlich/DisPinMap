@@ -20,4 +20,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ Fatal error: {e}")
         import sys
+
         sys.exit(1)

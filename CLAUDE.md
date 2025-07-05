@@ -12,7 +12,8 @@ Copilot, etc).**
 
 ## 🚨 Issue Awareness - Read First
 
-**CRITICAL**: Before starting any work, review current issues to understand known problems:
+**CRITICAL**: Before starting any work, review current issues to understand
+known problems:
 
 ```bash
 # 1. List all documented issues
@@ -28,7 +29,9 @@ gh issue list --state open
 ls docs/issues/closed/*.md 2>/dev/null || echo "No closed issues yet"
 ```
 
-💡 **Always run these commands to understand the full problem landscape before starting work. The `head -5` command shows the title and priority/status of each documented issue.**
+💡 **Always run these commands to understand the full problem landscape before
+starting work. The `head -5` command shows the title and priority/status of each
+documented issue.**
 
 ## 🗂️ Directory-Specific Agent Instructions
 

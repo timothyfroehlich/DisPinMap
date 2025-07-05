@@ -5,7 +5,9 @@
 
 ## Description
 
-The local development console interface only supports a subset of Discord bot commands due to hardcoded command mapping instead of using Discord.py's command processing system.
+The local development console interface only supports a subset of Discord bot
+commands due to hardcoded command mapping instead of using Discord.py's command
+processing system.
 
 ## Reproduction Steps
 
@@ -17,15 +19,18 @@ The local development console interface only supports a subset of Discord bot co
 ## Expected vs Actual Behavior
 
 - **Expected**: All Discord bot commands should work in console interface
-- **Actual**: Only 5 commands are hardcoded and mapped, others fail with "Unknown command"
+- **Actual**: Only 5 commands are hardcoded and mapped, others fail with
+  "Unknown command"
 
 ## Technical Details
 
 ### Root Cause
 
-The console interface in `src/local_dev/console_discord.py` has an architecture mismatch:
+The console interface in `src/local_dev/console_discord.py` has an architecture
+mismatch:
 
 1. **Hardcoded command mapping**: Only these commands are manually mapped:
+
    ```python
    if command.startswith("!add"):
        await self.command_handler.add_location(fake_message, *command.split()[1:])
@@ -34,12 +39,14 @@ The console interface in `src/local_dev/console_discord.py` has an architecture 
    # etc...
    ```
 
-2. **Bypasses Discord.py framework**: Should use `bot.process_commands()` instead
-3. **Method name mismatches**: Calls `show_help()` but real method is `help_command()`
+2. **Bypasses Discord.py framework**: Should use `bot.process_commands()`
+   instead
+3. **Method name mismatches**: Calls `show_help()` but real method is
+   `help_command()`
 
 ### Missing Commands
 
-- `!poll_rate` - Set polling frequency  
+- `!poll_rate` - Set polling frequency
 - `!notifications` - Configure notification types
 - `!export` - Export configuration
 - `!monitor_health` - Show monitoring health
@@ -67,10 +74,10 @@ async def _process_bot_command(self, command: str):
         fake_message.author = FakeUser()
         fake_message.channel = FakeChannel()
         fake_message.guild = FakeGuild()
-        
+
         # Process through Discord.py command system
         await self.bot.process_commands(fake_message)
-        
+
     except Exception as e:
         logger.error(f"❌ Error processing command '{command}': {e}")
 ```
@@ -98,15 +105,19 @@ def _build_command_mapping(self):
 
 ## Impact
 
-- **Development workflow**: Limited testing capabilities for configuration commands
-- **Debugging**: Cannot test poll rate changes, notification settings via console
+- **Development workflow**: Limited testing capabilities for configuration
+  commands
+- **Debugging**: Cannot test poll rate changes, notification settings via
+  console
 - **User experience**: Confusing that documented commands don't work
 
 ## Notes
 
-- Monitoring loop itself works correctly - this is only a console interface issue
+- Monitoring loop itself works correctly - this is only a console interface
+  issue
 - Commands work fine in actual Discord environment
-- Console interface was designed for basic testing, needs expansion for full functionality
+- Console interface was designed for basic testing, needs expansion for full
+  functionality
 
 ## Related Files
 
