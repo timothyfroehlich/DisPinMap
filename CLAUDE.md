@@ -15,24 +15,20 @@ Copilot, etc).**
 **CRITICAL**: Before starting any work, review current issues to understand known problems:
 
 ```bash
-# 1. Check documented issues in the repo
+# 1. List all documented issues
 ls docs/issues/*.md
 
-# 2. Check GitHub issues (requires gh CLI)
+# 2. Get summary of each issue (first 5 lines)
+head -5 docs/issues/*.md
+
+# 3. Check GitHub issues (requires gh CLI)
 gh issue list --state open
 
-# 3. Review recent closed issues for context
-ls docs/issues/closed/*.md
+# 4. Review recent closed issues for context
+ls docs/issues/closed/*.md 2>/dev/null || echo "No closed issues yet"
 ```
 
-**Current documented issues:**
-- `1-bug-seen-submission-race-condition.md` - Race condition in monitoring loop
-- `1-bug-startup-duplicate-notifications.md` - Startup sends old notifications  
-- `2-bug-console-interface-limited-commands.md` - Local dev console missing commands
-- `2-bug-timezone-handling-inconsistency.md` - Mixed naive/timezone-aware datetimes
-- `2-feature-monitoring-loop-debug-logging.md` - Need enhanced monitoring logs
-
-💡 **Always check both `docs/issues/` and `gh issue list` to understand the full problem landscape before starting work.**
+💡 **Always run these commands to understand the full problem landscape before starting work. The `head -5` command shows the title and priority/status of each documented issue.**
 
 ## 🗂️ Directory-Specific Agent Instructions
 
