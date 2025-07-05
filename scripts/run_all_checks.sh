@@ -28,10 +28,10 @@ run_check() {
     local name="$1"
     local command="$2"
     local fix_command="$3"
-    
+
     echo -e "\n${BLUE}Running: ${name}${NC}"
     echo "Command: $command"
-    
+
     if eval "$command"; then
         echo -e "${GREEN}✅ $name: PASSED${NC}"
         PASSED_CHECKS+=("$name")
@@ -132,7 +132,7 @@ if [ ${#FAILED_CHECKS[@]} -gt 0 ]; then
     for check in "${FAILED_CHECKS[@]}"; do
         echo "   • $check"
     done
-    
+
     if [ ${#FIX_COMMANDS[@]} -gt 0 ]; then
         echo -e "\n${YELLOW}🔧 AUTO-FIX COMMANDS:${NC}"
         echo "Run these commands to automatically fix issues:"
@@ -143,22 +143,22 @@ if [ ${#FAILED_CHECKS[@]} -gt 0 ]; then
         echo ""
         echo "Then re-run this script to verify fixes."
     fi
-    
+
     echo -e "\n${RED}❌ Some checks failed. Please fix the issues above.${NC}"
     exit 1
 else
     echo -e "\n${GREEN}🎉 ALL CHECKS PASSED! Code is ready for commit.${NC}"
-    
+
     # Bonus: Show test coverage summary
     echo -e "\n${BLUE}📊 COVERAGE SUMMARY:${NC}"
     pytest tests/ --cov=src --cov-report=term --quiet | tail -1
-    
+
     # Show git status
     echo -e "\n${BLUE}📋 GIT STATUS:${NC}"
     git status --porcelain | head -10
     if [ $(git status --porcelain | wc -l) -gt 10 ]; then
         echo "... and $(( $(git status --porcelain | wc -l) - 10 )) more files"
     fi
-    
+
     exit 0
 fi
