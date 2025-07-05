@@ -138,7 +138,7 @@ class FileWatcher:
         
         logger.info(f"🔍 File watcher initialized for: {os.path.abspath(command_file)}")
     
-    def start(self):
+    def start(self) -> None:
         """Start file watching and command processing"""
         if self.running:
             logger.warning("⚠️  File watcher already running")
