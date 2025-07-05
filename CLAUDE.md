@@ -10,6 +10,30 @@ Copilot, etc).**
 
 ## This is our repo: <https://github.com/timothyfroehlich/DisPinMap>
 
+## 🚨 Issue Awareness - Read First
+
+**CRITICAL**: Before starting any work, review current issues to understand known problems:
+
+```bash
+# 1. Check documented issues in the repo
+ls docs/issues/*.md
+
+# 2. Check GitHub issues (requires gh CLI)
+gh issue list --state open
+
+# 3. Review recent closed issues for context
+ls docs/issues/closed/*.md
+```
+
+**Current documented issues:**
+- `1-bug-seen-submission-race-condition.md` - Race condition in monitoring loop
+- `1-bug-startup-duplicate-notifications.md` - Startup sends old notifications  
+- `2-bug-console-interface-limited-commands.md` - Local dev console missing commands
+- `2-bug-timezone-handling-inconsistency.md` - Mixed naive/timezone-aware datetimes
+- `2-feature-monitoring-loop-debug-logging.md` - Need enhanced monitoring logs
+
+💡 **Always check both `docs/issues/` and `gh issue list` to understand the full problem landscape before starting work.**
+
 ## 🗂️ Directory-Specific Agent Instructions
 
 **IMPORTANT**: Before working in any directory, consult its specific CLAUDE.md
