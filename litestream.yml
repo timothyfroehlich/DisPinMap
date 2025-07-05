@@ -16,7 +16,7 @@ dbs:
     replicas:
       - type: gcs
         bucket: ${LITESTREAM_BUCKET}
-        path: db
+        path: db-v2
         # Real-time replication settings
         sync-interval: 1s
         # Retention settings (aligned with GCS bucket lifecycle)
