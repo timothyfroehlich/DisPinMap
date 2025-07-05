@@ -122,7 +122,7 @@ class ConsoleInterface:
                     continue
                     
                 # Schedule command processing in the event loop
-                asyncio.create_task(self._process_command(user_input))
+                self.loop.call_soon_threadsafe(asyncio.create_task, self._process_command(user_input))
                 
             except EOFError:
                 # Handle Ctrl+D
