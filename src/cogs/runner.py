@@ -450,7 +450,7 @@ class Runner(commands.Cog, name="Runner"):
             logger.info(
                 f"🔍 Task loop is running: {self.monitor_task_loop.is_running()}"
             )
-        except Exception as e:
+        except Exception:
             logger.exception("⚠️ Could not access bot debug info during startup")
             logger.info("🔄 Debug info will be available once bot is fully initialized")
 
