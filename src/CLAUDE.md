@@ -10,6 +10,13 @@
 - **messages.py** - Response templates and formatting functions
 - **log_config.py** - Centralized logging configuration
 
+### Local Development Files
+
+- **local_dev.py** - Local development entry point with console interface
+- **local_logging.py** - Enhanced logging with rotation for local testing
+- **console_discord.py** - Console Discord interface for stdin/stdout
+  interaction
+
 ## Command Architecture
 
 - **Handler**: `cogs/command_handler.py` - Discord command processing
@@ -40,8 +47,11 @@
 ## Common Commands
 
 ```bash
-# Run the bot locally
+# Run the bot in production mode
 python bot.py
+
+# Run the bot in local development mode (with console interface)
+python src/local_dev.py
 
 # Database migrations
 alembic upgrade head
@@ -51,6 +61,34 @@ pytest --cov=src
 
 # Check for critical issues
 grep -r "target_data" src/  # Should return nothing!
+```
+
+## Local Development Patterns
+
+### Console Interface Usage
+
+```python
+# In console_discord.py - simulates Discord interactions
+fake_message = FakeMessage(command)
+await self.command_handler.add_location(fake_message, *args)
+```
+
+### Enhanced Logging
+
+```python
+# Use local_logging.py for development
+from src.local_logging import setup_logging, get_logger
+setup_logging("DEBUG", "logs/bot.log")
+logger = get_logger("module_name")
+```
+
+### Database Access in Local Mode
+
+```python
+# Use the same Database class, but with local SQLite file
+database = Database()  # Reads from .env.local DATABASE_PATH
+with database.get_session() as session:
+    targets = session.query(MonitoringTarget).all()
 ```
 
 ## Code Style

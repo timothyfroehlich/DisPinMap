@@ -59,7 +59,8 @@ edge case handling.
 
 1. **Run lints first**: `npm run lint` or equivalent to catch syntax and style
    issues
-2. **Fix formatting**: `black`, `isort`, `flake8` for Python projects
+2. **Fix formatting**: `ruff` for all Python linting, formatting, and type
+   checking (we do not use black, isort, flake8, or mypy)
 3. **Address all issues** before running any tests
 4. **Then run tests**: Only after code is clean and formatted
 

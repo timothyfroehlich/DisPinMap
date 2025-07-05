@@ -5,6 +5,10 @@
 - **run_all_validations.py** - Comprehensive fixture and API validation
 - **validate_litestream.py** - Database backup configuration checks
 
+## Local Development Scripts
+
+- **download_production_db.py** - Download production database for local testing
+
 ## Git Worktree Management (Advanced)
 
 - **create-feature-worktree.sh** - Create new worktree for parallel development
@@ -15,6 +19,9 @@
 ## Common Commands
 
 ```bash
+# Download production database for local development
+python scripts/download_production_db.py
+
 # Validate all fixtures and API responses
 python scripts/run_all_validations.py --ci-safe
 

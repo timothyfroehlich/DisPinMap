@@ -38,6 +38,7 @@ area.**
 
 - `docs/DEVELOPER_HANDBOOK.md` - Complete development guide
 - `docs/DATABASE.md` - Database schema and patterns
+- `docs/LOCAL_DEVELOPMENT.md` - Local development with console interface
 - `tests/CLAUDE.md` - Testing framework guide
 
 ### For AI Agents (This File + Directory-Specific)
@@ -99,12 +100,126 @@ Always activate the virtual environment before running any Python commands:
 source venv/bin/activate
 ```
 
-### Code Quality Tools
+## 🖥️ Local Development Mode
 
-This project uses **Ruff** for both linting and formatting, plus **Prettier**
-for markdown/YAML files.
+**For debugging monitoring issues and cost-effective testing without Cloud
+Run.**
 
-#### Quick Commands
+### Quick Start
+
+```bash
+# 1. Download production database
+source venv/bin/activate
+python scripts/download_production_db.py
+
+# 2. Start local development mode
+python local_dev.py
+```
+
+### Local Development Features
+
+- **Console Discord Interface**: Interact with bot commands via stdin/stdout
+- **File Watcher Interface**: Send commands by appending to `commands.txt` file
+- **Enhanced Logging**: All output to console + rotating log file
+  (`logs/bot.log`)
+- **Production Database**: Real data from Cloud Run backups
+- **Monitoring Loop**: Full monitoring functionality with API calls
+- **Cost Savings**: Cloud Run scaled to 0 instances
+
+### Console Commands
+
+**Discord Bot Commands** (prefix with `!`):
+
+- `!add location "Name"` - Add location monitoring
+- `!list` - Show monitored targets
+- `!check` - Manual check all targets
+- `!help` - Show command help
+
+**Console Special Commands** (prefix with `.`):
+
+- `.quit` - Exit local development session
+- `.health` - Show bot health status (Discord, DB, monitoring loop)
+- `.status` - Show monitoring status (target counts, recent targets)
+- `.trigger` - Force immediate monitoring loop iteration
+
+### External Command Interface (File Watcher)
+
+**Send commands from another terminal without restarting the bot:**
+
+```bash
+# Terminal 1: Keep bot running
+python local_dev.py
+
+# Terminal 2: Send commands
+echo "!list" >> commands.txt
+echo ".status" >> commands.txt
+echo "!config poll_rate 15" >> commands.txt
+
+# Terminal 3: Monitor responses
+tail -f logs/bot.log
+```
+
+**Benefits:**
+
+- **No interruption**: Bot keeps running while you send commands
+- **External control**: Control from scripts, other terminals, or automation
+- **Command history**: All commands saved in `commands.txt` file
+- **Cross-platform**: Works on any system that supports file operations
+
+### Log Monitoring
+
+```bash
+# Watch logs in real-time
+tail -f logs/bot.log
+
+# Search for monitoring activity
+grep "MONITOR" logs/bot.log
+
+# Check for errors
+grep "ERROR" logs/bot.log
+```
+
+### Troubleshooting Local Dev
+
+- **Console not responding**: Check for EOF/Ctrl+D in input
+- **Database not found**: Run `python scripts/download_production_db.py`
+- **Discord connection issues**: Verify `DISCORD_BOT_TOKEN` in `.env.local`
+- **Missing environment**: Ensure `.env.local` exists with required variables
+
+### Production Database Download
+
+The production database is downloaded from Litestream backups:
+
+```bash
+python scripts/download_production_db.py
+```
+
+- Downloads latest backup from `dispinmap-bot-sqlite-backups` GCS bucket
+- Restores to `local_db/pinball_bot.db`
+- Verifies database integrity and shows table counts
+
+## Code Quality Standards
+
+**CRITICAL: We use Ruff exclusively for all Python code quality.**
+
+### Our Tool Stack
+
+- **Python**: `ruff` for ALL linting, formatting, type checking, and import
+  sorting
+- **Markdown/YAML**: `prettier` for formatting
+- **Tests**: `pytest` with coverage
+- **Git**: `pre-commit` hooks
+
+### Tools We Do NOT Use
+
+We have standardized on Ruff and explicitly **do not use**:
+
+- ❌ `mypy` (Ruff handles type checking)
+- ❌ `black` (Ruff handles formatting)
+- ❌ `flake8` (Ruff handles linting)
+- ❌ `isort` (Ruff handles import sorting)
+
+### Quick Commands
 
 ```bash
 # Activate environment first
@@ -120,6 +235,9 @@ prettier --write "**/*.{md,yml,yaml}" --ignore-path .gitignore
 
 # Run tests
 pytest tests/ --ignore=tests/simulation -v
+
+# Run ALL checks (comprehensive script)
+./scripts/run_all_checks.sh
 ```
 
 #### VS Code Tasks (Recommended)
