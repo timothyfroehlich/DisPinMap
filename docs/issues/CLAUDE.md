@@ -67,13 +67,23 @@ Clear description of the issue, bug, or feature request.
 Additional context, related discussions, or implementation notes.
 ```
 
+## Directory Structure
+
+```
+docs/issues/
+├── CLAUDE.md                           # This documentation
+├── <priority>-<type>-<description>.md  # Open issues
+└── closed/                            # Resolved issues archive
+    └── <priority>-<type>-<description>.md
+```
+
 ## Workflow
 
 1. **Create Issue**: Document problems/features as they're discovered
 2. **Prioritize**: Assign appropriate priority and type
 3. **Track Progress**: Update status as work progresses
-4. **Close**: Move to closed status when resolved
-5. **Archive**: Optionally move closed issues to subdirectories
+4. **Close**: Update status to 'closed' and move file to `closed/` directory
+5. **Archive**: Use `closed/` directory to maintain history of resolved issues
 
 ## Priority Guidelines
 
@@ -113,6 +123,35 @@ Additional context, related discussions, or implementation notes.
 - Update issue status when work begins/completes
 - Use issue analysis to guide development priorities
 
+## Closing and Archiving Issues
+
+### When to Close an Issue
+
+- **Bug fixed**: Code changes resolve the reported problem
+- **Feature implemented**: All acceptance criteria are met
+- **No longer relevant**: Issue became obsolete due to other changes
+- **Duplicate**: Issue already covered by another issue
+
+### Closing Process
+
+1. Update issue status to `closed` in the header
+2. Add resolution details to the issue description
+3. Move file to `closed/` directory: `git mv issue.md closed/`
+4. Reference the closing commit in issue resolution notes
+
+### Example Closure
+
+```markdown
+**Status**: closed **Resolved**: 2025-07-05 **Resolution**: Fixed in commit
+abc123
+
+## Resolution
+
+Issue resolved by implementing Discord.py command processing in console
+interface. All commands now work correctly through `bot.process_commands()`
+integration.
+```
+
 ## AI Agent Guidelines
 
 When working on this project:
@@ -121,4 +160,5 @@ When working on this project:
 2. **Create new issues** for discovered problems
 3. **Update issue status** as work progresses
 4. **Reference issues** in commits and PRs
-5. **Prioritize work** based on issue priorities
+5. **Close and archive** resolved issues properly
+6. **Prioritize work** based on issue priorities
