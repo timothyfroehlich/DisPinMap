@@ -82,6 +82,13 @@ class Notifier:
             submissions, notification_type
         )
 
+        # Mark all fetched submissions as seen BEFORE posting, to prevent the
+        # monitor loop from re-reporting them during the async post_submissions sleeps
+        if submissions:
+            submission_ids = [s["id"] for s in submissions if "id" in s]
+            if submission_ids:
+                self.db.mark_submissions_seen(ctx.channel.id, submission_ids)
+
         latest_submissions = filtered_submissions[:5]
 
         if latest_submissions:

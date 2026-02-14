@@ -27,7 +27,12 @@ async def test_monitoring_loop_finds_new_submission_and_notifies(
     - Asserts that a notification was sent.
     - Asserts that the new submission is added to the 'seen' table in the database.
     """
-    from src.models import ChannelConfig, MonitoringTarget, SeenSubmission
+    from unittest.mock import AsyncMock, MagicMock
+
+    from src.cogs.runner import Runner
+    from src.database import Database
+    from src.models import ChannelConfig, MonitoringTarget
+    from src.notifier import Notifier
 
     session = db_session()
 
@@ -53,26 +58,43 @@ async def test_monitoring_loop_finds_new_submission_and_notifies(
     )
 
     # Mock Discord bot and channel for notifications
-    from unittest.mock import AsyncMock
-
-    mock_bot = AsyncMock()
-    mock_channel = AsyncMock()
+    # bot.get_channel() is a sync method, so use MagicMock for the bot
+    mock_bot = MagicMock()
+    mock_channel = MagicMock()
+    mock_channel.id = 12345
+    mock_channel.send = AsyncMock()
     mock_bot.get_channel.return_value = mock_channel
-
-    # TODO: Add actual runner execution here when implementing full monitoring loop
-    # For now, verify the setup is correct for notification testing
 
     # Verify target is set up correctly
     targets = session.query(MonitoringTarget).filter_by(channel_id=12345).all()
     assert len(targets) == 1
     assert targets[0].location_id == 874
 
-    # Verify no seen submissions initially
-    seen_count = session.query(SeenSubmission).filter_by(channel_id=12345).count()
-    assert seen_count == 0
+    # Create real instances wired to the test database
+    database = Database(session_factory=db_session)
+    notifier = Notifier(db=database)
+    notifier.log_and_send = AsyncMock()
 
-    # TODO: Add actual monitoring loop execution and verify notifications are sent
-    # This would include checking mock_channel.send was called with expected content
+    runner = Runner(mock_bot, database, notifier)
+
+    # Run one cycle of the monitoring loop for this channel
+    config_dict = {
+        "channel_id": 12345,
+        "poll_rate_minutes": 60,
+        "is_active": True,
+        "notification_types": "all",
+    }
+    await runner.run_checks_for_channel(12345, config_dict)
+
+    # Assert that notifications were sent (log_and_send was called)
+    assert notifier.log_and_send.call_count > 0
+
+    # Verify submission IDs from the fixture were added to the seen_submissions table
+    seen_ids = database.get_seen_submission_ids(12345)
+    assert len(seen_ids) > 0
+    # Verify specific IDs from the fixture are in the seen table
+    assert 505959 in seen_ids
+    assert 505958 in seen_ids
 
     session.close()
 

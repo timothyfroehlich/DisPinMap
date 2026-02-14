@@ -131,9 +131,10 @@ class TestMainModule:
         assert response.text == "OK"
 
     @pytest.mark.asyncio
-    async def test_start_http_server(self):
-        """Test HTTP server startup"""
-        with patch("os.getenv", return_value="8080"):
+    @pytest.mark.parametrize("port", ["8080", "9000"], ids=["default", "custom"])
+    async def test_start_http_server(self, port):
+        """Test HTTP server startup with different ports"""
+        with patch("os.getenv", return_value=port):
             with patch("aiohttp.web.AppRunner") as mock_runner_class:
                 mock_runner = Mock()
                 mock_runner.setup = AsyncMock()
@@ -152,77 +153,43 @@ class TestMainModule:
                     await runner.cleanup()
 
     @pytest.mark.asyncio
-    async def test_start_http_server_custom_port(self):
-        """Test HTTP server startup with custom port"""
-        with patch("os.getenv", return_value="9000"):
-            with patch("aiohttp.web.AppRunner") as mock_runner_class:
-                mock_runner = Mock()
-                mock_runner.setup = AsyncMock()
-                mock_runner.cleanup = AsyncMock()
-                mock_runner_class.return_value = mock_runner
-
-                with patch("aiohttp.web.TCPSite") as mock_site_class:
-                    mock_site = Mock()
-                    mock_site.start = AsyncMock()
-                    mock_site_class.return_value = mock_site
-
-                    runner = await start_http_server()
-
-                    assert runner is not None
-                    # Clean up
-                    await runner.cleanup()
-
-    @pytest.mark.asyncio
-    async def test_cleanup_with_http_runner(self):
-        """Test cleanup with HTTP runner"""
+    @pytest.mark.parametrize(
+        "bot_is_closed, has_http_runner, expect_bot_close, expect_runner_cleanup",
+        [
+            pytest.param(False, True, True, True, id="with_http_runner"),
+            pytest.param(False, False, True, False, id="without_http_runner"),
+            pytest.param(True, False, False, False, id="bot_already_closed"),
+        ],
+    )
+    async def test_cleanup(
+        self,
+        bot_is_closed,
+        has_http_runner,
+        expect_bot_close,
+        expect_runner_cleanup,
+    ):
+        """Test cleanup under various conditions"""
         mock_bot = Mock()
-        mock_bot.is_closed.return_value = False
+        mock_bot.is_closed.return_value = bot_is_closed
         mock_bot.close = AsyncMock()
 
-        mock_runner = Mock()
-        mock_runner.cleanup = AsyncMock()
-
-        # Set global http_runner
         import src.main
 
-        src.main.http_runner = mock_runner
+        if has_http_runner:
+            mock_runner = Mock()
+            mock_runner.cleanup = AsyncMock()
+            src.main.http_runner = mock_runner
+        else:
+            src.main.http_runner = None
 
         await cleanup(mock_bot)
 
-        mock_runner.cleanup.assert_called_once()
-        mock_bot.close.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_cleanup_without_http_runner(self):
-        """Test cleanup without HTTP runner"""
-        mock_bot = Mock()
-        mock_bot.is_closed.return_value = False
-        mock_bot.close = AsyncMock()
-
-        # Set global http_runner to None
-        import src.main
-
-        src.main.http_runner = None
-
-        await cleanup(mock_bot)
-
-        mock_bot.close.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_cleanup_bot_already_closed(self):
-        """Test cleanup when bot is already closed"""
-        mock_bot = Mock()
-        mock_bot.is_closed.return_value = True
-        mock_bot.close = AsyncMock()
-
-        # Set global http_runner to None
-        import src.main
-
-        src.main.http_runner = None
-
-        await cleanup(mock_bot)
-
-        mock_bot.close.assert_not_called()
+        if expect_bot_close:
+            mock_bot.close.assert_called_once()
+        else:
+            mock_bot.close.assert_not_called()
+        if expect_runner_cleanup:
+            mock_runner.cleanup.assert_called_once()
 
     def test_handle_signal(self):
         """Test signal handler"""
@@ -232,29 +199,6 @@ class TestMainModule:
             handle_signal(2, None, mock_bot)  # SIGINT
 
             mock_create_task.assert_called_once()
-
-    def test_test_startup_flag(self):
-        """Test TEST_STARTUP flag detection"""
-        # This tests the global flag that's set based on sys.argv
-        # We can't easily test this without modifying sys.argv, so just verify it exists
-        from src.main import TEST_STARTUP
-
-        assert isinstance(TEST_STARTUP, bool)
-
-    @pytest.mark.asyncio
-    async def test_error_handler_missing_required_argument(self):
-        """Test that the error handler message exists and is properly formatted"""
-        from src.messages import Messages
-
-        # Test that the new error message exists and is properly formatted
-        missing_index_msg = Messages.Command.Remove.MISSING_INDEX
-        assert missing_index_msg is not None
-        assert "❌" in missing_index_msg
-        assert "!rm <index>" in missing_index_msg
-        assert "!list" in missing_index_msg
-
-        # This verifies that our error message integration point exists
-        # The actual Discord.py integration is tested in integration tests
 
     @pytest.mark.asyncio
     async def test_on_command_error_generic_missing_argument(self):

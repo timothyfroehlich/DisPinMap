@@ -10,6 +10,10 @@ Instead of having to run:
 """
 
 if __name__ == "__main__":
+    import asyncio
     from src.local_dev.local_dev import main
 
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n👋 Goodbye!")

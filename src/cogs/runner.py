@@ -410,6 +410,9 @@ class Runner(commands.Cog, name="Runner"):
                 )
                 return True
 
+            if last_poll.tzinfo is None:
+                last_poll = last_poll.replace(tzinfo=timezone.utc)
+
             time_since_last_poll = datetime.now(timezone.utc) - last_poll
             minutes_since_last_poll = time_since_last_poll.total_seconds() / 60
 
