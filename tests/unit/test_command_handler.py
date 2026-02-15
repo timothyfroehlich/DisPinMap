@@ -48,10 +48,37 @@ class TestCommandHandler:
         return ctx
 
     @pytest.mark.asyncio
-    async def test_poll_rate_channel_success(
-        self, command_handler, mock_ctx, mock_db, mock_notifier
+    @pytest.mark.parametrize(
+        "minutes, target_selector, expect_channel_update, expect_target_update",
+        [
+            pytest.param(
+                "10",
+                None,
+                {"channel_id": 123456, "guild_id": 789012, "poll_rate_minutes": 10},
+                False,
+                id="channel",
+            ),
+            pytest.param(
+                "15",
+                "1",
+                None,
+                {"channel_id": 123456, "target_id": 1, "poll_rate_minutes": 15},
+                id="target",
+            ),
+        ],
+    )
+    async def test_poll_rate_success(
+        self,
+        command_handler,
+        mock_ctx,
+        mock_db,
+        mock_notifier,
+        minutes,
+        target_selector,
+        expect_channel_update,
+        expect_target_update,
     ):
-        """Test setting poll rate for channel successfully"""
+        """Test setting poll rate for channel or specific target successfully"""
         mock_db.get_monitoring_targets.return_value = [
             {
                 "id": 1,
@@ -63,41 +90,24 @@ class TestCommandHandler:
         ]
         mock_db.get_channel_config.return_value = {"poll_rate_minutes": 5}
 
-        # Call the underlying callback function directly
-        await command_handler.poll_rate.callback(command_handler, mock_ctx, "10")
+        args = [command_handler, mock_ctx, minutes]
+        if target_selector:
+            args.append(target_selector)
+        await command_handler.poll_rate.callback(*args)
 
-        # Should update channel config
-        mock_db.update_channel_config.assert_called_with(
-            123456, 789012, poll_rate_minutes=10
-        )
-        # Should NOT update monitoring targets directly anymore
-        mock_db.update_monitoring_target.assert_not_called()
-        # Should send success message
-        mock_notifier.log_and_send.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_poll_rate_target_success(
-        self, command_handler, mock_ctx, mock_db, mock_notifier
-    ):
-        """Test setting poll rate for specific target successfully"""
-        mock_db.get_monitoring_targets.return_value = [
-            {
-                "id": 1,
-                "target_type": "location",
-                "display_name": "Test Location",
-                "location_id": 123,
-                "poll_rate_minutes": 5,
-            }
-        ]
-
-        # Call the underlying callback function directly
-        await command_handler.poll_rate.callback(command_handler, mock_ctx, "15", "1")
-
-        # Should update specific target by ID
-        mock_db.update_monitoring_target.assert_called_with(
-            123456, 1, poll_rate_minutes=15
-        )
-        # Should send success message
+        if expect_channel_update:
+            mock_db.update_channel_config.assert_called_with(
+                expect_channel_update["channel_id"],
+                expect_channel_update["guild_id"],
+                poll_rate_minutes=expect_channel_update["poll_rate_minutes"],
+            )
+            mock_db.update_monitoring_target.assert_not_called()
+        if expect_target_update:
+            mock_db.update_monitoring_target.assert_called_with(
+                expect_target_update["channel_id"],
+                expect_target_update["target_id"],
+                poll_rate_minutes=expect_target_update["poll_rate_minutes"],
+            )
         mock_notifier.log_and_send.assert_called_once()
 
     @pytest.mark.asyncio
@@ -158,10 +168,45 @@ class TestCommandHandler:
         mock_notifier.log_and_send.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_notifications_channel_success(
-        self, command_handler, mock_ctx, mock_db, mock_notifier
+    @pytest.mark.parametrize(
+        "notif_type, target_selector, expect_channel_update, expect_target_update",
+        [
+            pytest.param(
+                "machines",
+                None,
+                {
+                    "channel_id": 123456,
+                    "guild_id": 789012,
+                    "notification_types": "machines",
+                },
+                False,
+                id="channel",
+            ),
+            pytest.param(
+                "comments",
+                "1",
+                None,
+                {
+                    "channel_id": 123456,
+                    "target_id": 1,
+                    "notification_types": "comments",
+                },
+                id="target",
+            ),
+        ],
+    )
+    async def test_notifications_success(
+        self,
+        command_handler,
+        mock_ctx,
+        mock_db,
+        mock_notifier,
+        notif_type,
+        target_selector,
+        expect_channel_update,
+        expect_target_update,
     ):
-        """Test setting notification type for channel successfully"""
+        """Test setting notification type for channel or specific target successfully"""
         mock_db.get_monitoring_targets.return_value = [
             {
                 "id": 1,
@@ -173,45 +218,24 @@ class TestCommandHandler:
         ]
         mock_db.get_channel_config.return_value = {"notification_types": "all"}
 
-        # Call the underlying callback function directly
-        await command_handler.notifications.callback(
-            command_handler, mock_ctx, "machines"
-        )
+        args = [command_handler, mock_ctx, notif_type]
+        if target_selector:
+            args.append(target_selector)
+        await command_handler.notifications.callback(*args)
 
-        # Should update channel config
-        mock_db.update_channel_config.assert_called_with(
-            123456, 789012, notification_types="machines"
-        )
-        # Should NOT update monitoring targets directly anymore
-        mock_db.update_monitoring_target.assert_not_called()
-        # Should send success message
-        mock_notifier.log_and_send.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_notifications_target_success(
-        self, command_handler, mock_ctx, mock_db, mock_notifier
-    ):
-        """Test setting notification type for specific target successfully"""
-        mock_db.get_monitoring_targets.return_value = [
-            {
-                "id": 1,
-                "target_type": "location",
-                "display_name": "Test Location",
-                "location_id": 123,
-                "notification_types": "all",
-            }
-        ]
-
-        # Call the underlying callback function directly
-        await command_handler.notifications.callback(
-            command_handler, mock_ctx, "comments", "1"
-        )
-
-        # Should update specific target by ID
-        mock_db.update_monitoring_target.assert_called_with(
-            123456, 1, notification_types="comments"
-        )
-        # Should send success message
+        if expect_channel_update:
+            mock_db.update_channel_config.assert_called_with(
+                expect_channel_update["channel_id"],
+                expect_channel_update["guild_id"],
+                notification_types=expect_channel_update["notification_types"],
+            )
+            mock_db.update_monitoring_target.assert_not_called()
+        if expect_target_update:
+            mock_db.update_monitoring_target.assert_called_with(
+                expect_target_update["channel_id"],
+                expect_target_update["target_id"],
+                notification_types=expect_target_update["notification_types"],
+            )
         mock_notifier.log_and_send.assert_called_once()
 
     @pytest.mark.asyncio

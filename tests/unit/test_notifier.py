@@ -54,58 +54,63 @@ class TestNotifier:
 
         ctx.send.assert_called_once_with(message)
 
-    def test_filter_submissions_by_type_machines(self, notifier):
-        """Test filtering submissions for machines type"""
-        submissions = [
-            {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
-            {"submission_type": "remove_machine", "machine_name": "Pinball 2"},
-            {"submission_type": "new_condition", "machine_name": "Pinball 3"},
-            {"submission_type": "other_type", "machine_name": "Pinball 4"},
-        ]
+    @pytest.mark.parametrize(
+        "filter_type, submissions, expected_count, expected_types",
+        [
+            pytest.param(
+                "machines",
+                [
+                    {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
+                    {"submission_type": "remove_machine", "machine_name": "Pinball 2"},
+                    {"submission_type": "new_condition", "machine_name": "Pinball 3"},
+                    {"submission_type": "other_type", "machine_name": "Pinball 4"},
+                ],
+                2,
+                ["new_lmx", "remove_machine"],
+                id="machines",
+            ),
+            pytest.param(
+                "comments",
+                [
+                    {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
+                    {"submission_type": "new_condition", "machine_name": "Pinball 2"},
+                    {"submission_type": "other_type", "machine_name": "Pinball 3"},
+                ],
+                1,
+                ["new_condition"],
+                id="comments",
+            ),
+            pytest.param(
+                "all",
+                [
+                    {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
+                    {"submission_type": "new_condition", "machine_name": "Pinball 2"},
+                    {"submission_type": "other_type", "machine_name": "Pinball 3"},
+                ],
+                3,
+                ["new_lmx", "new_condition", "other_type"],
+                id="all",
+            ),
+            pytest.param(
+                "unknown_type",
+                [
+                    {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
+                    {"submission_type": "new_condition", "machine_name": "Pinball 2"},
+                ],
+                2,
+                ["new_lmx", "new_condition"],
+                id="unknown-falls-back-to-all",
+            ),
+        ],
+    )
+    def test_filter_submissions_by_type(
+        self, notifier, filter_type, submissions, expected_count, expected_types
+    ):
+        """Test filtering submissions by various types"""
+        result = notifier._filter_submissions_by_type(submissions, filter_type)
 
-        result = notifier._filter_submissions_by_type(submissions, "machines")
-
-        assert len(result) == 2
-        assert result[0]["submission_type"] == "new_lmx"
-        assert result[1]["submission_type"] == "remove_machine"
-
-    def test_filter_submissions_by_type_comments(self, notifier):
-        """Test filtering submissions for comments type"""
-        submissions = [
-            {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
-            {"submission_type": "new_condition", "machine_name": "Pinball 2"},
-            {"submission_type": "other_type", "machine_name": "Pinball 3"},
-        ]
-
-        result = notifier._filter_submissions_by_type(submissions, "comments")
-
-        assert len(result) == 1
-        assert result[0]["submission_type"] == "new_condition"
-
-    def test_filter_submissions_by_type_all(self, notifier):
-        """Test filtering submissions for all type"""
-        submissions = [
-            {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
-            {"submission_type": "new_condition", "machine_name": "Pinball 2"},
-            {"submission_type": "other_type", "machine_name": "Pinball 3"},
-        ]
-
-        result = notifier._filter_submissions_by_type(submissions, "all")
-
-        assert len(result) == 3
-        assert result == submissions
-
-    def test_filter_submissions_by_type_unknown(self, notifier):
-        """Test filtering submissions for unknown type"""
-        submissions = [
-            {"submission_type": "new_lmx", "machine_name": "Pinball 1"},
-            {"submission_type": "new_condition", "machine_name": "Pinball 2"},
-        ]
-
-        result = notifier._filter_submissions_by_type(submissions, "unknown_type")
-
-        assert len(result) == 2
-        assert result == submissions
+        assert len(result) == expected_count
+        assert [s["submission_type"] for s in result] == expected_types
 
     @pytest.mark.asyncio
     @patch("src.notifier.fetch_submissions_for_location", new_callable=AsyncMock)
@@ -130,7 +135,7 @@ class TestNotifier:
                 target_type="location",
             )
 
-            mock_fetch.assert_called_once_with(location_id=123)
+            mock_fetch.assert_called_once_with(location_id=123, use_min_date=False)
             mock_post.assert_called_once()
             # Verify that the correct message was sent
             mock_ctx.send.assert_any_call(
@@ -158,7 +163,7 @@ class TestNotifier:
                 target_type="geographic",
             )
 
-            mock_fetch.assert_called_once_with(45.5, -122.6, 25)
+            mock_fetch.assert_called_once_with(45.5, -122.6, 25, use_min_date=False)
             mock_post.assert_not_called()
             mock_ctx.send.assert_called_once_with(
                 "ℹ️ No recent submissions found for **Test City**."
@@ -192,87 +197,87 @@ class TestNotifier:
             assert len(call_args[1]) == 1
             assert call_args[1][0]["submission_type"] == "new_lmx"
 
-    def test_format_submission_new_lmx(self, notifier):
-        """Test formatting new_lmx submission"""
-        submission = {
-            "submission_type": "new_lmx",
-            "machine_name": "Test Machine",
-            "location_name": "Test Location",
-            "user_name": "Test User",
-        }
-
+    @pytest.mark.parametrize(
+        "submission, expected_strings, unexpected_strings",
+        [
+            pytest.param(
+                {
+                    "submission_type": "new_lmx",
+                    "machine_name": "Test Machine",
+                    "location_name": "Test Location",
+                    "user_name": "Test User",
+                },
+                ["Test Machine", "Test Location", "Test User", "added"],
+                [],
+                id="new_lmx",
+            ),
+            pytest.param(
+                {
+                    "submission_type": "remove_machine",
+                    "machine_name": "Test Machine",
+                    "location_name": "Test Location",
+                    "user_name": "Test User",
+                },
+                ["Test Machine", "Test Location", "Test User", "removed"],
+                [],
+                id="remove_machine",
+            ),
+            pytest.param(
+                {
+                    "submission_type": "new_condition",
+                    "machine_name": "Test Machine",
+                    "location_name": "Test Location",
+                    "user_name": "Test User",
+                    "comment": "Great condition!",
+                },
+                [
+                    "Test Machine",
+                    "Test Location",
+                    "Test User",
+                    "Great condition!",
+                    "💬",
+                ],
+                [],
+                id="new_condition_with_comment",
+            ),
+            pytest.param(
+                {
+                    "submission_type": "new_condition",
+                    "machine_name": "Test Machine",
+                    "location_name": "Test Location",
+                    "user_name": "Test User",
+                },
+                ["Test Machine", "Test Location", "Test User"],
+                ["💬"],
+                id="new_condition_without_comment",
+            ),
+            pytest.param(
+                {
+                    "submission_type": "unknown_type",
+                    "machine_name": "Test Machine",
+                    "location_name": "Test Location",
+                    "user_name": "Test User",
+                },
+                ["Test Machine", "Test Location", "Test User", "unknown_type"],
+                [],
+                id="unknown_type",
+            ),
+        ],
+    )
+    def test_format_submission(
+        self, notifier, submission, expected_strings, unexpected_strings
+    ):
+        """Test formatting submissions of various types"""
         result = notifier.format_submission(submission)
 
-        assert "Test Machine" in result
-        assert "Test Location" in result
-        assert "Test User" in result
-        assert "added" in result.lower()
-
-    def test_format_submission_remove_machine(self, notifier):
-        """Test formatting remove_machine submission"""
-        submission = {
-            "submission_type": "remove_machine",
-            "machine_name": "Test Machine",
-            "location_name": "Test Location",
-            "user_name": "Test User",
-        }
-
-        result = notifier.format_submission(submission)
-
-        assert "Test Machine" in result
-        assert "Test Location" in result
-        assert "Test User" in result
-        assert "removed" in result.lower()
-
-    def test_format_submission_new_condition_with_comment(self, notifier):
-        """Test formatting new_condition submission with comment"""
-        submission = {
-            "submission_type": "new_condition",
-            "machine_name": "Test Machine",
-            "location_name": "Test Location",
-            "user_name": "Test User",
-            "comment": "Great condition!",
-        }
-
-        result = notifier.format_submission(submission)
-
-        assert "Test Machine" in result
-        assert "Test Location" in result
-        assert "Test User" in result
-        assert "Great condition!" in result
-        assert "💬" in result
-
-    def test_format_submission_new_condition_without_comment(self, notifier):
-        """Test formatting new_condition submission without comment"""
-        submission = {
-            "submission_type": "new_condition",
-            "machine_name": "Test Machine",
-            "location_name": "Test Location",
-            "user_name": "Test User",
-        }
-
-        result = notifier.format_submission(submission)
-
-        assert "Test Machine" in result
-        assert "Test Location" in result
-        assert "Test User" in result
-        assert "💬" not in result
-
-    def test_format_submission_unknown_type(self, notifier):
-        """Test formatting submission with unknown type"""
-        submission = {
-            "submission_type": "unknown_type",
-            "machine_name": "Test Machine",
-            "location_name": "Test Location",
-            "user_name": "Test User",
-        }
-
-        result = notifier.format_submission(submission)
-
-        assert "Test Machine" in result
-        assert "Test Location" in result
-        assert "Test User" in result
-        assert "unknown_type" in result
+        for expected in expected_strings:
+            assert expected in result or expected.lower() in result.lower(), (
+                f"Expected '{expected}' in '{result}'"
+            )
+        for unexpected in unexpected_strings:
+            assert unexpected not in result, (
+                f"Did not expect '{unexpected}' in '{result}'"
+            )
 
     def test_format_submission_missing_fields(self, notifier):
         """Test formatting submission with missing fields"""

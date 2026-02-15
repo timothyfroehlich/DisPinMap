@@ -16,8 +16,10 @@ from aiohttp import web
 from discord.ext import commands
 from dotenv import load_dotenv
 
-# Load .env from the repo root
-load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
+# Load .env.local first (local dev), then .env (production fallback)
+_repo_root = Path(__file__).parent.parent
+load_dotenv(dotenv_path=_repo_root / ".env.local")
+load_dotenv(dotenv_path=_repo_root / ".env")
 
 # Try to import from src, fallback for running directly
 try:

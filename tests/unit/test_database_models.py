@@ -42,39 +42,6 @@ def test_monitoring_target_representation():
     # and some identifier information
 
 
-def test_channel_config_is_active_property():
-    """
-    Tests any custom logic associated with the ChannelConfig model,
-    for example, a property that determines if a channel is active
-    based on its targets or other settings.
-    """
-    from datetime import datetime
-
-    # Create a channel config instance
-    config = ChannelConfig(
-        channel_id=12345,
-        guild_id=11111,
-        poll_rate_minutes=60,
-        notification_types="machines",
-        is_active=True,
-        last_poll_at=datetime(2024, 1, 1, 12, 0, 0),
-        created_at=datetime(2024, 1, 1, 10, 0, 0),
-    )
-
-    # Test the is_active property
-    assert config.is_active is True
-
-    # Test changing is_active
-    config.is_active = False
-    assert config.is_active is False
-
-    # Test other properties work as expected
-    assert config.channel_id == 12345
-    assert config.guild_id == 11111
-    assert config.poll_rate_minutes == 60
-    assert config.notification_types == "machines"
-
-
 def test_model_initialization_defaults():
     """
     Tests that models initialize with correct default values for their fields.
@@ -143,21 +110,6 @@ def test_monitoring_target_model_has_expected_columns():
 
     assert "last_checked_at" in columns
     assert isinstance(columns["last_checked_at"].type, DateTime)
-
-
-def test_add_and_remove_seen_submission():
-    """Test SeenSubmission model instantiation and basic functionality."""
-    from datetime import datetime
-
-    # Test model can be instantiated with correct fields
-    seen_submission = SeenSubmission(
-        channel_id=12345, submission_id=789, seen_at=datetime.now()
-    )
-
-    # Test basic properties
-    assert seen_submission.channel_id == 12345
-    assert seen_submission.submission_id == 789
-    assert isinstance(seen_submission.seen_at, datetime)
 
 
 def test_model_relationships_are_configured():

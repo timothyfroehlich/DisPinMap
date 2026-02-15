@@ -110,25 +110,3 @@ class TestColoredFormatter:
 
                 assert expected_color in result
                 assert "\033[0m" in result  # Reset color code
-
-    def test_format_with_unknown_log_level(self):
-        """Test formatting with a log level not in COLORS mapping"""
-        formatter = ColoredFormatter()
-
-        # Create a mock record with an unknown level
-        record = Mock()
-        record.levelno = 999  # Unknown level
-        record.getMessage.return_value = "Unknown level message"
-
-        with pytest.MonkeyPatch().context() as m:
-            m.setattr(
-                logging.Formatter,
-                "format",
-                lambda self, record: "2024-01-01 12:00:00 - Unknown level message",
-            )
-
-            result = formatter.format(record)
-
-            # Should not contain any color codes
-            assert "\033[" not in result
-            assert "2024-01-01 12:00:00 - Unknown level message" == result

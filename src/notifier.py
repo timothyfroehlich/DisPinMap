@@ -58,7 +58,7 @@ class Notifier:
         try:
             if target_type == "location" and location_id is not None:
                 submissions = await fetch_submissions_for_location(
-                    location_id=location_id
+                    location_id=location_id, use_min_date=False
                 )
             elif (
                 target_type == "geographic"
@@ -67,7 +67,7 @@ class Notifier:
             ):
                 radius = radius_miles or 25
                 submissions = await fetch_submissions_for_coordinates(
-                    latitude, longitude, radius
+                    latitude, longitude, radius, use_min_date=False
                 )
         except Exception as e:
             logger.error(f"Error fetching initial submissions for {display_name}: {e}")
@@ -81,6 +81,13 @@ class Notifier:
         filtered_submissions = self._filter_submissions_by_type(
             submissions, notification_type
         )
+
+        # Mark all fetched submissions as seen BEFORE posting, to prevent the
+        # monitor loop from re-reporting them during the async post_submissions sleeps
+        if submissions:
+            submission_ids = [s["id"] for s in submissions if "id" in s]
+            if submission_ids:
+                self.db.mark_submissions_seen(ctx.channel.id, submission_ids)
 
         latest_submissions = filtered_submissions[:5]
 

@@ -655,7 +655,7 @@ Examples:
     async def _handle_location_add(self, ctx, location_input: str):
         """Handle adding a location, including searching and selection."""
         try:
-            location_input_stripped = location_input.strip()
+            location_input_stripped = location_input.strip().strip("\"'")
 
             # Handle direct location ID input
             if location_input_stripped.isdigit():

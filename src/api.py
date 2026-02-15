@@ -156,9 +156,6 @@ async def rate_limited_request(
             else:
                 raise
 
-        # Add small delay between requests to be nice to the API
-        await asyncio.sleep(0.5)
-
     raise Exception(f"Failed after {max_retries} attempts")
 
 

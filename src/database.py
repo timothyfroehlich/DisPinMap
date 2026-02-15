@@ -5,7 +5,7 @@ Replaces the old sqlite3-based database.py with modern SQLAlchemy ORM
 
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import create_engine, delete, select, update
@@ -13,6 +13,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 logger = logging.getLogger(__name__)
+
+
+def ensure_timezone_aware(dt):
+    """Convert naive datetime to timezone-aware (UTC) if needed"""
+    if dt is not None and dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 try:
     from .models import (
         Base,
@@ -109,15 +118,6 @@ class Database:
         with self.get_session() as session:
             config = session.get(ChannelConfig, channel_id)
             if config:
-                # Ensure timezone-aware datetime objects for consistent behavior
-                from datetime import timezone
-
-                def ensure_timezone_aware(dt):
-                    """Convert naive datetime to timezone-aware (UTC) if needed"""
-                    if dt is not None and dt.tzinfo is None:
-                        return dt.replace(tzinfo=timezone.utc)
-                    return dt
-
                 return {
                     "channel_id": config.channel_id,
                     "guild_id": config.guild_id,
@@ -197,15 +197,6 @@ class Database:
 
                 if has_targets:
                     configs.append(config)
-
-            # Ensure timezone-aware datetime objects for consistent behavior
-            from datetime import timezone
-
-            def ensure_timezone_aware(dt):
-                """Convert naive datetime to timezone-aware (UTC) if needed"""
-                if dt is not None and dt.tzinfo is None:
-                    return dt.replace(tzinfo=timezone.utc)
-                return dt
 
             return [
                 {
@@ -549,30 +540,28 @@ class Database:
             return
 
         with self.get_session() as session:
-            # Create all seen submission objects
-            seen_submissions = []
-            for submission_id in submission_ids:
-                seen = SeenSubmission(
-                    channel_id=channel_id, submission_id=submission_id
+            # Find which submissions are already seen
+            existing = set(
+                session.execute(
+                    select(SeenSubmission.submission_id).where(
+                        SeenSubmission.channel_id == channel_id,
+                        SeenSubmission.submission_id.in_(submission_ids),
+                    )
                 )
-                seen_submissions.append(seen)
+                .scalars()
+                .all()
+            )
 
-            # Add all to session
-            session.add_all(seen_submissions)
-
-            try:
-                # Commit all at once
+            # Only insert truly new ones
+            new_ids = [sid for sid in submission_ids if sid not in existing]
+            if new_ids:
+                session.add_all(
+                    [
+                        SeenSubmission(channel_id=channel_id, submission_id=sid)
+                        for sid in new_ids
+                    ]
+                )
                 session.commit()
-            except IntegrityError:
-                # Rollback and handle duplicates individually
-                session.rollback()
-                for seen in seen_submissions:
-                    try:
-                        session.add(seen)
-                        session.commit()
-                    except IntegrityError:
-                        session.rollback()
-                        # Ignore duplicate - submission already marked as seen
 
     def filter_new_submissions(
         self, channel_id: int, submissions: List[Dict[str, Any]]

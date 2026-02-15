@@ -1,315 +1,177 @@
-# Project Instructions
+# Project Instructions for AI Agents
 
-**This file contains project-specific instructions for AI code agents (Claude,
-Copilot, etc).**
+**Repo:** <https://github.com/timothyfroehlich/DisPinMap>
 
-- If you are using an AI agent to automate coding, testing, or infrastructure
-  tasks, you (and the agent) must read this file first.
-- Human contributors: For general developer guidance, see
-  `docs/DEVELOPER_HANDBOOK.md`.
+A Discord bot that monitors [pinballmap.com](https://pinballmap.com) for pinball
+machine changes and posts updates to Discord channels. Deployed on GCP Cloud Run
+with Terraform.
 
-## This is our repo: <https://github.com/timothyfroehlich/DisPinMap>
+## Directory-Specific Instructions
 
-## 🗂️ Directory-Specific Agent Instructions
+Read the relevant CLAUDE.md before working in any directory:
 
-**IMPORTANT**: Before working in any directory, consult its specific CLAUDE.md
-file:
+| Directory               | Scope                                                            |
+| ----------------------- | ---------------------------------------------------------------- |
+| `src/CLAUDE.md`         | Core application: models, API, database, commands, notifications |
+| `tests/CLAUDE.md`       | Test framework, mock patterns, fixtures, test organization       |
+| `terraform/CLAUDE.md`   | Infrastructure as Code, GCP resources                            |
+| `alembic/CLAUDE.md`     | Database migrations, schema changes                              |
+| `scripts/CLAUDE.md`     | Utility scripts, validation tools                                |
+| `docs/CLAUDE.md`        | Documentation standards                                          |
+| `docs/issues/CLAUDE.md` | Issue tracking and bug documentation                             |
 
-- **📁 `src/CLAUDE.md`** - Core application code, models, API clients, command
-  handlers
-- **📁 `tests/CLAUDE.md`** - Testing framework, mock patterns, test organization
-- **📁 `terraform/CLAUDE.md`** - Infrastructure as Code, GCP resources,
-  deployment
-- **📁 `alembic/CLAUDE.md`** - Database migrations, schema changes, SQLAlchemy
-- **📁 `scripts/CLAUDE.md`** - Utility scripts, validation tools, automation
-- **📁 `docs/CLAUDE.md`** - Documentation standards, writing guidelines
+## Architecture Overview
 
-💡 **Always read the relevant directory CLAUDE.md before making changes in that
-area.**
+```
+Discord User
+    │
+    ▼
+CommandHandler (src/cogs/command_handler.py)
+    │  validates args → calls Database → triggers Notifier
+    ▼
+Database (src/database.py)          ← SQLAlchemy ORM, SQLite
+    │  CRUD for channels, targets, seen submissions
+    ▼
+Runner (src/cogs/runner.py)         ← background task loop (1-min interval)
+    │  polls active channels → fetches API → filters new → notifies
+    ▼
+Notifier (src/notifier.py)         ← formats and sends Discord messages
+    │  uses Messages (src/messages.py) for templates
+    ▼
+API (src/api.py)                   ← pinballmap.com + geocoding
+    rate-limited HTTP requests
+```
 
-## 📚 Documentation Map
+**Core flow:** User adds a monitoring target via `!add` command. The Runner's
+background loop polls the PinballMap API on each channel's configured interval,
+filters out already-seen submissions via the database, and sends new ones to the
+Discord channel through the Notifier.
 
-### For Users & Overview
+**Key models** (`src/models.py`): `ChannelConfig` (per-channel settings),
+`MonitoringTarget` (what to monitor), `SeenSubmission` (deduplication).
 
-- `README.md` - Project overview, quick start
-- `USER_DOCUMENTATION.md` - Bot command reference
+## Development Environment
 
-### For Developers
-
-- `docs/DEVELOPER_HANDBOOK.md` - Complete development guide
-- `docs/DATABASE.md` - Database schema and patterns
-- `docs/LOCAL_DEVELOPMENT.md` - Local development with console interface
-- `tests/CLAUDE.md` - Testing framework guide
-
-### For AI Agents (This File + Directory-Specific)
-
-- **Main**: `CLAUDE.md` (this file) - Project overview, workflows, standards
-- **Specific**: `{directory}/CLAUDE.md` - Directory-specific context and
-  patterns
-
-## CRITICAL: Branch and Pull Request Workflow
-
-**ALL work must be done in feature branches with PR review:**
-
-1. **Always create a branch**: `git checkout -b feature/description` or
-   `fix/description`
-2. **Never commit directly to main**
-3. **All changes require PR review and approval**
-4. **Wait for approval before merging**
-5. **Include test results and verification in PR description**
-6. **Use descriptive branch names that clearly indicate the purpose**
-7. **GitHub branch protection rules require passing status checks before merge**
-
-## Environment Assumptions for Automation
-
-- **Assume GCP, Docker, and Terraform are already installed and authenticated.**
-  - All commands can assume the correct GCP project is set, Docker is
-    authenticated for Artifact Registry, and Terraform is initialized and has
-    access to state.
-  - No need to repeat authentication or setup steps unless explicitly requested.
-- **Assume required environment variables and secrets are already configured.**
-  - The bot's Discord token and database credentials are present in Secret
-    Manager and referenced by Terraform.
-- **Assume the working directory is the project root unless otherwise
-  specified.**
-
-_Update this section if your environment setup changes or if additional
-assumptions should be made for automation or agent work._
-
-## Python Development Environment
-
-**CRITICAL: Always use the Python virtual environment located in `venv/` (not
-`.venv`).**
-
-### Setting Up the Environment
-
-If the `venv/` directory doesn't exist, create it:
+**Python virtual environment is in `venv/` (not `.venv`).**
 
 ```bash
+# Setup (if venv/ doesn't exist)
 python -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -e .[dev]
-```
 
-### Activating the Environment
-
-Always activate the virtual environment before running any Python commands:
-
-```bash
+# Activate (every session)
 source venv/bin/activate
 ```
 
-## 🖥️ Local Development Mode
+## Code Quality
 
-**For debugging monitoring issues and cost-effective testing without Cloud
-Run.**
-
-### Quick Start
+**Ruff is the only Python quality tool. We do not use mypy, black, flake8, or
+isort.**
 
 ```bash
-# 1. Download production database
 source venv/bin/activate
-python scripts/download_production_db.py
-
-# 2. Start local development mode
-python local_dev.py
+ruff format .         # format
+ruff check --fix .    # lint + auto-fix
+pytest tests/ --ignore=tests/simulation -v  # test
 ```
 
-### Local Development Features
+Pre-commit hooks enforce: trailing whitespace, EOF, YAML, ruff, prettier
+(markdown/YAML), actionlint.
 
-- **Console Discord Interface**: Interact with bot commands via stdin/stdout
-- **File Watcher Interface**: Send commands by appending to `commands.txt` file
-- **Enhanced Logging**: All output to console + rotating log file
-  (`logs/bot.log`)
-- **Production Database**: Real data from Cloud Run backups
-- **Monitoring Loop**: Full monitoring functionality with API calls
-- **Cost Savings**: Cloud Run scaled to 0 instances
-
-### Console Commands
-
-**Discord Bot Commands** (prefix with `!`):
-
-- `!add location "Name"` - Add location monitoring
-- `!list` - Show monitored targets
-- `!check` - Manual check all targets
-- `!help` - Show command help
-
-**Console Special Commands** (prefix with `.`):
-
-- `.quit` - Exit local development session
-- `.health` - Show bot health status (Discord, DB, monitoring loop)
-- `.status` - Show monitoring status (target counts, recent targets)
-- `.trigger` - Force immediate monitoring loop iteration
-
-### External Command Interface (File Watcher)
-
-**Send commands from another terminal without restarting the bot:**
+**Always run pre-commit before committing:**
 
 ```bash
-# Terminal 1: Keep bot running
-python local_dev.py
-
-# Terminal 2: Send commands
-echo "!list" >> commands.txt
-echo ".status" >> commands.txt
-echo "!config poll_rate 15" >> commands.txt
-
-# Terminal 3: Monitor responses
-tail -f logs/bot.log
+pre-commit run --all-files
 ```
 
-**Benefits:**
+## Git Workflow
 
-- **No interruption**: Bot keeps running while you send commands
-- **External control**: Control from scripts, other terminals, or automation
-- **Command history**: All commands saved in `commands.txt` file
-- **Cross-platform**: Works on any system that supports file operations
-
-### Log Monitoring
+1. **Never commit directly to main.** All work in feature branches.
+2. Branch naming: `feature/description` or `fix/description`.
+3. All changes require PR review. Branch protection requires passing CI.
+4. Commit attribution for AI agents:
 
 ```bash
-# Watch logs in real-time
-tail -f logs/bot.log
+git commit --author="Claude Code <claude-code@anthropic.com>" -m "$(cat <<'EOF'
+commit message here
 
-# Search for monitoring activity
-grep "MONITOR" logs/bot.log
+🤖 Generated with [Claude Code](https://claude.ai/code)
 
-# Check for errors
-grep "ERROR" logs/bot.log
+Co-Authored-By: Claude <claude-code@anthropic.com>
+EOF
+)"
 ```
 
-### Troubleshooting Local Dev
+**Never modify git config.** Use `--author` flag instead.
 
-- **Console not responding**: Check for EOF/Ctrl+D in input
-- **Database not found**: Run `python scripts/download_production_db.py`
-- **Discord connection issues**: Verify `DISCORD_BOT_TOKEN` in `.env.local`
-- **Missing environment**: Ensure `.env.local` exists with required variables
+## Testing
 
-### Production Database Download
-
-The production database is downloaded from Litestream backups:
+Tests follow a pyramid: unit → integration → simulation.
 
 ```bash
-python scripts/download_production_db.py
+pytest tests/ --ignore=tests/simulation -v    # standard run
+pytest tests/unit/ -v                         # unit only
+pytest tests/integration/ -v                  # integration only
+pytest -n auto                                # parallel execution
+pytest --cov=src --cov-report=html            # with coverage
 ```
 
-- Downloads latest backup from `dispinmap-bot-sqlite-backups` GCS bucket
-- Restores to `local_db/pinball_bot.db`
-- Verifies database integrity and shows table counts
+**Key rules:**
 
-## Code Quality Standards
+- All mocks must use spec-based factories from `tests/utils/mock_factories.py`.
+  Never use raw `Mock()` or `MagicMock()` without specs.
+- Each test worker gets an isolated SQLite database.
+- API mocking uses `api_mocker` fixture with JSON fixtures in
+  `tests/fixtures/api_responses/`.
+- See `tests/CLAUDE.md` for full testing guide.
 
-**CRITICAL: We use Ruff exclusively for all Python code quality.**
+## Bug Fix Workflow
 
-### Our Tool Stack
+When presented with a production bug:
 
-- **Python**: `ruff` for ALL linting, formatting, type checking, and import
-  sorting
-- **Markdown/YAML**: `prettier` for formatting
-- **Tests**: `pytest` with coverage
-- **Git**: `pre-commit` hooks
+1. Add a failing test that reproduces the bug
+2. Only fix the bug once the test fails
+3. Verify the fix makes the test pass
 
-### Tools We Do NOT Use
-
-We have standardized on Ruff and explicitly **do not use**:
-
-- ❌ `mypy` (Ruff handles type checking)
-- ❌ `black` (Ruff handles formatting)
-- ❌ `flake8` (Ruff handles linting)
-- ❌ `isort` (Ruff handles import sorting)
-
-### Quick Commands
+## Local Development
 
 ```bash
-# Activate environment first
 source venv/bin/activate
-
-# Format and lint Python code
-ruff format .           # Format Python code
-ruff check .            # Lint Python code
-ruff check --fix .      # Auto-fix linting issues
-
-# Format markdown and YAML
-prettier --write "**/*.{md,yml,yaml}" --ignore-path .gitignore
-
-# Run tests
-pytest tests/ --ignore=tests/simulation -v
-
-# Run ALL checks (comprehensive script)
-./scripts/run_all_checks.sh
+python scripts/download_production_db.py  # one-time: get prod data
+python local_dev.py                       # start local dev session
 ```
 
-#### VS Code Tasks (Recommended)
+- Console interface simulates Discord (`!add`, `!list`, `!check`, `!help`)
+- Dot commands for control (`.quit`, `.health`, `.status`, `.trigger`)
+- File watcher: `echo "!list" >> commands.txt` from another terminal
+- Logs: `tail -f logs/bot.log`
 
-Use the pre-configured VS Code tasks (accessible via `Ctrl+Shift+P` → "Tasks:
-Run Task"):
-
-- **Format Code**: Runs `ruff format .`
-- **Lint Code**: Runs `ruff check .`
-- **Run Tests**: Runs pytest with coverage
-- **Install Dependencies**: Sets up the virtual environment
-
-#### Pre-Commit Workflow
-
-Before committing changes:
-
-1. **Format**: `ruff format .`
-2. **Lint**: `ruff check --fix .`
-3. **Test**: `pytest tests/ --ignore=tests/simulation -v`
-4. **Format Docs**:
-   `prettier --write "**/*.{md,yml,yaml}" --ignore-path .gitignore`
-
-#### CI/CD Integration
-
-The GitHub Actions workflows automatically run:
-
-- `ruff check .` (linting)
-- `ruff format --check .` (format checking)
-- `prettier --check "**/*.{md,yml,yaml}"` (markdown/YAML checking)
-- Full test suite with coverage
-
-For detailed project lessons learned and historical context, load
-`@project-lessons.md`. When you solve a tricky problem or we end up taking a
-different direction, update project-lessons.md with those new lessons.
-
-## Claude Code Commit Attribution
-
-When Claude Code makes commits, use proper attribution to distinguish
-AI-generated changes:
+## Production Debugging
 
 ```bash
-git commit --author="Claude Code <claude-code@anthropic.com>" -m "commit message"
-```
-
-**Standard commit format:**
-
-- Use descriptive commit messages explaining the changes and reasoning
-- Always include the Claude Code signature block:
-
-  ```
-  🤖 Generated with [Claude Code](https://claude.ai/code)
-
-  Co-Authored-By: Claude <claude-code@anthropic.com>
-  ```
-
-- Keep user's git configuration unchanged - never modify `git config` settings
-- Use `--author` flag instead of changing global git configuration
-
-This ensures clear attribution while preserving the user's personal git
-settings.
-
-## Debugging
-
-Use this command to check recent logs:
-
-```
 gcloud run services logs read dispinmap-bot --region=us-central1 --limit=50
 ```
 
-When presented with a production bug, start by adding a failing test that
-reproduces the bug. Only start fixing the bug once you have a test that fails.
+## Environment Assumptions
 
-## Other
+- GCP, Docker, Terraform already installed and authenticated
+- Environment variables and secrets already configured
+- Working directory is project root unless specified
 
-Never use src.path.append for imports.
+## Documentation Map
+
+| Audience           | File                                             |
+| ------------------ | ------------------------------------------------ |
+| Users              | `README.md`, `USER_DOCUMENTATION.md`             |
+| Developers         | `docs/LOCAL_DEVELOPMENT.md`, `docs/DATABASE.md`  |
+| AI Agents          | This file + directory-specific `CLAUDE.md` files |
+| Historical context | `project-lessons.md`                             |
+
+## Rules
+
+- Never use `sys.path.append` for imports
+- Never use `--no-verify` on git commands unless explicitly asked
+- Don't use GitHub issue labels
+- When solving tricky problems, update `project-lessons.md` with new lessons

@@ -43,7 +43,7 @@ def load_local_environment():
     load_dotenv(env_file)
 
     # Verify required variables
-    required_vars = ["DISCORD_BOT_TOKEN", "DATABASE_PATH"]
+    required_vars = ["DISCORD_TOKEN", "DATABASE_PATH"]
     missing_vars = []
 
     for var in required_vars:
@@ -141,7 +141,7 @@ async def main():
 
         # Start the bot
         logger.info("🚀 Starting Discord bot...")
-        discord_token = os.getenv("DISCORD_BOT_TOKEN")
+        discord_token = os.getenv("DISCORD_TOKEN")
 
         # Run the bot
         await bot.start(discord_token)
