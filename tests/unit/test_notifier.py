@@ -135,7 +135,7 @@ class TestNotifier:
                 target_type="location",
             )
 
-            mock_fetch.assert_called_once_with(location_id=123)
+            mock_fetch.assert_called_once_with(location_id=123, use_min_date=False)
             mock_post.assert_called_once()
             # Verify that the correct message was sent
             mock_ctx.send.assert_any_call(
@@ -163,7 +163,7 @@ class TestNotifier:
                 target_type="geographic",
             )
 
-            mock_fetch.assert_called_once_with(45.5, -122.6, 25)
+            mock_fetch.assert_called_once_with(45.5, -122.6, 25, use_min_date=False)
             mock_post.assert_not_called()
             mock_ctx.send.assert_called_once_with(
                 "ℹ️ No recent submissions found for **Test City**."

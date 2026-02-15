@@ -58,7 +58,7 @@ class Notifier:
         try:
             if target_type == "location" and location_id is not None:
                 submissions = await fetch_submissions_for_location(
-                    location_id=location_id
+                    location_id=location_id, use_min_date=False
                 )
             elif (
                 target_type == "geographic"
@@ -67,7 +67,7 @@ class Notifier:
             ):
                 radius = radius_miles or 25
                 submissions = await fetch_submissions_for_coordinates(
-                    latitude, longitude, radius
+                    latitude, longitude, radius, use_min_date=False
                 )
         except Exception as e:
             logger.error(f"Error fetching initial submissions for {display_name}: {e}")
